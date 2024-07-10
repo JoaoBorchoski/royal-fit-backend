@@ -1,0 +1,41 @@
+import createConnection from '../index'
+
+async function create() {
+  const connection = await createConnection()
+
+  await connection.query(`truncate migrations`)
+  await connection.query(`drop table users`)
+  await connection.query(`drop table block_reasons`)
+  await connection.query(`drop table user_groups`)
+  await connection.query(`drop table pagamentos`)
+  await connection.query(`drop table balancos`)
+  await connection.query(`drop table relatorios_funcionarios`)
+  await connection.query(`drop table relatorios_clientes`)
+  await connection.query(`drop table pedido_itens`)
+  await connection.query(`drop table pedidos`)
+  await connection.query(`drop table bonificacoes`)
+  await connection.query(`drop table status_pagamento`)
+  await connection.query(`drop table meios_pagamento`)
+  await connection.query(`drop table garrafoes`)
+  await connection.query(`drop table produtos`)
+  await connection.query(`drop table clientes`)
+  await connection.query(`drop table funcionarios`)
+  await connection.query(`drop table ceps`)
+  await connection.query(`drop table cidades`)
+  await connection.query(`drop table estados`)
+  await connection.query(`drop table paises`)
+  await connection.query(`drop table user_tokens`)
+  await connection.query(`drop table menu_options`)
+  await connection.query(`drop table modules`)
+  await connection.query(`drop table navigation`)
+  await connection.query(`drop table profile_options`)
+  await connection.query(`drop table users_profiles`)
+  await connection.query(`drop table profiles`)
+  await connection.query(`drop table users`)
+  await connection.query(`drop table block_reasons`)
+  await connection.query(`drop table user_groups`)
+
+  await connection.close()
+}
+
+create().then(() => console.log('Tabelas deletadas!'))
