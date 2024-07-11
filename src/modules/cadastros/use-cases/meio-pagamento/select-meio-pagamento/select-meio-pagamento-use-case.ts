@@ -1,5 +1,5 @@
-import { inject, injectable } from 'tsyringe'
-import { IMeioPagamentoRepository } from '@modules/cadastros/repositories/i-meio-pagamento-repository'
+import { inject, injectable } from "tsyringe"
+import { IMeioPagamentoRepository } from "@modules/cadastros/repositories/i-meio-pagamento-repository"
 
 interface ResponseProps {
   items?: object[]
@@ -10,18 +10,17 @@ interface ResponseProps {
 
 @injectable()
 class SelectMeioPagamentoUseCase {
-  constructor(@inject('MeioPagamentoRepository')
+  constructor(
+    @inject("MeioPagamentoRepository")
     private meioPagamentoRepository: IMeioPagamentoRepository
   ) {}
 
-  async execute({
-    filter,
-  }): Promise<ResponseProps> {
+  async execute({ filter }): Promise<ResponseProps> {
     const meiosPagamento = await this.meioPagamentoRepository.select(filter)
 
     const newMeiosPagamento = {
       items: meiosPagamento.data,
-      hasNext: false
+      hasNext: false,
     }
 
     return newMeiosPagamento

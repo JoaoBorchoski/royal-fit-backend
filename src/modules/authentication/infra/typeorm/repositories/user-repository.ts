@@ -1,7 +1,7 @@
-import { getRepository, Repository } from 'typeorm'
-import { IUserDTO } from '@modules/authentication/dtos/i-user-dto'
-import { IUserRepository } from '@modules/authentication/repositories/i-user-repository'
-import { User } from '../entities/user'
+import { getRepository, Repository } from "typeorm"
+import { IUserDTO } from "@modules/authentication/dtos/i-user-dto"
+import { IUserRepository } from "@modules/authentication/repositories/i-user-repository"
+import { User } from "../entities/user"
 
 class UserRepository implements IUserRepository {
   private repository: Repository<User>
@@ -22,30 +22,36 @@ class UserRepository implements IUserRepository {
     blockReasonId,
     mustChangePasswordNextLogon,
     avatar,
-    isDisabled
-  }: IUserDTO): Promise<void> {
-    const user = this.repository.create({
-      id,
-      userGroupId,
-      name,
-      login,
-      password,
-      isAdmin,
-      isSuperUser,
-      isBlocked,
-      blockReasonId,
-      mustChangePasswordNextLogon,
-      avatar,
-      isDisabled
-    })
+    isDisabled,
+  }: IUserDTO): Promise<User> {
+    try {
+      const user = this.repository.create({
+        id,
+        userGroupId,
+        name,
+        login,
+        password,
+        isAdmin,
+        isSuperUser,
+        isBlocked,
+        blockReasonId,
+        mustChangePasswordNextLogon,
+        avatar,
+        isDisabled,
+      })
 
-    await this.repository.save(user)
+      const result = await this.repository.save(user)
+
+      return result
+    } catch (error) {
+      return error
+    }
   }
 
   async findByEmail(login: string): Promise<User> {
     const newLogin = login.toLowerCase()
     const user = await this.repository.findOne({ login: newLogin })
-      
+
     return user
   }
 

@@ -1,9 +1,9 @@
-import { Brackets, getRepository, Repository } from 'typeorm'
-import { ICepDTO } from '@modules/comum/dtos/i-cep-dto'
-import { ICepRepository } from '@modules/comum/repositories/i-cep-repository'
-import { Cep } from '@modules/comum/infra/typeorm/entities/cep'
-import { noContent, serverError, ok, notFound, HttpResponse } from '@shared/helpers'
-import { AppError } from '@shared/errors/app-error'
+import { Brackets, getRepository, Repository } from "typeorm"
+import { ICepDTO } from "@modules/comum/dtos/i-cep-dto"
+import { ICepRepository } from "@modules/comum/repositories/i-cep-repository"
+import { Cep } from "@modules/comum/infra/typeorm/entities/cep"
+import { noContent, serverError, ok, notFound, HttpResponse } from "@shared/helpers"
+import { AppError } from "@shared/errors/app-error"
 
 class CepRepository implements ICepRepository {
   private repository: Repository<Cep>
@@ -12,60 +12,43 @@ class CepRepository implements ICepRepository {
     this.repository = getRepository(Cep)
   }
 
-
   // create
-  async create ({
-    codigoCep,
-    logradouro,
-    bairro,
-    estadoId,
-    cidadeId
-  }: ICepDTO): Promise<HttpResponse> {
+  async create({ codigoCep, logradouro, bairro, estadoId, cidadeId }: ICepDTO): Promise<HttpResponse> {
     const cep = this.repository.create({
       codigoCep,
       logradouro,
       bairro,
       estadoId,
-      cidadeId
+      cidadeId,
     })
 
-    const result = await this.repository.save(cep)
-      .then(cepResult => {
+    const result = await this.repository
+      .save(cep)
+      .then((cepResult) => {
         return ok(cepResult)
       })
-      .catch(error => {
+      .catch((error) => {
         return serverError(error)
       })
 
     return result
   }
 
-
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string,
-    filter: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string, filter: string): Promise<HttpResponse> {
     let columnName: string
-    let columnDirection: 'ASC' | 'DESC'
+    let columnDirection: "ASC" | "DESC"
 
-    if ((typeof(order) === 'undefined') || (order === "")) {
-      columnName = 'nome'
-      columnDirection = 'ASC'
+    if (typeof order === "undefined" || order === "") {
+      columnName = "nome"
+      columnDirection = "ASC"
     } else {
-      columnName = order.substring(0, 1) === '-' ? order.substring(1) : order
-      columnDirection = order.substring(0, 1) === '-' ? 'DESC' : 'ASC'
+      columnName = order.substring(0, 1) === "-" ? order.substring(1) : order
+      columnDirection = order.substring(0, 1) === "-" ? "DESC" : "ASC"
     }
 
-    const referenceArray = [
-      "codigoCep",
-      "logradouro",
-      "bairro",
-    ]
-    const columnOrder = new Array<'ASC' | 'DESC'>(2).fill('ASC')
+    const referenceArray = ["codigoCep", "logradouro", "bairro"]
+    const columnOrder = new Array<"ASC" | "DESC">(2).fill("ASC")
 
     const index = referenceArray.indexOf(columnName)
 
@@ -74,28 +57,25 @@ class CepRepository implements ICepRepository {
     const offset = rowsPerPage * page
 
     try {
-      let query = this.repository.createQueryBuilder('cep')
-        .select([
-          'cep.id as "id"',
-          'cep.codigoCep as "codigoCep"',
-          'cep.logradouro as "logradouro"',
-          'cep.bairro as "bairro"',
-        ])
+      let query = this.repository
+        .createQueryBuilder("cep")
+        .select(['cep.id as "id"', 'cep.codigoCep as "codigoCep"', 'cep.logradouro as "logradouro"', 'cep.bairro as "bairro"'])
 
       if (filter) {
-        query = query
-          .where(filter)
+        query = query.where(filter)
       }
 
       const ceps = await query
-        .andWhere(new Brackets(query => {
-          query.andWhere('CAST(cep.codigoCep AS VARCHAR) ilike :search', { search: `%${search}%` })
-          query.orWhere('CAST(cep.logradouro AS VARCHAR) ilike :search', { search: `%${search}%` })
-          query.orWhere('CAST(cep.bairro AS VARCHAR) ilike :search', { search: `%${search}%` })
-        }))
-        .addOrderBy('cep.codigoCep', columnOrder[0])
-        .addOrderBy('cep.logradouro', columnOrder[1])
-        .addOrderBy('cep.bairro', columnOrder[2])
+        .andWhere(
+          new Brackets((query) => {
+            query.andWhere("CAST(cep.codigoCep AS VARCHAR) ilike :search", { search: `%${search}%` })
+            query.orWhere("CAST(cep.logradouro AS VARCHAR) ilike :search", { search: `%${search}%` })
+            query.orWhere("CAST(cep.bairro AS VARCHAR) ilike :search", { search: `%${search}%` })
+          })
+        )
+        .addOrderBy("cep.codigoCep", columnOrder[0])
+        .addOrderBy("cep.logradouro", columnOrder[1])
+        .addOrderBy("cep.bairro", columnOrder[2])
         .offset(offset)
         .limit(rowsPerPage)
         .take(rowsPerPage)
@@ -107,17 +87,14 @@ class CepRepository implements ICepRepository {
     }
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     try {
-      const ceps = await this.repository.createQueryBuilder('cep')
-        .select([
-          'cep. as "value"',
-          'cep. as "label"',
-        ])
-        .where('cep. ilike :filter', { filter: `${filter}%` })
-        .addOrderBy('cep.')
+      const ceps = await this.repository
+        .createQueryBuilder("cep")
+        .select(['cep. as "value"', 'cep. as "label"'])
+        .where("cep. ilike :filter", { filter: `${filter}%` })
+        .addOrderBy("cep.")
         .getRawMany()
 
       return ok(ceps)
@@ -126,16 +103,13 @@ class CepRepository implements ICepRepository {
     }
   }
 
-
   // id select
-  async idSelect (id: string): Promise<HttpResponse> {
+  async idSelect(id: string): Promise<HttpResponse> {
     try {
-      const cep = await this.repository.createQueryBuilder('cep')
-        .select([
-          'cep. as "value"',
-          'cep. as "label"',
-        ])
-        .where('cep. = :id', { id: `${id}` })
+      const cep = await this.repository
+        .createQueryBuilder("cep")
+        .select(['cep. as "value"', 'cep. as "label"'])
+        .where("cep. = :id", { id: `${id}` })
         .getRawOne()
 
       return ok(cep)
@@ -144,29 +118,23 @@ class CepRepository implements ICepRepository {
     }
   }
 
-
   // count
-  async count (
-    search: string,
-    filter: string
-  ): Promise<HttpResponse> {
+  async count(search: string, filter: string): Promise<HttpResponse> {
     try {
-      let query = this.repository.createQueryBuilder('cep')
-        .select([
-          'cep.id as "id"',
-        ])
+      let query = this.repository.createQueryBuilder("cep").select(['cep.id as "id"'])
 
       if (filter) {
-        query = query
-          .where(filter)
+        query = query.where(filter)
       }
 
       const ceps = await query
-        .andWhere(new Brackets(query => {
-          query.andWhere('CAST(cep.codigoCep AS VARCHAR) ilike :search', { search: `%${search}%` })
-          query.orWhere('CAST(cep.logradouro AS VARCHAR) ilike :search', { search: `%${search}%` })
-          query.orWhere('CAST(cep.bairro AS VARCHAR) ilike :search', { search: `%${search}%` })
-        }))
+        .andWhere(
+          new Brackets((query) => {
+            query.andWhere("CAST(cep.codigoCep AS VARCHAR) ilike :search", { search: `%${search}%` })
+            query.orWhere("CAST(cep.logradouro AS VARCHAR) ilike :search", { search: `%${search}%` })
+            query.orWhere("CAST(cep.bairro AS VARCHAR) ilike :search", { search: `%${search}%` })
+          })
+        )
         .getRawMany()
 
       return ok({ count: ceps.length })
@@ -175,11 +143,11 @@ class CepRepository implements ICepRepository {
     }
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     try {
-      const cep = await this.repository.createQueryBuilder('cep')
+      const cep = await this.repository
+        .createQueryBuilder("cep")
         .select([
           'cep.id as "id"',
           'cep.codigoCep as "codigoCep"',
@@ -190,12 +158,12 @@ class CepRepository implements ICepRepository {
           'cep.cidadeId as "cidadeId"',
           'b.nomeCidade as "cidadeNomeCidade"',
         ])
-        .leftJoin('cep.estadoId', 'a')
-        .leftJoin('cep.cidadeId', 'b')
-        .where('cep.id = :id', { id })
+        .leftJoin("cep.estadoId", "a")
+        .leftJoin("cep.cidadeId", "b")
+        .where("cep.id = :id", { id })
         .getRawOne()
 
-      if (typeof cep === 'undefined') {
+      if (typeof cep === "undefined") {
         return noContent()
       }
 
@@ -205,16 +173,8 @@ class CepRepository implements ICepRepository {
     }
   }
 
-
   // update
-  async update ({
-    id,
-    codigoCep,
-    logradouro,
-    bairro,
-    estadoId,
-    cidadeId
-  }: ICepDTO): Promise<HttpResponse> {
+  async update({ id, codigoCep, logradouro, bairro, estadoId, cidadeId }: ICepDTO): Promise<HttpResponse> {
     const cep = await this.repository.findOne(id)
 
     if (!cep) {
@@ -227,7 +187,7 @@ class CepRepository implements ICepRepository {
       logradouro,
       bairro,
       estadoId,
-      cidadeId
+      cidadeId,
     })
 
     try {
@@ -239,34 +199,61 @@ class CepRepository implements ICepRepository {
     }
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     try {
       await this.repository.delete(id)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
 
       return serverError(err)
     }
   }
 
-
   // multi delete
-  async multiDelete (ids: string[]): Promise<HttpResponse> {
+  async multiDelete(ids: string[]): Promise<HttpResponse> {
     try {
       await this.repository.delete(ids)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
 
+      return serverError(err)
+    }
+  }
+
+  async getByCep(cep: string): Promise<HttpResponse> {
+    try {
+      const cepInfo = await this.repository
+        .createQueryBuilder("cep")
+        .select([
+          'cep.id as "id"',
+          'cep.codigoCep as "codigoCep"',
+          'cep.logradouro as "logradouro"',
+          'cep.bairro as "bairro"',
+          'cep.estadoId as "estadoId"',
+          'a.uf as "estadoUf"',
+          'cep.cidadeId as "cidadeId"',
+          'b.nomeCidade as "cidadeNomeCidade"',
+        ])
+        .leftJoin("cep.estadoId", "a")
+        .leftJoin("cep.cidadeId", "b")
+        .where("cep.codigoCep = :cep", { cep })
+        .getRawOne()
+
+      if (typeof cep === "undefined") {
+        return noContent()
+      }
+
+      return ok(cepInfo)
+    } catch (err) {
       return serverError(err)
     }
   }

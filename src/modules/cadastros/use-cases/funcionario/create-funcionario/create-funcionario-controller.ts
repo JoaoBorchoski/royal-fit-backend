@@ -1,7 +1,7 @@
-import { Request, Response } from 'express'
-import { container } from 'tsyringe'
-import { CreateFuncionarioUseCase } from './create-funcionario-use-case'
-import { HttpResponse } from '@shared/helpers'
+import { Request, Response } from "express"
+import { container } from "tsyringe"
+import { CreateFuncionarioUseCase } from "./create-funcionario-use-case"
+import { HttpResponse } from "@shared/helpers"
 
 class CreateFuncionarioController {
   async handle(request: Request, response: Response): Promise<Response> {
@@ -19,12 +19,13 @@ class CreateFuncionarioController {
       complemento,
       telefone,
       usuarioId,
-      desabilitado
+      desabilitado,
     } = request.body
 
     const createFuncionarioUseCase = container.resolve(CreateFuncionarioUseCase)
 
-    const result = await createFuncionarioUseCase.execute({
+    const result = await createFuncionarioUseCase
+      .execute({
         nome,
         cpf,
         email,
@@ -38,12 +39,12 @@ class CreateFuncionarioController {
         complemento,
         telefone,
         usuarioId,
-        desabilitado
+        desabilitado,
       })
-      .then(funcionarioResult => {
+      .then((funcionarioResult) => {
         return funcionarioResult
       })
-      .catch(error => {
+      .catch((error) => {
         return error
       })
 

@@ -1,9 +1,9 @@
-import { getRepository, Repository } from 'typeorm'
-import { IUserGroupDTO } from '@modules/security/dtos/i-user-group-dto'
-import { IUserGroupRepository } from '@modules/security/repositories/i-user-group-repository'
-import { UserGroup } from '@modules/security/infra/typeorm/entities/user-group'
-import { noContent, serverError, ok, notFound, HttpResponse } from '@shared/helpers'
-import { AppError } from '@shared/errors/app-error'
+import { getRepository, Repository } from "typeorm"
+import { IUserGroupDTO } from "@modules/security/dtos/i-user-group-dto"
+import { IUserGroupRepository } from "@modules/security/repositories/i-user-group-repository"
+import { UserGroup } from "@modules/security/infra/typeorm/entities/user-group"
+import { noContent, serverError, ok, notFound, HttpResponse } from "@shared/helpers"
+import { AppError } from "@shared/errors/app-error"
 
 class UserGroupRepository implements IUserGroupRepository {
   private repository: Repository<UserGroup>
@@ -12,52 +12,40 @@ class UserGroupRepository implements IUserGroupRepository {
     this.repository = getRepository(UserGroup)
   }
 
-
   // create
-  async create ({
-    name,
-    disabled
-  }: IUserGroupDTO): Promise<HttpResponse> {
+  async create({ name, disabled }: IUserGroupDTO): Promise<HttpResponse> {
     const userGroup = this.repository.create({
       name,
-      disabled
+      disabled,
     })
 
-    const result = await this.repository.save(userGroup)
-      .then(userGroupResult => {
+    const result = await this.repository
+      .save(userGroup)
+      .then((userGroupResult) => {
         return ok(userGroupResult)
       })
-      .catch(error => {
+      .catch((error) => {
         return serverError(error)
       })
 
     return result
   }
 
-
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string,
-    filter?: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string, filter?: string): Promise<HttpResponse> {
     let columnName: string
-    let columnDirection: 'ASC' | 'DESC'
+    let columnDirection: "ASC" | "DESC"
 
-    if ((typeof(order) === 'undefined') || (order === "")) {
-      columnName = 'nome'
-      columnDirection = 'ASC'
+    if (typeof order === "undefined" || order === "") {
+      columnName = "nome"
+      columnDirection = "ASC"
     } else {
-      columnName = order.substring(0, 1) === '-' ? order.substring(1) : order
-      columnDirection = order.substring(0, 1) === '-' ? 'DESC' : 'ASC'
+      columnName = order.substring(0, 1) === "-" ? order.substring(1) : order
+      columnDirection = order.substring(0, 1) === "-" ? "DESC" : "ASC"
     }
 
-    const referenceArray = [
-      "name"
-    ]
-    const columnOrder = new Array<'ASC' | 'DESC'>(2).fill('ASC')
+    const referenceArray = ["name"]
+    const columnOrder = new Array<"ASC" | "DESC">(2).fill("ASC")
 
     const index = referenceArray.indexOf(columnName)
 
@@ -66,13 +54,11 @@ class UserGroupRepository implements IUserGroupRepository {
     const offset = rowsPerPage * page
 
     try {
-      let userGroups = await this.repository.createQueryBuilder('use')
-        .select([
-          'use.id as "id"',
-          'use.name as "name"',
-        ])
-        .where('use.name ilike :search', { search: `%${search}%` })
-        .addOrderBy('use.name', columnOrder[0])
+      let userGroups = await this.repository
+        .createQueryBuilder("use")
+        .select(['use.id as "id"', 'use.name as "name"'])
+        .where("use.name ilike :search", { search: `%${search}%` })
+        .addOrderBy("use.name", columnOrder[0])
         .take(rowsPerPage)
         .skip(offset)
         .getRawMany()
@@ -91,17 +77,14 @@ class UserGroupRepository implements IUserGroupRepository {
     }
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     try {
-      const userGroups = await this.repository.createQueryBuilder('use')
-        .select([
-          'use.id as "value"',
-          'use.name as "label"',
-        ])
-        .where('use.name ilike :filter', { filter: `${filter}%` })
-        .addOrderBy('use.name')
+      const userGroups = await this.repository
+        .createQueryBuilder("use")
+        .select(['use.id as "value"', 'use.name as "label"'])
+        .where("use.name ilike :filter", { filter: `${filter}%` })
+        .addOrderBy("use.name")
         .getRawMany()
 
       return ok(userGroups)
@@ -110,16 +93,13 @@ class UserGroupRepository implements IUserGroupRepository {
     }
   }
 
-
   // id select
-  async idSelect (id: string): Promise<HttpResponse> {
+  async idSelect(id: string): Promise<HttpResponse> {
     try {
-      const userGroup = await this.repository.createQueryBuilder('use')
-        .select([
-          'use.id as "value"',
-          'use.name as "label"',
-        ])
-        .where('use.id = :id', { id: `${id}` })
+      const userGroup = await this.repository
+        .createQueryBuilder("use")
+        .select(['use.id as "value"', 'use.name as "label"'])
+        .where("use.id = :id", { id: `${id}` })
         .getRawOne()
 
       return ok(userGroup)
@@ -128,18 +108,13 @@ class UserGroupRepository implements IUserGroupRepository {
     }
   }
 
-
   // count
-  async count (
-    search: string,
-    filter?: string
-  ): Promise<HttpResponse> {
+  async count(search: string, filter?: string): Promise<HttpResponse> {
     try {
-      const userGroups = await this.repository.createQueryBuilder('use')
-        .select([
-          'use.id as "id"',
-        ])
-        .where('use.name ilike :search', { search: `%${search}%` })
+      const userGroups = await this.repository
+        .createQueryBuilder("use")
+        .select(['use.id as "id"'])
+        .where("use.name ilike :search", { search: `%${search}%` })
         .getRawMany()
 
       return ok({ count: userGroups.length })
@@ -148,13 +123,12 @@ class UserGroupRepository implements IUserGroupRepository {
     }
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     try {
       const userGroup = await this.repository.findOne(id)
 
-      if (typeof userGroup === 'undefined') {
+      if (typeof userGroup === "undefined") {
         return noContent()
       }
 
@@ -164,13 +138,8 @@ class UserGroupRepository implements IUserGroupRepository {
     }
   }
 
-
   // update
-  async update ({
-    id,
-    name,
-    disabled
-  }: IUserGroupDTO): Promise<HttpResponse> {
+  async update({ id, name, disabled }: IUserGroupDTO): Promise<HttpResponse> {
     const userGroup = await this.repository.findOne(id)
 
     if (!userGroup) {
@@ -180,7 +149,7 @@ class UserGroupRepository implements IUserGroupRepository {
     const newuserGroup = this.repository.create({
       id,
       name,
-      disabled
+      disabled,
     })
 
     try {
@@ -192,9 +161,8 @@ class UserGroupRepository implements IUserGroupRepository {
     }
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     try {
       await this.repository.delete(id)
 
@@ -204,19 +172,27 @@ class UserGroupRepository implements IUserGroupRepository {
     }
   }
 
-
   // multi delete
-  async multiDelete (ids: string[]): Promise<HttpResponse> {
+  async multiDelete(ids: string[]): Promise<HttpResponse> {
     try {
       await this.repository.delete(ids)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
-      
+
       return serverError(err)
+    }
+  }
+
+  async getByName(name: string): Promise<HttpResponse> {
+    try {
+      const userGroup = await this.repository.findOne({ name })
+      return ok(userGroup)
+    } catch (error) {
+      return serverError(error)
     }
   }
 }

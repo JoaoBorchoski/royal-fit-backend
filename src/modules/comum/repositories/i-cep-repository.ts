@@ -1,47 +1,35 @@
-import { ICepDTO } from '@modules/comum/dtos/i-cep-dto'
-import { HttpResponse } from '@shared/helpers'
+import { ICepDTO } from "@modules/comum/dtos/i-cep-dto"
+import { HttpResponse } from "@shared/helpers"
 
 interface ICepRepository {
   // create
-  create (data: ICepDTO): Promise<HttpResponse> 
-
+  create(data: ICepDTO): Promise<HttpResponse>
 
   // list
-  list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string,
-    filter: string
-  ): Promise<HttpResponse>
-
+  list(search: string, page: number, rowsPerPage: number, order: string, filter: string): Promise<HttpResponse>
 
   // select
-  select (filter: string): Promise<HttpResponse>
-  
-  
-  // id select
-  idSelect (id: string): Promise<HttpResponse>
+  select(filter: string): Promise<HttpResponse>
 
+  // id select
+  idSelect(id: string): Promise<HttpResponse>
 
   // count
-  count (search: string, filter: string): Promise<HttpResponse>
-
+  count(search: string, filter: string): Promise<HttpResponse>
 
   // get
-  get (id: string): Promise<HttpResponse>
-
+  get(id: string): Promise<HttpResponse>
 
   // update
-  update (data: ICepDTO): Promise<HttpResponse>
-
+  update(data: ICepDTO): Promise<HttpResponse>
 
   // delete
-  delete (id: string): Promise<HttpResponse>
+  delete(id: string): Promise<HttpResponse>
 
-  
   // multi delete
-  multiDelete (ids: string[]): Promise<HttpResponse>
+  multiDelete(ids: string[]): Promise<HttpResponse>
+
+  getByCep(cep: string): Promise<HttpResponse>
 }
 
 export { ICepRepository }

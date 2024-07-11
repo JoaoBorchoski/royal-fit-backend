@@ -1,9 +1,9 @@
-import { Brackets, getRepository, Repository } from 'typeorm'
-import { ICidadeDTO } from '@modules/comum/dtos/i-cidade-dto'
-import { ICidadeRepository } from '@modules/comum/repositories/i-cidade-repository'
-import { Cidade } from '@modules/comum/infra/typeorm/entities/cidade'
-import { noContent, serverError, ok, notFound, HttpResponse } from '@shared/helpers'
-import { AppError } from '@shared/errors/app-error'
+import { Brackets, getRepository, Repository } from "typeorm"
+import { ICidadeDTO } from "@modules/comum/dtos/i-cidade-dto"
+import { ICidadeRepository } from "@modules/comum/repositories/i-cidade-repository"
+import { Cidade } from "@modules/comum/infra/typeorm/entities/cidade"
+import { noContent, serverError, ok, notFound, HttpResponse } from "@shared/helpers"
+import { AppError } from "@shared/errors/app-error"
 
 class CidadeRepository implements ICidadeRepository {
   private repository: Repository<Cidade>
@@ -12,55 +12,41 @@ class CidadeRepository implements ICidadeRepository {
     this.repository = getRepository(Cidade)
   }
 
-
   // create
-  async create ({
-    estadoId,
-    codigoIbge,
-    nomeCidade
-  }: ICidadeDTO): Promise<HttpResponse> {
+  async create({ estadoId, codigoIbge, nomeCidade }: ICidadeDTO): Promise<HttpResponse> {
     const cidade = this.repository.create({
       estadoId,
       codigoIbge,
-      nomeCidade
+      nomeCidade,
     })
 
-    const result = await this.repository.save(cidade)
-      .then(cidadeResult => {
+    const result = await this.repository
+      .save(cidade)
+      .then((cidadeResult) => {
         return ok(cidadeResult)
       })
-      .catch(error => {
+      .catch((error) => {
         return serverError(error)
       })
 
     return result
   }
 
-
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string,
-    filter: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string, filter: string): Promise<HttpResponse> {
     let columnName: string
-    let columnDirection: 'ASC' | 'DESC'
+    let columnDirection: "ASC" | "DESC"
 
-    if ((typeof(order) === 'undefined') || (order === "")) {
-      columnName = 'nome'
-      columnDirection = 'ASC'
+    if (typeof order === "undefined" || order === "") {
+      columnName = "nome"
+      columnDirection = "ASC"
     } else {
-      columnName = order.substring(0, 1) === '-' ? order.substring(1) : order
-      columnDirection = order.substring(0, 1) === '-' ? 'DESC' : 'ASC'
+      columnName = order.substring(0, 1) === "-" ? order.substring(1) : order
+      columnDirection = order.substring(0, 1) === "-" ? "DESC" : "ASC"
     }
 
-    const referenceArray = [
-      "estadoUf",
-      "nomeCidade",
-    ]
-    const columnOrder = new Array<'ASC' | 'DESC'>(2).fill('ASC')
+    const referenceArray = ["estadoUf", "nomeCidade"]
+    const columnOrder = new Array<"ASC" | "DESC">(2).fill("ASC")
 
     const index = referenceArray.indexOf(columnName)
 
@@ -69,27 +55,24 @@ class CidadeRepository implements ICidadeRepository {
     const offset = rowsPerPage * page
 
     try {
-      let query = this.repository.createQueryBuilder('cid')
-        .select([
-          'cid.id as "id"',
-          'a.id as "estadoId"',
-          'a.uf as "estadoUf"',
-          'cid.nomeCidade as "nomeCidade"',
-        ])
-        .leftJoin('cid.estadoId', 'a')
+      let query = this.repository
+        .createQueryBuilder("cid")
+        .select(['cid.id as "id"', 'a.id as "estadoId"', 'a.uf as "estadoUf"', 'cid.nomeCidade as "nomeCidade"'])
+        .leftJoin("cid.estadoId", "a")
 
       if (filter) {
-        query = query
-          .where(filter)
+        query = query.where(filter)
       }
 
       const cidades = await query
-        .andWhere(new Brackets(query => {
-          query.andWhere('CAST(a.uf AS VARCHAR) ilike :search', { search: `%${search}%` })
-          query.orWhere('CAST(cid.nomeCidade AS VARCHAR) ilike :search', { search: `%${search}%` })
-        }))
-        .addOrderBy('a.uf', columnOrder[0])
-        .addOrderBy('cid.nomeCidade', columnOrder[1])
+        .andWhere(
+          new Brackets((query) => {
+            query.andWhere("CAST(a.uf AS VARCHAR) ilike :search", { search: `%${search}%` })
+            query.orWhere("CAST(cid.nomeCidade AS VARCHAR) ilike :search", { search: `%${search}%` })
+          })
+        )
+        .addOrderBy("a.uf", columnOrder[0])
+        .addOrderBy("cid.nomeCidade", columnOrder[1])
         .offset(offset)
         .limit(rowsPerPage)
         .take(rowsPerPage)
@@ -101,18 +84,15 @@ class CidadeRepository implements ICidadeRepository {
     }
   }
 
-
   // select
-  async select (filter: string, estadoId): Promise<HttpResponse> {
+  async select(filter: string, estadoId): Promise<HttpResponse> {
     try {
-      const cidades = await this.repository.createQueryBuilder('cid')
-        .select([
-          'cid.id as "value"',
-          'cid.nomeCidade as "label"',
-        ])
-        .where('cid.estadoId = :estadoId', { estadoId: `${estadoId}`})
-        .andWhere('cid.nomeCidade ilike :filter', { filter: `${filter}%` })
-        .addOrderBy('cid.nomeCidade')
+      const cidades = await this.repository
+        .createQueryBuilder("cid")
+        .select(['cid.id as "value"', 'cid.nomeCidade as "label"'])
+        .where("cid.estadoId = :estadoId", { estadoId: `${estadoId}` })
+        .andWhere("cid.nomeCidade ilike :filter", { filter: `${filter}%` })
+        .addOrderBy("cid.nomeCidade")
         .getRawMany()
 
       return ok(cidades)
@@ -121,16 +101,13 @@ class CidadeRepository implements ICidadeRepository {
     }
   }
 
-
   // id select
-  async idSelect (id: string): Promise<HttpResponse> {
+  async idSelect(id: string): Promise<HttpResponse> {
     try {
-      const cidade = await this.repository.createQueryBuilder('cid')
-        .select([
-          'cid.id as "value"',
-          'cid.nomeCidade as "label"',
-        ])
-        .where('cid.id = :id', { id: `${id}` })
+      const cidade = await this.repository
+        .createQueryBuilder("cid")
+        .select(['cid.id as "value"', 'cid.nomeCidade as "label"'])
+        .where("cid.id = :id", { id: `${id}` })
         .getRawOne()
 
       return ok(cidade)
@@ -139,29 +116,22 @@ class CidadeRepository implements ICidadeRepository {
     }
   }
 
-
   // count
-  async count (
-    search: string,
-    filter: string
-  ): Promise<HttpResponse> {
+  async count(search: string, filter: string): Promise<HttpResponse> {
     try {
-      let query = this.repository.createQueryBuilder('cid')
-        .select([
-          'cid.id as "id"',
-        ])
-        .leftJoin('cid.estadoId', 'a')
+      let query = this.repository.createQueryBuilder("cid").select(['cid.id as "id"']).leftJoin("cid.estadoId", "a")
 
       if (filter) {
-        query = query
-          .where(filter)
+        query = query.where(filter)
       }
 
       const cidades = await query
-        .andWhere(new Brackets(query => {
-          query.andWhere('CAST(a.uf AS VARCHAR) ilike :search', { search: `%${search}%` })
-          query.orWhere('CAST(cid.nomeCidade AS VARCHAR) ilike :search', { search: `%${search}%` })
-        }))
+        .andWhere(
+          new Brackets((query) => {
+            query.andWhere("CAST(a.uf AS VARCHAR) ilike :search", { search: `%${search}%` })
+            query.orWhere("CAST(cid.nomeCidade AS VARCHAR) ilike :search", { search: `%${search}%` })
+          })
+        )
         .getRawMany()
 
       return ok({ count: cidades.length })
@@ -170,11 +140,11 @@ class CidadeRepository implements ICidadeRepository {
     }
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     try {
-      const cidade = await this.repository.createQueryBuilder('cid')
+      const cidade = await this.repository
+        .createQueryBuilder("cid")
         .select([
           'cid.id as "id"',
           'cid.estadoId as "estadoId"',
@@ -182,11 +152,11 @@ class CidadeRepository implements ICidadeRepository {
           'cid.codigoIbge as "codigoIbge"',
           'cid.nomeCidade as "nomeCidade"',
         ])
-        .leftJoin('cid.estadoId', 'a')
-        .where('cid.id = :id', { id })
+        .leftJoin("cid.estadoId", "a")
+        .where("cid.id = :id", { id })
         .getRawOne()
 
-      if (typeof cidade === 'undefined') {
+      if (typeof cidade === "undefined") {
         return noContent()
       }
 
@@ -196,14 +166,8 @@ class CidadeRepository implements ICidadeRepository {
     }
   }
 
-
   // update
-  async update ({
-    id,
-    estadoId,
-    codigoIbge,
-    nomeCidade
-  }: ICidadeDTO): Promise<HttpResponse> {
+  async update({ id, estadoId, codigoIbge, nomeCidade }: ICidadeDTO): Promise<HttpResponse> {
     const cidade = await this.repository.findOne(id)
 
     if (!cidade) {
@@ -214,7 +178,7 @@ class CidadeRepository implements ICidadeRepository {
       id,
       estadoId,
       codigoIbge,
-      nomeCidade
+      nomeCidade,
     })
 
     try {
@@ -226,34 +190,47 @@ class CidadeRepository implements ICidadeRepository {
     }
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     try {
       await this.repository.delete(id)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
 
       return serverError(err)
     }
   }
 
-
   // multi delete
-  async multiDelete (ids: string[]): Promise<HttpResponse> {
+  async multiDelete(ids: string[]): Promise<HttpResponse> {
     try {
       await this.repository.delete(ids)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
 
+      return serverError(err)
+    }
+  }
+
+  async nameSelect(name: string): Promise<HttpResponse> {
+    try {
+      let query = this.repository
+        .createQueryBuilder("cid")
+        .select(['cid.id as "cidadeId"', 'est.id as "estadoId"'])
+        .innerJoin("estados", "est", "cid.estadoId = est.id")
+        .where("cid.nomeCidade = :name", { name })
+
+      const cidades = await query.getRawOne()
+      return ok(cidades)
+    } catch (err) {
       return serverError(err)
     }
   }
