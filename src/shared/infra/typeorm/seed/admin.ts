@@ -115,13 +115,13 @@ async function create() {
 			('c287d4db-8546-44fe-acfb-bdec5e279367', '3bfc11ef-8ee3-44a6-87c1-589089adbc98', '003005', 'Meio de Pagamento', '/meios-pagamento', 'List', 'cadastros-meios-pagamento', 'now()', 'now()'),
 			('e4cb2675-9a6f-4241-84a6-0e5896f6df2d', '3bfc11ef-8ee3-44a6-87c1-589089adbc98', '003006', 'Status de Pagamento', '/status-pagamento', 'List', 'cadastros-status-pagamento', 'now()', 'now()'),
 			('3719edab-1310-4406-ab8a-b0ae1c81e662', '3bfc11ef-8ee3-44a6-87c1-589089adbc98', '003007', 'Bonificacões', '/bonificacoes', 'List', 'cadastros-bonificacoes', 'now()', 'now()'),
-			('ad07130b-63eb-4563-80ff-6ddcf98883e7', '8e9568d3-dc76-44a9-8ca2-04c8ad85a527', '004', 'Pedidos', '', 'fa-solid fa-pencil', 'pedido', 'now()', 'now()'),
+			('ad07130b-63eb-4563-80ff-6ddcf98883e7', '8e9568d3-dc76-44a9-8ca2-04c8ad85a527', '004', 'Pedidos', '', 'fa-solid fa-clipboard', 'pedido', 'now()', 'now()'),
 			('2a7a3210-1abf-4716-bf02-8249421dae5f', '8e9568d3-dc76-44a9-8ca2-04c8ad85a527', '004001', 'Pedidos', '/pedidos', 'sell', 'pedido-pedidos', 'now()', 'now()'),
 			('5195e975-109f-49cf-b671-73dfb5de6d0c', '8e9568d3-dc76-44a9-8ca2-04c8ad85a527', '004002', 'PedidoItens', '/pedido-itens', 'sell', 'pedido-pedido-itens', 'now()', 'now()'),
 			('e205a1bc-bf90-40c3-97a1-5117be01dd10', '483256d7-5011-4fb7-a0c6-27b1909bb154', '005', 'Relatorios', '', 'fa-solid fa-file', 'relatorios', 'now()', 'now()'),
 			('e037ea49-5769-46f1-9483-671105cb01fe', '483256d7-5011-4fb7-a0c6-27b1909bb154', '005001', 'Relatórios Cliente', '/relatorios-clientes', 'List', 'relatorios-relatorios-clientes', 'now()', 'now()'),
 			('3d06e43e-ce88-4fe8-8e8e-83c8398bbb20', '483256d7-5011-4fb7-a0c6-27b1909bb154', '005002', 'Relatórios Funcionarios', '/relatorios-funcionarios', 'List', 'relatorios-relatorios-funcionarios', 'now()', 'now()'),
-			('bc22a6aa-1a3a-4c67-8ae5-c2f13d0da978', 'a44a8034-e2ef-4b20-a226-ca981365baed', '006', 'Clientes', '', 'fa-solid fa-file', 'clientes', 'now()', 'now()'),
+			('bc22a6aa-1a3a-4c67-8ae5-c2f13d0da978', 'a44a8034-e2ef-4b20-a226-ca981365baed', '006', 'Clientes', '', 'fa-solid fa-user', 'clientes', 'now()', 'now()'),
 			('7e10b4b1-c3a4-4aad-83b4-47c64671aeaa', 'a44a8034-e2ef-4b20-a226-ca981365baed', '006001', 'Balanços Clientes', '/balancos', 'List', 'clientes-balancos', 'now()', 'now()'),
 			('62b653ce-e08c-45da-a1e1-d8287e6377c5', 'a44a8034-e2ef-4b20-a226-ca981365baed', '006002', 'Pagamentos Clientes', '/pagamentos', 'List', 'clientes-pagamentos', 'now()', 'now()')`
   )

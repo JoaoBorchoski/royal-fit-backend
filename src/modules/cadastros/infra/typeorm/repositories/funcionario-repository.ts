@@ -1,4 +1,4 @@
-import { Brackets, getRepository, Repository } from "typeorm"
+import { Brackets, EntityManager, getRepository, Repository, TransactionManager } from "typeorm"
 import { IFuncionarioDTO } from "@modules/cadastros/dtos/i-funcionario-dto"
 import { IFuncionarioRepository } from "@modules/cadastros/repositories/i-funcionario-repository"
 import { Funcionario } from "@modules/cadastros/infra/typeorm/entities/funcionario"
@@ -47,6 +47,53 @@ class FuncionarioRepository implements IFuncionarioRepository {
     })
 
     const result = await this.repository
+      .save(funcionario)
+      .then((funcionarioResult) => {
+        return ok(funcionarioResult)
+      })
+      .catch((error) => {
+        return serverError(error)
+      })
+
+    return result
+  }
+  async createWithQueryRunner(
+    {
+      nome,
+      cpf,
+      email,
+      cargo,
+      cep,
+      estadoId,
+      cidadeId,
+      bairro,
+      endereco,
+      numero,
+      complemento,
+      telefone,
+      usuarioId,
+      desabilitado,
+    }: IFuncionarioDTO,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    const funcionario = transactionManager.create(Funcionario, {
+      nome,
+      cpf,
+      email,
+      cargo,
+      cep,
+      estadoId,
+      cidadeId,
+      bairro,
+      endereco,
+      numero,
+      complemento,
+      telefone,
+      usuarioId,
+      desabilitado,
+    })
+
+    const result = await transactionManager
       .save(funcionario)
       .then((funcionarioResult) => {
         return ok(funcionarioResult)

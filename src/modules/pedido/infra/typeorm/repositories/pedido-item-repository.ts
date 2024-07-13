@@ -1,9 +1,9 @@
-import { Brackets, getRepository, Repository } from 'typeorm'
-import { IPedidoItemDTO } from '@modules/pedido/dtos/i-pedido-item-dto'
-import { IPedidoItemRepository } from '@modules/pedido/repositories/i-pedido-item-repository'
-import { PedidoItem } from '@modules/pedido/infra/typeorm/entities/pedido-item'
-import { noContent, serverError, ok, notFound, HttpResponse } from '@shared/helpers'
-import { AppError } from '@shared/errors/app-error'
+import { Brackets, getRepository, Repository } from "typeorm"
+import { IPedidoItemDTO } from "@modules/pedido/dtos/i-pedido-item-dto"
+import { IPedidoItemRepository } from "@modules/pedido/repositories/i-pedido-item-repository"
+import { PedidoItem } from "@modules/pedido/infra/typeorm/entities/pedido-item"
+import { noContent, serverError, ok, notFound, HttpResponse } from "@shared/helpers"
+import { AppError } from "@shared/errors/app-error"
 
 class PedidoItemRepository implements IPedidoItemRepository {
   private repository: Repository<PedidoItem>
@@ -12,55 +12,42 @@ class PedidoItemRepository implements IPedidoItemRepository {
     this.repository = getRepository(PedidoItem)
   }
 
-
   // create
-  async create ({
-    produtoId,
-    pedidoId,
-    quantidade,
-    desabilitado
-  }: IPedidoItemDTO): Promise<HttpResponse> {
+  async create({ produtoId, pedidoId, quantidade, desabilitado }: IPedidoItemDTO): Promise<HttpResponse> {
     const pedidoItem = this.repository.create({
       produtoId,
       pedidoId,
       quantidade,
-      desabilitado
+      desabilitado,
     })
 
-    const result = await this.repository.save(pedidoItem)
-      .then(pedidoItemResult => {
+    const result = await this.repository
+      .save(pedidoItem)
+      .then((pedidoItemResult) => {
         return ok(pedidoItemResult)
       })
-      .catch(error => {
+      .catch((error) => {
         return serverError(error)
       })
 
     return result
   }
 
-
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string,
-    filter: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string, filter: string): Promise<HttpResponse> {
     let columnName: string
-    let columnDirection: 'ASC' | 'DESC'
+    let columnDirection: "ASC" | "DESC"
 
-    if ((typeof(order) === 'undefined') || (order === "")) {
-      columnName = 'nome'
-      columnDirection = 'ASC'
+    if (typeof order === "undefined" || order === "") {
+      columnName = "nome"
+      columnDirection = "ASC"
     } else {
-      columnName = order.substring(0, 1) === '-' ? order.substring(1) : order
-      columnDirection = order.substring(0, 1) === '-' ? 'DESC' : 'ASC'
+      columnName = order.substring(0, 1) === "-" ? order.substring(1) : order
+      columnDirection = order.substring(0, 1) === "-" ? "DESC" : "ASC"
     }
 
-    const referenceArray = [
-    ]
-    const columnOrder = new Array<'ASC' | 'DESC'>(2).fill('ASC')
+    const referenceArray = []
+    const columnOrder = new Array<"ASC" | "DESC">(2).fill("ASC")
 
     const index = referenceArray.indexOf(columnName)
 
@@ -69,20 +56,18 @@ class PedidoItemRepository implements IPedidoItemRepository {
     const offset = rowsPerPage * page
 
     try {
-      let query = this.repository.createQueryBuilder('ped')
-        .select([
-          'ped.id as "id"',
-        ])
+      let query = this.repository.createQueryBuilder("ped").select(['ped.id as "id"'])
 
       if (filter) {
-        query = query
-          .where(filter)
+        query = query.where(filter)
       }
 
       const pedidoItens = await query
-        .andWhere(new Brackets(query => {
-          query.andWhere('CAST(ped. AS VARCHAR) ilike :search', { search: `%${search}%` })
-        }))
+        .andWhere(
+          new Brackets((query) => {
+            query.andWhere("CAST(ped. AS VARCHAR) ilike :search", { search: `%${search}%` })
+          })
+        )
         .offset(offset)
         .limit(rowsPerPage)
         .take(rowsPerPage)
@@ -94,17 +79,14 @@ class PedidoItemRepository implements IPedidoItemRepository {
     }
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     try {
-      const pedidoItens = await this.repository.createQueryBuilder('ped')
-        .select([
-          'ped. as "value"',
-          'ped. as "label"',
-        ])
-        .where('ped. ilike :filter', { filter: `${filter}%` })
-        .addOrderBy('ped.')
+      const pedidoItens = await this.repository
+        .createQueryBuilder("ped")
+        .select(['ped. as "value"', 'ped. as "label"'])
+        .where("ped. ilike :filter", { filter: `${filter}%` })
+        .addOrderBy("ped.")
         .getRawMany()
 
       return ok(pedidoItens)
@@ -113,16 +95,13 @@ class PedidoItemRepository implements IPedidoItemRepository {
     }
   }
 
-
   // id select
-  async idSelect (id: string): Promise<HttpResponse> {
+  async idSelect(id: string): Promise<HttpResponse> {
     try {
-      const pedidoItem = await this.repository.createQueryBuilder('ped')
-        .select([
-          'ped. as "value"',
-          'ped. as "label"',
-        ])
-        .where('ped. = :id', { id: `${id}` })
+      const pedidoItem = await this.repository
+        .createQueryBuilder("ped")
+        .select(['ped. as "value"', 'ped. as "label"'])
+        .where("ped. = :id", { id: `${id}` })
         .getRawOne()
 
       return ok(pedidoItem)
@@ -131,27 +110,21 @@ class PedidoItemRepository implements IPedidoItemRepository {
     }
   }
 
-
   // count
-  async count (
-    search: string,
-    filter: string
-  ): Promise<HttpResponse> {
+  async count(search: string, filter: string): Promise<HttpResponse> {
     try {
-      let query = this.repository.createQueryBuilder('ped')
-        .select([
-          'ped.id as "id"',
-        ])
+      let query = this.repository.createQueryBuilder("ped").select(['ped.id as "id"'])
 
       if (filter) {
-        query = query
-          .where(filter)
+        query = query.where(filter)
       }
 
       const pedidoItens = await query
-        .andWhere(new Brackets(query => {
-          query.andWhere('CAST(ped. AS VARCHAR) ilike :search', { search: `%${search}%` })
-        }))
+        .andWhere(
+          new Brackets((query) => {
+            query.andWhere("CAST(ped. AS VARCHAR) ilike :search", { search: `%${search}%` })
+          })
+        )
         .getRawMany()
 
       return ok({ count: pedidoItens.length })
@@ -160,11 +133,11 @@ class PedidoItemRepository implements IPedidoItemRepository {
     }
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     try {
-      const pedidoItem = await this.repository.createQueryBuilder('ped')
+      const pedidoItem = await this.repository
+        .createQueryBuilder("ped")
         .select([
           'ped.id as "id"',
           'ped.produtoId as "produtoId"',
@@ -174,12 +147,12 @@ class PedidoItemRepository implements IPedidoItemRepository {
           'ped.quantidade as "quantidade"',
           'ped.desabilitado as "desabilitado"',
         ])
-        .leftJoin('ped.produtoId', 'a')
-        .leftJoin('ped.pedidoId', 'b')
-        .where('ped.id = :id', { id })
+        .leftJoin("ped.produtoId", "a")
+        .leftJoin("ped.pedidoId", "b")
+        .where("ped.id = :id", { id })
         .getRawOne()
 
-      if (typeof pedidoItem === 'undefined') {
+      if (typeof pedidoItem === "undefined") {
         return noContent()
       }
 
@@ -189,15 +162,8 @@ class PedidoItemRepository implements IPedidoItemRepository {
     }
   }
 
-
   // update
-  async update ({
-    id,
-    produtoId,
-    pedidoId,
-    quantidade,
-    desabilitado
-  }: IPedidoItemDTO): Promise<HttpResponse> {
+  async update({ id, produtoId, pedidoId, quantidade, desabilitado }: IPedidoItemDTO): Promise<HttpResponse> {
     const pedidoItem = await this.repository.findOne(id)
 
     if (!pedidoItem) {
@@ -209,7 +175,7 @@ class PedidoItemRepository implements IPedidoItemRepository {
       produtoId,
       pedidoId,
       quantidade,
-      desabilitado
+      desabilitado,
     })
 
     try {
@@ -221,32 +187,44 @@ class PedidoItemRepository implements IPedidoItemRepository {
     }
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     try {
       await this.repository.delete(id)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
 
       return serverError(err)
     }
   }
 
+  async deleteByPedidoId(pedidoId: string): Promise<HttpResponse> {
+    try {
+      await this.repository.delete({ pedidoId })
+
+      return noContent()
+    } catch (err) {
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
+      }
+
+      return serverError(err)
+    }
+  }
 
   // multi delete
-  async multiDelete (ids: string[]): Promise<HttpResponse> {
+  async multiDelete(ids: string[]): Promise<HttpResponse> {
     try {
       await this.repository.delete(ids)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
 
       return serverError(err)

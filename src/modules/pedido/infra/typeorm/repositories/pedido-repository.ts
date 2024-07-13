@@ -1,9 +1,10 @@
-import { Brackets, getRepository, Repository } from 'typeorm'
-import { IPedidoDTO } from '@modules/pedido/dtos/i-pedido-dto'
-import { IPedidoRepository } from '@modules/pedido/repositories/i-pedido-repository'
-import { Pedido } from '@modules/pedido/infra/typeorm/entities/pedido'
-import { noContent, serverError, ok, notFound, HttpResponse } from '@shared/helpers'
-import { AppError } from '@shared/errors/app-error'
+import { Brackets, getRepository, Repository } from "typeorm"
+import { IPedidoDTO } from "@modules/pedido/dtos/i-pedido-dto"
+import { IPedidoRepository } from "@modules/pedido/repositories/i-pedido-repository"
+import { Pedido } from "@modules/pedido/infra/typeorm/entities/pedido"
+import { noContent, serverError, ok, notFound, HttpResponse } from "@shared/helpers"
+import { AppError } from "@shared/errors/app-error"
+import { PedidoItem } from "../entities/pedido-item"
 
 class PedidoRepository implements IPedidoRepository {
   private repository: Repository<Pedido>
@@ -12,9 +13,8 @@ class PedidoRepository implements IPedidoRepository {
     this.repository = getRepository(Pedido)
   }
 
-
   // create
-  async create ({
+  async create({
     sequencial,
     clienteId,
     data,
@@ -25,7 +25,7 @@ class PedidoRepository implements IPedidoRepository {
     meioPagamentoId,
     statusPagamentoId,
     isPagamentoPosterior,
-    desabilitado
+    desabilitado,
   }: IPedidoDTO): Promise<HttpResponse> {
     const pedido = this.repository.create({
       sequencial,
@@ -38,47 +38,36 @@ class PedidoRepository implements IPedidoRepository {
       meioPagamentoId,
       statusPagamentoId,
       isPagamentoPosterior,
-      desabilitado
+      desabilitado,
     })
 
-    const result = await this.repository.save(pedido)
-      .then(pedidoResult => {
+    const result = await this.repository
+      .save(pedido)
+      .then((pedidoResult) => {
         return ok(pedidoResult)
       })
-      .catch(error => {
+      .catch((error) => {
         return serverError(error)
       })
 
     return result
   }
 
-
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string,
-    filter: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string, filter: string): Promise<HttpResponse> {
     let columnName: string
-    let columnDirection: 'ASC' | 'DESC'
+    let columnDirection: "ASC" | "DESC"
 
-    if ((typeof(order) === 'undefined') || (order === "")) {
-      columnName = 'nome'
-      columnDirection = 'ASC'
+    if (typeof order === "undefined" || order === "") {
+      columnName = "nome"
+      columnDirection = "ASC"
     } else {
-      columnName = order.substring(0, 1) === '-' ? order.substring(1) : order
-      columnDirection = order.substring(0, 1) === '-' ? 'DESC' : 'ASC'
+      columnName = order.substring(0, 1) === "-" ? order.substring(1) : order
+      columnDirection = order.substring(0, 1) === "-" ? "DESC" : "ASC"
     }
 
-    const referenceArray = [
-      "sequencial",
-      "clienteNome",
-      "data",
-      "valorTotal",
-    ]
-    const columnOrder = new Array<'ASC' | 'DESC'>(2).fill('ASC')
+    const referenceArray = ["sequencial", "clienteNome", "data", "valorTotal"]
+    const columnOrder = new Array<"ASC" | "DESC">(2).fill("ASC")
 
     const index = referenceArray.indexOf(columnName)
 
@@ -87,30 +76,32 @@ class PedidoRepository implements IPedidoRepository {
     const offset = rowsPerPage * page
 
     try {
-      let query = this.repository.createQueryBuilder('ped')
+      let query = this.repository
+        .createQueryBuilder("ped")
         .select([
           'ped.id as "id"',
           'ped.sequencial as "sequencial"',
           'a.id as "clienteId"',
           'a.nome as "clienteNome"',
           'ped.data as "data"',
-          'ped.valorTotal as "valorTotal"',
+          'ped.valorTotal :: float as "valorTotal"',
         ])
-        .leftJoin('ped.clienteId', 'a')
+        .leftJoin("ped.clienteId", "a")
 
       if (filter) {
-        query = query
-          .where(filter)
+        query = query.where(filter)
       }
 
       const pedidos = await query
-        .andWhere(new Brackets(query => {
-          query.andWhere('CAST(ped.sequencial AS VARCHAR) ilike :search', { search: `%${search}%` })
-        }))
-        .addOrderBy('ped.sequencial', columnOrder[0])
-        .addOrderBy('a.nome', columnOrder[1])
-        .addOrderBy('ped.data', columnOrder[2])
-        .addOrderBy('ped.valorTotal', columnOrder[3])
+        .andWhere(
+          new Brackets((query) => {
+            query.andWhere("CAST(ped.sequencial AS VARCHAR) ilike :search", { search: `%${search}%` })
+          })
+        )
+        .addOrderBy("ped.sequencial", columnOrder[0])
+        .addOrderBy("a.nome", columnOrder[1])
+        .addOrderBy("ped.data", columnOrder[2])
+        .addOrderBy("ped.valorTotal", columnOrder[3])
         .offset(offset)
         .limit(rowsPerPage)
         .take(rowsPerPage)
@@ -122,17 +113,14 @@ class PedidoRepository implements IPedidoRepository {
     }
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     try {
-      const pedidos = await this.repository.createQueryBuilder('ped')
-        .select([
-          'ped.id as "value"',
-          'ped.nome as "label"',
-        ])
-        .where('ped.nome ilike :filter', { filter: `${filter}%` })
-        .addOrderBy('ped.nome')
+      const pedidos = await this.repository
+        .createQueryBuilder("ped")
+        .select(['ped.id as "value"', 'ped.nome as "label"'])
+        .where("ped.nome ilike :filter", { filter: `${filter}%` })
+        .addOrderBy("ped.nome")
         .getRawMany()
 
       return ok(pedidos)
@@ -141,16 +129,13 @@ class PedidoRepository implements IPedidoRepository {
     }
   }
 
-
   // id select
-  async idSelect (id: string): Promise<HttpResponse> {
+  async idSelect(id: string): Promise<HttpResponse> {
     try {
-      const pedido = await this.repository.createQueryBuilder('ped')
-        .select([
-          'ped.id as "value"',
-          'ped.nome as "label"',
-        ])
-        .where('ped.id = :id', { id: `${id}` })
+      const pedido = await this.repository
+        .createQueryBuilder("ped")
+        .select(['ped.id as "value"', 'ped.nome as "label"'])
+        .where("ped.id = :id", { id: `${id}` })
         .getRawOne()
 
       return ok(pedido)
@@ -159,28 +144,21 @@ class PedidoRepository implements IPedidoRepository {
     }
   }
 
-
   // count
-  async count (
-    search: string,
-    filter: string
-  ): Promise<HttpResponse> {
+  async count(search: string, filter: string): Promise<HttpResponse> {
     try {
-      let query = this.repository.createQueryBuilder('ped')
-        .select([
-          'ped.id as "id"',
-        ])
-        .leftJoin('ped.clienteId', 'a')
+      let query = this.repository.createQueryBuilder("ped").select(['ped.id as "id"']).leftJoin("ped.clienteId", "a")
 
       if (filter) {
-        query = query
-          .where(filter)
+        query = query.where(filter)
       }
 
       const pedidos = await query
-        .andWhere(new Brackets(query => {
-          query.andWhere('CAST(ped.sequencial AS VARCHAR) ilike :search', { search: `%${search}%` })
-        }))
+        .andWhere(
+          new Brackets((query) => {
+            query.andWhere("CAST(ped.sequencial AS VARCHAR) ilike :search", { search: `%${search}%` })
+          })
+        )
         .getRawMany()
 
       return ok({ count: pedidos.length })
@@ -189,38 +167,54 @@ class PedidoRepository implements IPedidoRepository {
     }
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     try {
-      const pedido = await this.repository.createQueryBuilder('ped')
+      const pedido = await this.repository
+        .createQueryBuilder("ped")
         .select([
           'ped.id as "id"',
           'ped.sequencial as "sequencial"',
           'ped.clienteId as "clienteId"',
-          'a.nome as "clienteNome"',
           'ped.data as "data"',
           'ped.hora as "hora"',
-          'ped.valorTotal as "valorTotal"',
+          'ped.valorTotal :: float as "valorTotal"',
           'ped.desconto as "desconto"',
           'ped.funcionarioId as "funcionarioId"',
-          'b.nome as "funcionarioNome"',
           'ped.meioPagamentoId as "meioPagamentoId"',
-          'c.nome as "statusPagamentoNome"',
           'ped.statusPagamentoId as "statusPagamentoId"',
-          'd.nome as "funcionarioNomeStatusPagamento"',
           'ped.isPagamentoPosterior as "isPagamentoPosterior"',
           'ped.desabilitado as "desabilitado"',
         ])
-        .leftJoin('ped.clienteId', 'a')
-        .leftJoin('ped.funcionarioId', 'b')
-        .leftJoin('ped.meioPagamentoId', 'c')
-        .leftJoin('ped.statusPagamentoId', 'd')
-        .where('ped.id = :id', { id })
+        .leftJoin("ped.clienteId", "a")
+        .leftJoin("ped.funcionarioId", "b")
+        .leftJoin("ped.meioPagamentoId", "c")
+        .leftJoin("ped.statusPagamentoId", "d")
+        .where("ped.id = :id", { id })
         .getRawOne()
 
-      if (typeof pedido === 'undefined') {
+      if (typeof pedido === "undefined") {
         return noContent()
+      }
+
+      const pedidoItens = await getRepository(PedidoItem)
+        .createQueryBuilder("pedItem")
+        .select([
+          'pedItem.id as "id"',
+          'pedItem.produtoId as "produtoId"',
+          'prod.nome as "produtoNome"',
+          'prod.preco as "preco"',
+          'pedItem.quantidade as "quantidade"',
+          // 'pedItem.valorTotal as "valor"',
+          'CAST(pedItem.quantidade * prod.preco AS float) as "valor"',
+        ])
+        .leftJoin("pedItem.pedidoId", "ped")
+        .leftJoin("pedItem.produtoId", "prod")
+        .where("pedItem.pedidoId = :id", { id })
+        .getRawMany()
+
+      if (pedidoItens.length > 0) {
+        pedido["pedidoItemForm"] = [...pedidoItens]
       }
 
       return ok(pedido)
@@ -229,9 +223,8 @@ class PedidoRepository implements IPedidoRepository {
     }
   }
 
-
   // update
-  async update ({
+  async update({
     id,
     sequencial,
     clienteId,
@@ -243,7 +236,7 @@ class PedidoRepository implements IPedidoRepository {
     meioPagamentoId,
     statusPagamentoId,
     isPagamentoPosterior,
-    desabilitado
+    desabilitado,
   }: IPedidoDTO): Promise<HttpResponse> {
     const pedido = await this.repository.findOne(id)
 
@@ -263,7 +256,7 @@ class PedidoRepository implements IPedidoRepository {
       meioPagamentoId,
       statusPagamentoId,
       isPagamentoPosterior,
-      desabilitado
+      desabilitado,
     })
 
     try {
@@ -275,32 +268,30 @@ class PedidoRepository implements IPedidoRepository {
     }
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     try {
       await this.repository.delete(id)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
 
       return serverError(err)
     }
   }
 
-
   // multi delete
-  async multiDelete (ids: string[]): Promise<HttpResponse> {
+  async multiDelete(ids: string[]): Promise<HttpResponse> {
     try {
       await this.repository.delete(ids)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
 
       return serverError(err)

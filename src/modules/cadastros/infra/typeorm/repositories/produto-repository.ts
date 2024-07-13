@@ -1,9 +1,9 @@
-import { Brackets, getRepository, Repository } from 'typeorm'
-import { IProdutoDTO } from '@modules/cadastros/dtos/i-produto-dto'
-import { IProdutoRepository } from '@modules/cadastros/repositories/i-produto-repository'
-import { Produto } from '@modules/cadastros/infra/typeorm/entities/produto'
-import { noContent, serverError, ok, notFound, HttpResponse } from '@shared/helpers'
-import { AppError } from '@shared/errors/app-error'
+import { Brackets, EntityManager, getRepository, Repository, TransactionManager } from "typeorm"
+import { IProdutoDTO } from "@modules/cadastros/dtos/i-produto-dto"
+import { IProdutoRepository } from "@modules/cadastros/repositories/i-produto-repository"
+import { Produto } from "@modules/cadastros/infra/typeorm/entities/produto"
+import { noContent, serverError, ok, notFound, HttpResponse } from "@shared/helpers"
+import { AppError } from "@shared/errors/app-error"
 
 class ProdutoRepository implements IProdutoRepository {
   private repository: Repository<Produto>
@@ -12,58 +12,65 @@ class ProdutoRepository implements IProdutoRepository {
     this.repository = getRepository(Produto)
   }
 
-
   // create
-  async create ({
-    nome,
-    preco,
-    descricao,
-    desabilitado
-  }: IProdutoDTO): Promise<HttpResponse> {
+  async create({ nome, preco, descricao, desabilitado }: IProdutoDTO): Promise<HttpResponse> {
     const produto = this.repository.create({
       nome,
       preco,
       descricao,
-      desabilitado
+      desabilitado,
     })
 
-    const result = await this.repository.save(produto)
-      .then(produtoResult => {
+    const result = await this.repository
+      .save(produto)
+      .then((produtoResult) => {
         return ok(produtoResult)
       })
-      .catch(error => {
+      .catch((error) => {
         return serverError(error)
       })
 
     return result
   }
 
+  async createWithQueryRunner(
+    { nome, preco, descricao, desabilitado }: IProdutoDTO,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    const produto = transactionManager.create(Produto, {
+      nome,
+      preco,
+      descricao,
+      desabilitado,
+    })
+
+    const result = await transactionManager
+      .save(produto)
+      .then((produtoResult) => {
+        return ok(produtoResult)
+      })
+      .catch((error) => {
+        return serverError(error)
+      })
+
+    return result
+  }
 
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string,
-    filter: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string, filter: string): Promise<HttpResponse> {
     let columnName: string
-    let columnDirection: 'ASC' | 'DESC'
+    let columnDirection: "ASC" | "DESC"
 
-    if ((typeof(order) === 'undefined') || (order === "")) {
-      columnName = 'nome'
-      columnDirection = 'ASC'
+    if (typeof order === "undefined" || order === "") {
+      columnName = "nome"
+      columnDirection = "ASC"
     } else {
-      columnName = order.substring(0, 1) === '-' ? order.substring(1) : order
-      columnDirection = order.substring(0, 1) === '-' ? 'DESC' : 'ASC'
+      columnName = order.substring(0, 1) === "-" ? order.substring(1) : order
+      columnDirection = order.substring(0, 1) === "-" ? "DESC" : "ASC"
     }
 
-    const referenceArray = [
-      "nome",
-      "preco",
-      "descricao",
-    ]
-    const columnOrder = new Array<'ASC' | 'DESC'>(2).fill('ASC')
+    const referenceArray = ["nome", "preco", "descricao"]
+    const columnOrder = new Array<"ASC" | "DESC">(2).fill("ASC")
 
     const index = referenceArray.indexOf(columnName)
 
@@ -72,27 +79,24 @@ class ProdutoRepository implements IProdutoRepository {
     const offset = rowsPerPage * page
 
     try {
-      let query = this.repository.createQueryBuilder('pro')
-        .select([
-          'pro.id as "id"',
-          'pro.nome as "nome"',
-          'pro.preco as "preco"',
-          'pro.descricao as "descricao"',
-        ])
+      let query = this.repository
+        .createQueryBuilder("pro")
+        .select(['pro.id as "id"', 'pro.nome as "nome"', 'pro.preco as "preco"', 'pro.descricao as "descricao"'])
 
       if (filter) {
-        query = query
-          .where(filter)
+        query = query.where(filter)
       }
 
       const produtos = await query
-        .andWhere(new Brackets(query => {
-          query.andWhere('CAST(pro.nome AS VARCHAR) ilike :search', { search: `%${search}%` })
-          query.orWhere('CAST(pro.descricao AS VARCHAR) ilike :search', { search: `%${search}%` })
-        }))
-        .addOrderBy('pro.nome', columnOrder[0])
-        .addOrderBy('pro.preco', columnOrder[1])
-        .addOrderBy('pro.descricao', columnOrder[2])
+        .andWhere(
+          new Brackets((query) => {
+            query.andWhere("CAST(pro.nome AS VARCHAR) ilike :search", { search: `%${search}%` })
+            query.orWhere("CAST(pro.descricao AS VARCHAR) ilike :search", { search: `%${search}%` })
+          })
+        )
+        .addOrderBy("pro.nome", columnOrder[0])
+        .addOrderBy("pro.preco", columnOrder[1])
+        .addOrderBy("pro.descricao", columnOrder[2])
         .offset(offset)
         .limit(rowsPerPage)
         .take(rowsPerPage)
@@ -104,17 +108,14 @@ class ProdutoRepository implements IProdutoRepository {
     }
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     try {
-      const produtos = await this.repository.createQueryBuilder('pro')
-        .select([
-          'pro.id as "value"',
-          'pro.nome as "label"',
-        ])
-        .where('pro.nome ilike :filter', { filter: `${filter}%` })
-        .addOrderBy('pro.nome')
+      const produtos = await this.repository
+        .createQueryBuilder("pro")
+        .select(['pro.id as "value"', 'pro.nome as "label"'])
+        .where("pro.nome ilike :filter", { filter: `${filter}%` })
+        .addOrderBy("pro.nome")
         .getRawMany()
 
       return ok(produtos)
@@ -123,16 +124,13 @@ class ProdutoRepository implements IProdutoRepository {
     }
   }
 
-
   // id select
-  async idSelect (id: string): Promise<HttpResponse> {
+  async idSelect(id: string): Promise<HttpResponse> {
     try {
-      const produto = await this.repository.createQueryBuilder('pro')
-        .select([
-          'pro.id as "value"',
-          'pro.nome as "label"',
-        ])
-        .where('pro.id = :id', { id: `${id}` })
+      const produto = await this.repository
+        .createQueryBuilder("pro")
+        .select(['pro.id as "value"', 'pro.nome as "label"'])
+        .where("pro.id = :id", { id: `${id}` })
         .getRawOne()
 
       return ok(produto)
@@ -141,28 +139,22 @@ class ProdutoRepository implements IProdutoRepository {
     }
   }
 
-
   // count
-  async count (
-    search: string,
-    filter: string
-  ): Promise<HttpResponse> {
+  async count(search: string, filter: string): Promise<HttpResponse> {
     try {
-      let query = this.repository.createQueryBuilder('pro')
-        .select([
-          'pro.id as "id"',
-        ])
+      let query = this.repository.createQueryBuilder("pro").select(['pro.id as "id"'])
 
       if (filter) {
-        query = query
-          .where(filter)
+        query = query.where(filter)
       }
 
       const produtos = await query
-        .andWhere(new Brackets(query => {
-          query.andWhere('CAST(pro.nome AS VARCHAR) ilike :search', { search: `%${search}%` })
-          query.orWhere('CAST(pro.descricao AS VARCHAR) ilike :search', { search: `%${search}%` })
-        }))
+        .andWhere(
+          new Brackets((query) => {
+            query.andWhere("CAST(pro.nome AS VARCHAR) ilike :search", { search: `%${search}%` })
+            query.orWhere("CAST(pro.descricao AS VARCHAR) ilike :search", { search: `%${search}%` })
+          })
+        )
         .getRawMany()
 
       return ok({ count: produtos.length })
@@ -171,11 +163,11 @@ class ProdutoRepository implements IProdutoRepository {
     }
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     try {
-      const produto = await this.repository.createQueryBuilder('pro')
+      const produto = await this.repository
+        .createQueryBuilder("pro")
         .select([
           'pro.id as "id"',
           'pro.nome as "nome"',
@@ -183,10 +175,10 @@ class ProdutoRepository implements IProdutoRepository {
           'pro.descricao as "descricao"',
           'pro.desabilitado as "desabilitado"',
         ])
-        .where('pro.id = :id', { id })
+        .where("pro.id = :id", { id })
         .getRawOne()
 
-      if (typeof produto === 'undefined') {
+      if (typeof produto === "undefined") {
         return noContent()
       }
 
@@ -196,15 +188,8 @@ class ProdutoRepository implements IProdutoRepository {
     }
   }
 
-
   // update
-  async update ({
-    id,
-    nome,
-    preco,
-    descricao,
-    desabilitado
-  }: IProdutoDTO): Promise<HttpResponse> {
+  async update({ id, nome, preco, descricao, desabilitado }: IProdutoDTO): Promise<HttpResponse> {
     const produto = await this.repository.findOne(id)
 
     if (!produto) {
@@ -216,7 +201,7 @@ class ProdutoRepository implements IProdutoRepository {
       nome,
       preco,
       descricao,
-      desabilitado
+      desabilitado,
     })
 
     try {
@@ -228,32 +213,30 @@ class ProdutoRepository implements IProdutoRepository {
     }
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     try {
       await this.repository.delete(id)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
 
       return serverError(err)
     }
   }
 
-
   // multi delete
-  async multiDelete (ids: string[]): Promise<HttpResponse> {
+  async multiDelete(ids: string[]): Promise<HttpResponse> {
     try {
       await this.repository.delete(ids)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
 
       return serverError(err)

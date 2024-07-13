@@ -1,7 +1,7 @@
-import { Request, Response } from 'express'
-import { container } from 'tsyringe'
-import { CreatePedidoUseCase } from './create-pedido-use-case'
-import { HttpResponse } from '@shared/helpers'
+import { Request, Response } from "express"
+import { container } from "tsyringe"
+import { CreatePedidoUseCase } from "./create-pedido-use-case"
+import { HttpResponse } from "@shared/helpers"
 
 class CreatePedidoController {
   async handle(request: Request, response: Response): Promise<Response> {
@@ -16,12 +16,14 @@ class CreatePedidoController {
       meioPagamentoId,
       statusPagamentoId,
       isPagamentoPosterior,
-      desabilitado
+      desabilitado,
+      pedidoItemForm,
     } = request.body
 
     const createPedidoUseCase = container.resolve(CreatePedidoUseCase)
 
-    const result = await createPedidoUseCase.execute({
+    const result = await createPedidoUseCase
+      .execute({
         sequencial,
         clienteId,
         data,
@@ -32,12 +34,13 @@ class CreatePedidoController {
         meioPagamentoId,
         statusPagamentoId,
         isPagamentoPosterior,
-        desabilitado
+        desabilitado,
+        pedidoItemForm,
       })
-      .then(pedidoResult => {
+      .then((pedidoResult) => {
         return pedidoResult
       })
-      .catch(error => {
+      .catch((error) => {
         return error
       })
 

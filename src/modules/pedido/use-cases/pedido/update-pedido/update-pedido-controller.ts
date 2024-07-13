@@ -1,6 +1,6 @@
-import { Request, Response } from 'express'
-import { container } from 'tsyringe'
-import { UpdatePedidoUseCase } from './update-pedido-use-case'
+import { Request, Response } from "express"
+import { container } from "tsyringe"
+import { UpdatePedidoUseCase } from "./update-pedido-use-case"
 
 class UpdatePedidoController {
   async handle(request: Request, response: Response): Promise<Response> {
@@ -15,14 +15,16 @@ class UpdatePedidoController {
       meioPagamentoId,
       statusPagamentoId,
       isPagamentoPosterior,
-      desabilitado
+      desabilitado,
+      pedidoItemForm,
     } = request.body
 
     const { id } = request.params
 
     const updatePedidoUseCase = container.resolve(UpdatePedidoUseCase)
 
-    const result = await updatePedidoUseCase.execute({
+    const result = await updatePedidoUseCase
+      .execute({
         id,
         sequencial,
         clienteId,
@@ -34,12 +36,13 @@ class UpdatePedidoController {
         meioPagamentoId,
         statusPagamentoId,
         isPagamentoPosterior,
-        desabilitado
+        desabilitado,
+        pedidoItemForm,
       })
-      .then(pedidoResult => {
+      .then((pedidoResult) => {
         return pedidoResult
       })
-      .catch(error => {
+      .catch((error) => {
         return error
       })
 
