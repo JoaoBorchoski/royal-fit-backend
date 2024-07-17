@@ -1,19 +1,13 @@
-import { ICepDTO } from '@modules/comum/dtos/i-cep-dto'
-import { ICepRepository } from '@modules/comum/repositories/i-cep-repository'
-import { Cep } from '@modules/comum/infra/typeorm/entities/cep'
-import { ok, notFound, HttpResponse } from '@shared/helpers'
+import { ICepDTO } from "@modules/comum/dtos/i-cep-dto"
+import { ICepRepository } from "@modules/comum/repositories/i-cep-repository"
+import { Cep } from "@modules/comum/infra/typeorm/entities/cep"
+import { ok, notFound, HttpResponse } from "@shared/helpers"
 
 class CepRepositoryInMemory implements ICepRepository {
   ceps: Cep[] = []
 
   // create
-  async create ({
-    codigoCep,
-    logradouro,
-    bairro,
-    estadoId,
-    cidadeId
-  }: ICepDTO): Promise<HttpResponse> {
+  async create({ codigoCep, logradouro, bairro, estadoId, cidadeId }: ICepDTO): Promise<HttpResponse> {
     const cep = new Cep()
 
     Object.assign(cep, {
@@ -21,7 +15,7 @@ class CepRepositoryInMemory implements ICepRepository {
       logradouro,
       bairro,
       estadoId,
-      cidadeId
+      cidadeId,
     })
 
     this.ceps.push(cep)
@@ -29,14 +23,8 @@ class CepRepositoryInMemory implements ICepRepository {
     return ok(cep)
   }
 
-
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string): Promise<HttpResponse> {
     let filteredCeps = this.ceps
 
     filteredCeps = filteredCeps.filter((cep) => {
@@ -50,9 +38,12 @@ class CepRepositoryInMemory implements ICepRepository {
     return ok(filteredCeps.slice((page - 1) * rowsPerPage, page * rowsPerPage))
   }
 
+  getByCep(cep: string): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
 
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     let filteredCeps = this.ceps
 
     filteredCeps = filteredCeps.filter((cep) => {
@@ -66,16 +57,14 @@ class CepRepositoryInMemory implements ICepRepository {
     return ok(filteredCeps)
   }
 
-
   //
   // id select
   idSelect(id: string): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 
-
   // count
-  async count (search: string,): Promise<HttpResponse> {
+  async count(search: string): Promise<HttpResponse> {
     let filteredCeps = this.ceps
 
     filteredCeps = filteredCeps.filter((cep) => {
@@ -89,28 +78,19 @@ class CepRepositoryInMemory implements ICepRepository {
     return ok(filteredCeps.length)
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     const cep = this.ceps.find((cep) => cep.id === id)
 
-    if (typeof cep === 'undefined') {
+    if (typeof cep === "undefined") {
       return notFound()
     } else {
       return ok(cep)
     }
   }
 
-
   // update
-  async update ({
-    id,
-    codigoCep,
-    logradouro,
-    bairro,
-    estadoId,
-    cidadeId
-  }: ICepDTO): Promise<HttpResponse> {
+  async update({ id, codigoCep, logradouro, bairro, estadoId, cidadeId }: ICepDTO): Promise<HttpResponse> {
     const index = this.ceps.findIndex((cep) => cep.id === id)
 
     this.ceps[index].codigoCep = codigoCep
@@ -122,9 +102,8 @@ class CepRepositoryInMemory implements ICepRepository {
     return ok(this.ceps[index])
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     const index = this.ceps.findIndex((cep) => cep.id === id)
 
     this.ceps.splice(index, 1)
@@ -132,10 +111,9 @@ class CepRepositoryInMemory implements ICepRepository {
     return ok(this.ceps)
   }
 
-
   // multi delete
   multiDelete(ids: string[]): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 }
 

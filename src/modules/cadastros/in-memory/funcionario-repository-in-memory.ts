@@ -1,13 +1,14 @@
-import { IFuncionarioDTO } from '@modules/cadastros/dtos/i-funcionario-dto'
-import { IFuncionarioRepository } from '@modules/cadastros/repositories/i-funcionario-repository'
-import { Funcionario } from '@modules/cadastros/infra/typeorm/entities/funcionario'
-import { ok, notFound, HttpResponse } from '@shared/helpers'
+import { IFuncionarioDTO } from "@modules/cadastros/dtos/i-funcionario-dto"
+import { IFuncionarioRepository } from "@modules/cadastros/repositories/i-funcionario-repository"
+import { Funcionario } from "@modules/cadastros/infra/typeorm/entities/funcionario"
+import { ok, notFound, HttpResponse } from "@shared/helpers"
+import { EntityManager } from "typeorm"
 
 class FuncionarioRepositoryInMemory implements IFuncionarioRepository {
   funcionarios: Funcionario[] = []
 
   // create
-  async create ({
+  async create({
     nome,
     cpf,
     email,
@@ -21,7 +22,7 @@ class FuncionarioRepositoryInMemory implements IFuncionarioRepository {
     complemento,
     telefone,
     usuarioId,
-    desabilitado
+    desabilitado,
   }: IFuncionarioDTO): Promise<HttpResponse> {
     const funcionario = new Funcionario()
 
@@ -39,7 +40,7 @@ class FuncionarioRepositoryInMemory implements IFuncionarioRepository {
       complemento,
       telefone,
       usuarioId,
-      desabilitado
+      desabilitado,
     })
 
     this.funcionarios.push(funcionario)
@@ -47,14 +48,38 @@ class FuncionarioRepositoryInMemory implements IFuncionarioRepository {
     return ok(funcionario)
   }
 
+  createWithQueryRunner(
+    {
+      nome,
+      cpf,
+      email,
+      cargo,
+      cep,
+      estadoId,
+      cidadeId,
+      bairro,
+      endereco,
+      numero,
+      complemento,
+      telefone,
+      usuarioId,
+      desabilitado,
+    }: IFuncionarioDTO,
+    transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
+
+  getByCpf(cpf: string): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
+
+  getFuncionarioByEmail(email: string): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
 
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string): Promise<HttpResponse> {
     let filteredFuncionarios = this.funcionarios
 
     filteredFuncionarios = filteredFuncionarios.filter((funcionario) => {
@@ -68,9 +93,8 @@ class FuncionarioRepositoryInMemory implements IFuncionarioRepository {
     return ok(filteredFuncionarios.slice((page - 1) * rowsPerPage, page * rowsPerPage))
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     let filteredFuncionarios = this.funcionarios
 
     filteredFuncionarios = filteredFuncionarios.filter((funcionario) => {
@@ -84,16 +108,14 @@ class FuncionarioRepositoryInMemory implements IFuncionarioRepository {
     return ok(filteredFuncionarios)
   }
 
-
   //
   // id select
   idSelect(id: string): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 
-
   // count
-  async count (search: string,): Promise<HttpResponse> {
+  async count(search: string): Promise<HttpResponse> {
     let filteredFuncionarios = this.funcionarios
 
     filteredFuncionarios = filteredFuncionarios.filter((funcionario) => {
@@ -107,21 +129,19 @@ class FuncionarioRepositoryInMemory implements IFuncionarioRepository {
     return ok(filteredFuncionarios.length)
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     const funcionario = this.funcionarios.find((funcionario) => funcionario.id === id)
 
-    if (typeof funcionario === 'undefined') {
+    if (typeof funcionario === "undefined") {
       return notFound()
     } else {
       return ok(funcionario)
     }
   }
 
-
   // update
-  async update ({
+  async update({
     id,
     nome,
     cpf,
@@ -136,7 +156,7 @@ class FuncionarioRepositoryInMemory implements IFuncionarioRepository {
     complemento,
     telefone,
     usuarioId,
-    desabilitado
+    desabilitado,
   }: IFuncionarioDTO): Promise<HttpResponse> {
     const index = this.funcionarios.findIndex((funcionario) => funcionario.id === id)
 
@@ -158,9 +178,8 @@ class FuncionarioRepositoryInMemory implements IFuncionarioRepository {
     return ok(this.funcionarios[index])
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     const index = this.funcionarios.findIndex((funcionario) => funcionario.id === id)
 
     this.funcionarios.splice(index, 1)
@@ -168,10 +187,9 @@ class FuncionarioRepositoryInMemory implements IFuncionarioRepository {
     return ok(this.funcionarios)
   }
 
-
   // multi delete
   multiDelete(ids: string[]): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 }
 

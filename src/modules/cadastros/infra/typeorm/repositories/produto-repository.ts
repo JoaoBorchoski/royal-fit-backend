@@ -114,7 +114,7 @@ class ProdutoRepository implements IProdutoRepository {
       const produtos = await this.repository
         .createQueryBuilder("pro")
         .select(['pro.id as "value"', 'pro.nome as "label"'])
-        .where("pro.nome ilike :filter", { filter: `${filter}%` })
+        .where("pro.nome ilike :filter", { filter: `%${filter}%` })
         .addOrderBy("pro.nome")
         .getRawMany()
 
@@ -188,6 +188,33 @@ class ProdutoRepository implements IProdutoRepository {
     }
   }
 
+  async getByname(nome: string): Promise<HttpResponse> {
+    const nomeRegex = nome.split(" ").join(".*")
+
+    try {
+      const produto = await this.repository
+        .createQueryBuilder("pro")
+        .select([
+          'pro.id as "id"',
+          'pro.nome as "nome"',
+          'pro.preco as "preco"',
+          'pro.descricao as "descricao"',
+          'pro.desabilitado as "desabilitado"',
+        ])
+        // .where("CAST(pro.nome AS VARCHAR) ilike :nome", { nome: `%${nome}%` })
+        .where("pro.nome ~* :nome", { nome: nomeRegex })
+        .getRawOne()
+
+      if (typeof produto === "undefined") {
+        return noContent()
+      }
+
+      return ok(produto)
+    } catch (err) {
+      return serverError(err)
+    }
+  }
+
   // update
   async update({ id, nome, preco, descricao, desabilitado }: IProdutoDTO): Promise<HttpResponse> {
     const produto = await this.repository.findOne(id)
@@ -216,7 +243,8 @@ class ProdutoRepository implements IProdutoRepository {
   // delete
   async delete(id: string): Promise<HttpResponse> {
     try {
-      await this.repository.delete(id)
+      // await this.repository.delete(id)
+      await this.repository.update(id, { desabilitado: true })
 
       return noContent()
     } catch (err) {
@@ -231,7 +259,8 @@ class ProdutoRepository implements IProdutoRepository {
   // multi delete
   async multiDelete(ids: string[]): Promise<HttpResponse> {
     try {
-      await this.repository.delete(ids)
+      // await this.repository.delete(ids)
+      await this.repository.update(ids, { desabilitado: true })
 
       return noContent()
     } catch (err) {

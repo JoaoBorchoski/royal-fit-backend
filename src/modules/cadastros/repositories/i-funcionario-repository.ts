@@ -41,6 +41,8 @@ interface IFuncionarioRepository {
   // get
   get(id: string): Promise<HttpResponse>
 
+  getByCpf(cpf: string): Promise<HttpResponse>
+
   // update
   update(data: IFuncionarioDTO): Promise<HttpResponse>
 

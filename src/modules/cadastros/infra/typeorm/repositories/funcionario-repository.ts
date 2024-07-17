@@ -57,6 +57,7 @@ class FuncionarioRepository implements IFuncionarioRepository {
 
     return result
   }
+
   async createWithQueryRunner(
     {
       nome,
@@ -164,7 +165,7 @@ class FuncionarioRepository implements IFuncionarioRepository {
       const funcionarios = await this.repository
         .createQueryBuilder("fun")
         .select(['fun.id as "value"', 'fun.nome as "label"'])
-        .where("fun.nome ilike :filter", { filter: `${filter}%` })
+        .where("fun.nome ilike :filter", { filter: `%${filter}%` })
         .addOrderBy("fun.nome")
         .getRawMany()
 
@@ -250,6 +251,16 @@ class FuncionarioRepository implements IFuncionarioRepository {
       return ok(funcionario)
     } catch (err) {
       return serverError(err)
+    }
+  }
+
+  async getByCpf(cpf: string): Promise<HttpResponse> {
+    try {
+      const funcionario = await this.repository.findOne({ cpf: cpf })
+
+      return ok(funcionario)
+    } catch (error) {
+      return serverError(error)
     }
   }
 

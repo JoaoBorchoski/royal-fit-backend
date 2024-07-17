@@ -1,13 +1,14 @@
-import { IClienteDTO } from '@modules/cadastros/dtos/i-cliente-dto'
-import { IClienteRepository } from '@modules/cadastros/repositories/i-cliente-repository'
-import { Cliente } from '@modules/cadastros/infra/typeorm/entities/cliente'
-import { ok, notFound, HttpResponse } from '@shared/helpers'
+import { IClienteDTO } from "@modules/cadastros/dtos/i-cliente-dto"
+import { IClienteRepository } from "@modules/cadastros/repositories/i-cliente-repository"
+import { Cliente } from "@modules/cadastros/infra/typeorm/entities/cliente"
+import { ok, notFound, HttpResponse } from "@shared/helpers"
+import { EntityManager } from "typeorm"
 
 class ClienteRepositoryInMemory implements IClienteRepository {
   clientes: Cliente[] = []
 
   // create
-  async create ({
+  async create({
     nome,
     cpfCnpj,
     email,
@@ -20,7 +21,7 @@ class ClienteRepositoryInMemory implements IClienteRepository {
     complemento,
     telefone,
     usuarioId,
-    desabilitado
+    desabilitado,
   }: IClienteDTO): Promise<HttpResponse> {
     const cliente = new Cliente()
 
@@ -37,7 +38,7 @@ class ClienteRepositoryInMemory implements IClienteRepository {
       complemento,
       telefone,
       usuarioId,
-      desabilitado
+      desabilitado,
     })
 
     this.clientes.push(cliente)
@@ -45,14 +46,29 @@ class ClienteRepositoryInMemory implements IClienteRepository {
     return ok(cliente)
   }
 
+  createWithQueryRunner(
+    {
+      nome,
+      cpfCnpj,
+      email,
+      cep,
+      estadoId,
+      cidadeId,
+      bairro,
+      endereco,
+      numero,
+      complemento,
+      telefone,
+      usuarioId,
+      desabilitado,
+    }: IClienteDTO,
+    transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
 
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string): Promise<HttpResponse> {
     let filteredClientes = this.clientes
 
     filteredClientes = filteredClientes.filter((cliente) => {
@@ -66,9 +82,8 @@ class ClienteRepositoryInMemory implements IClienteRepository {
     return ok(filteredClientes.slice((page - 1) * rowsPerPage, page * rowsPerPage))
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     let filteredClientes = this.clientes
 
     filteredClientes = filteredClientes.filter((cliente) => {
@@ -82,16 +97,14 @@ class ClienteRepositoryInMemory implements IClienteRepository {
     return ok(filteredClientes)
   }
 
-
   //
   // id select
   idSelect(id: string): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 
-
   // count
-  async count (search: string,): Promise<HttpResponse> {
+  async count(search: string): Promise<HttpResponse> {
     let filteredClientes = this.clientes
 
     filteredClientes = filteredClientes.filter((cliente) => {
@@ -105,21 +118,23 @@ class ClienteRepositoryInMemory implements IClienteRepository {
     return ok(filteredClientes.length)
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     const cliente = this.clientes.find((cliente) => cliente.id === id)
 
-    if (typeof cliente === 'undefined') {
+    if (typeof cliente === "undefined") {
       return notFound()
     } else {
       return ok(cliente)
     }
   }
 
+  getByCpfCnpj(cpfCnpj: string): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
 
   // update
-  async update ({
+  async update({
     id,
     nome,
     cpfCnpj,
@@ -133,7 +148,7 @@ class ClienteRepositoryInMemory implements IClienteRepository {
     complemento,
     telefone,
     usuarioId,
-    desabilitado
+    desabilitado,
   }: IClienteDTO): Promise<HttpResponse> {
     const index = this.clientes.findIndex((cliente) => cliente.id === id)
 
@@ -154,9 +169,8 @@ class ClienteRepositoryInMemory implements IClienteRepository {
     return ok(this.clientes[index])
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     const index = this.clientes.findIndex((cliente) => cliente.id === id)
 
     this.clientes.splice(index, 1)
@@ -164,10 +178,9 @@ class ClienteRepositoryInMemory implements IClienteRepository {
     return ok(this.clientes)
   }
 
-
   // multi delete
   multiDelete(ids: string[]): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 }
 

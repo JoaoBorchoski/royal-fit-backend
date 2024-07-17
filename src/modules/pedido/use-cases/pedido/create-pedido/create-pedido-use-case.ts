@@ -3,6 +3,10 @@ import { Pedido } from "@modules/pedido/infra/typeorm/entities/pedido"
 import { IPedidoRepository } from "@modules/pedido/repositories/i-pedido-repository"
 import { AppError } from "@shared/errors/app-error"
 import { IPedidoItemRepository } from "@modules/pedido/repositories/i-pedido-item-repository"
+import { IEstoqueRepository } from "@modules/cadastros/repositories/i-estoque-repository"
+import { getConnection } from "typeorm"
+import { IProdutoRepository } from "@modules/cadastros/repositories/i-produto-repository"
+import { IBonificacaoRepository } from "@modules/cadastros/repositories/i-bonificacao-repository"
 
 interface IRequest {
   sequencial: number
@@ -24,8 +28,14 @@ class CreatePedidoUseCase {
   constructor(
     @inject("PedidoRepository")
     private pedidoRepository: IPedidoRepository,
+    @inject("EstoqueRepository")
+    private estoqueRepository: IEstoqueRepository,
+    @inject("ProdutoRepository")
+    private produtoRepository: IProdutoRepository,
     @inject("PedidoItemRepository")
-    private pedidoItemRepository: IPedidoItemRepository
+    private pedidoItemRepository: IPedidoItemRepository,
+    @inject("BonificacaoRepository")
+    private bonificacaoRepository: IBonificacaoRepository
   ) {}
 
   async execute({
@@ -42,27 +52,32 @@ class CreatePedidoUseCase {
     desabilitado,
     pedidoItemForm,
   }: IRequest): Promise<Pedido> {
+    const queryRunner = getConnection().createQueryRunner()
+    await queryRunner.startTransaction()
+
     try {
       const totalPedidos = await this.pedidoRepository.count("", "")
-
-      console.log(funcionarioId, "funcionarioId")
-      console.log(meioPagamentoId, "meioPagamentoId")
-      console.log(statusPagamentoId, "statusPagamentoId")
+      const bonificacao = await this.bonificacaoRepository.getByClienteId(clienteId)
+      let newBonificacao = 0
+      let newTotalVendido = 0
 
       const result = await this.pedidoRepository
-        .create({
-          sequencial: totalPedidos.data.count + 1,
-          clienteId,
-          data,
-          hora,
-          valorTotal,
-          desconto,
-          funcionarioId,
-          meioPagamentoId,
-          statusPagamentoId,
-          isPagamentoPosterior,
-          desabilitado,
-        })
+        .createWithQueryRunner(
+          {
+            sequencial: totalPedidos.data.count + 1,
+            clienteId,
+            data,
+            hora,
+            valorTotal,
+            desconto,
+            funcionarioId,
+            meioPagamentoId,
+            statusPagamentoId,
+            isPagamentoPosterior,
+            desabilitado,
+          },
+          queryRunner.manager
+        )
         .then((pedidoResult) => {
           return pedidoResult
         })
@@ -71,16 +86,52 @@ class CreatePedidoUseCase {
         })
 
       for await (const pedidoItem of pedidoItemForm) {
-        await this.pedidoItemRepository.create({
-          pedidoId: result.data.id,
-          produtoId: pedidoItem.produtoId,
-          quantidade: pedidoItem.quantidade,
-        })
+        const estoqueAtual = await this.estoqueRepository.getByProdutoId(pedidoItem.produtoId)
+        const produto = await this.produtoRepository.get(pedidoItem.produtoId)
+
+        if (!estoqueAtual.data || estoqueAtual.data.quantidade < pedidoItem.quantidade) {
+          throw new AppError(`Estoque insuficiente ou estoque não cadastrado para o produto ${produto.data.nome}`)
+        }
+
+        if (
+          produto.data.id == "fbe43047-093b-496b-9c59-ce5c2ce66b34" ||
+          produto.data.id == "907a8147-dada-4532-82a7-0346666792c9"
+        ) {
+          newBonificacao += Math.floor(pedidoItem.quantidade / 10)
+          newTotalVendido += pedidoItem.quantidade
+        }
+
+        await this.estoqueRepository.updateEstoqueQuantidade(
+          estoqueAtual.data.id,
+          estoqueAtual.data.quantidade - pedidoItem.quantidade,
+          queryRunner.manager
+        )
+
+        await this.pedidoItemRepository.createWithQueryRunner(
+          {
+            pedidoId: result.data.id,
+            produtoId: pedidoItem.produtoId,
+            quantidade: pedidoItem.quantidade,
+          },
+          queryRunner.manager
+        )
       }
 
+      await this.bonificacaoRepository.update({
+        id: bonificacao.data.id,
+        clienteId: clienteId,
+        totalVendido: bonificacao.data.totalVendido + newTotalVendido,
+        bonificacaoDisponivel: bonificacao.data.bonificacaoDisponivel + newBonificacao,
+      })
+
+      await queryRunner.commitTransaction()
       return result
     } catch (error) {
-      throw new AppError(error)
+      console.log("error", error)
+      await queryRunner.rollbackTransaction()
+      return error
+    } finally {
+      await queryRunner.release()
     }
   }
 }

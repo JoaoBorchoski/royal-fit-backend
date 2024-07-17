@@ -1,5 +1,6 @@
 import { IClienteDTO } from "@modules/cadastros/dtos/i-cliente-dto"
 import { IFuncionarioDTO } from "@modules/cadastros/dtos/i-funcionario-dto"
+import { IBonificacaoRepository } from "@modules/cadastros/repositories/i-bonificacao-repository"
 import { IClienteRepository } from "@modules/cadastros/repositories/i-cliente-repository"
 import { HttpResponse, noContent, ok } from "@shared/helpers"
 import fs from "fs"
@@ -15,7 +16,9 @@ interface IRequest {
 class ImportClienteUseCase {
   constructor(
     @inject("ClienteRepository")
-    private clienteRepository: IClienteRepository
+    private clienteRepository: IClienteRepository,
+    @inject("BonificacaoRepository")
+    private bonificacaoRepository: IBonificacaoRepository
   ) {}
 
   async importExcelData(row: any): Promise<IFuncionarioDTO> {
@@ -52,6 +55,16 @@ class ImportClienteUseCase {
       for await (const row of rows) {
         const cliente = await this.importExcelData(row)
         const teste = await this.clienteRepository.createWithQueryRunner(cliente, queryRunner.manager)
+
+        await this.bonificacaoRepository.createWithQueryRunner(
+          {
+            clienteId: teste.data.id,
+            bonificacaoDisponivel: 0,
+            totalVendido: 0,
+            desabilitado: false,
+          },
+          queryRunner.manager
+        )
       }
 
       fs.unlinkSync(file.path)

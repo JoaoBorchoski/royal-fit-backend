@@ -1,19 +1,13 @@
-import { IRelatorioFuncionarioDTO } from '@modules/relatorios/dtos/i-relatorio-funcionario-dto'
-import { IRelatorioFuncionarioRepository } from '@modules/relatorios/repositories/i-relatorio-funcionario-repository'
-import { RelatorioFuncionario } from '@modules/relatorios/infra/typeorm/entities/relatorio-funcionario'
-import { ok, notFound, HttpResponse } from '@shared/helpers'
+import { IRelatorioFuncionarioDTO } from "@modules/relatorios/dtos/i-relatorio-funcionario-dto"
+import { IRelatorioFuncionarioRepository } from "@modules/relatorios/repositories/i-relatorio-funcionario-repository"
+import { RelatorioFuncionario } from "@modules/relatorios/infra/typeorm/entities/relatorio-funcionario"
+import { ok, notFound, HttpResponse } from "@shared/helpers"
 
 class RelatorioFuncionarioRepositoryInMemory implements IRelatorioFuncionarioRepository {
   relatoriosFuncionarios: RelatorioFuncionario[] = []
 
   // create
-  async create ({
-    funcionarioId,
-    dataInicio,
-    dataFim,
-    relatório,
-    desabilitado
-  }: IRelatorioFuncionarioDTO): Promise<HttpResponse> {
+  async create({ funcionarioId, dataInicio, dataFim, relatório, desabilitado }: IRelatorioFuncionarioDTO): Promise<HttpResponse> {
     const relatorioFuncionario = new RelatorioFuncionario()
 
     Object.assign(relatorioFuncionario, {
@@ -21,7 +15,7 @@ class RelatorioFuncionarioRepositoryInMemory implements IRelatorioFuncionarioRep
       dataInicio,
       dataFim,
       relatório,
-      desabilitado
+      desabilitado,
     })
 
     this.relatoriosFuncionarios.push(relatorioFuncionario)
@@ -29,78 +23,72 @@ class RelatorioFuncionarioRepositoryInMemory implements IRelatorioFuncionarioRep
     return ok(relatorioFuncionario)
   }
 
+  getPedidosByData(dataInicio: Date, dataFim: Date): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
+
+  getPedidosByDataAndFuncionario(dataInicio: Date, dataFim: Date, funcionarioId: string): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
 
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string): Promise<HttpResponse> {
     let filteredRelatoriosFuncionarios = this.relatoriosFuncionarios
 
     filteredRelatoriosFuncionarios = filteredRelatoriosFuncionarios.filter((relatorioFuncionario) => {
-
       return false
     })
 
     return ok(filteredRelatoriosFuncionarios.slice((page - 1) * rowsPerPage, page * rowsPerPage))
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     let filteredRelatoriosFuncionarios = this.relatoriosFuncionarios
 
     filteredRelatoriosFuncionarios = filteredRelatoriosFuncionarios.filter((relatorioFuncionario) => {
-
       return false
     })
 
     return ok(filteredRelatoriosFuncionarios)
   }
 
-
   //
   // id select
   idSelect(id: string): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 
-
   // count
-  async count (search: string,): Promise<HttpResponse> {
+  async count(search: string): Promise<HttpResponse> {
     let filteredRelatoriosFuncionarios = this.relatoriosFuncionarios
 
     filteredRelatoriosFuncionarios = filteredRelatoriosFuncionarios.filter((relatorioFuncionario) => {
-
       return false
     })
 
     return ok(filteredRelatoriosFuncionarios.length)
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     const relatorioFuncionario = this.relatoriosFuncionarios.find((relatorioFuncionario) => relatorioFuncionario.id === id)
 
-    if (typeof relatorioFuncionario === 'undefined') {
+    if (typeof relatorioFuncionario === "undefined") {
       return notFound()
     } else {
       return ok(relatorioFuncionario)
     }
   }
 
-
   // update
-  async update ({
+  async update({
     id,
     funcionarioId,
     dataInicio,
     dataFim,
     relatório,
-    desabilitado
+    desabilitado,
   }: IRelatorioFuncionarioDTO): Promise<HttpResponse> {
     const index = this.relatoriosFuncionarios.findIndex((relatorioFuncionario) => relatorioFuncionario.id === id)
 
@@ -113,9 +101,8 @@ class RelatorioFuncionarioRepositoryInMemory implements IRelatorioFuncionarioRep
     return ok(this.relatoriosFuncionarios[index])
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     const index = this.relatoriosFuncionarios.findIndex((relatorioFuncionario) => relatorioFuncionario.id === id)
 
     this.relatoriosFuncionarios.splice(index, 1)
@@ -123,10 +110,9 @@ class RelatorioFuncionarioRepositoryInMemory implements IRelatorioFuncionarioRep
     return ok(this.relatoriosFuncionarios)
   }
 
-
   // multi delete
   multiDelete(ids: string[]): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 }
 

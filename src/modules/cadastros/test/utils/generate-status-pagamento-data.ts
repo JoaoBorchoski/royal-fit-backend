@@ -23,7 +23,7 @@ export function generateStatusPagamentoData(overide = {}) {
   }
 }
 
-export function generateStatusPagamentoData(n: number = 1, overide = {}) {
+export function generateStatusPagamentosData(n: number = 1, overide = {}) {
   return Array.from(
     {
       length: n,

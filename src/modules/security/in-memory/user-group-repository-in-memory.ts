@@ -1,21 +1,18 @@
-import { IUserGroupDTO } from '@modules/security/dtos/i-user-group-dto'
-import { IUserGroupRepository } from '@modules/security/repositories/i-user-group-repository'
-import { UserGroup } from '@modules/security/infra/typeorm/entities/user-group'
-import { ok, notFound, HttpResponse } from '@shared/helpers'
+import { IUserGroupDTO } from "@modules/security/dtos/i-user-group-dto"
+import { IUserGroupRepository } from "@modules/security/repositories/i-user-group-repository"
+import { UserGroup } from "@modules/security/infra/typeorm/entities/user-group"
+import { ok, notFound, HttpResponse } from "@shared/helpers"
 
 class UserGroupRepositoryInMemory implements IUserGroupRepository {
   userGroups: UserGroup[] = []
 
   // create
-  async create ({
-    name,
-    disabled
-  }: IUserGroupDTO): Promise<HttpResponse> {
+  async create({ name, disabled }: IUserGroupDTO): Promise<HttpResponse> {
     const userGroup = new UserGroup()
 
     Object.assign(userGroup, {
       name,
-      disabled
+      disabled,
     })
 
     this.userGroups.push(userGroup)
@@ -23,14 +20,12 @@ class UserGroupRepositoryInMemory implements IUserGroupRepository {
     return ok(userGroup)
   }
 
+  getByName(name: string): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
 
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string): Promise<HttpResponse> {
     let filteredUserGroups = this.userGroups
 
     filteredUserGroups = filteredUserGroups.filter((userGroup) => {
@@ -42,9 +37,8 @@ class UserGroupRepositoryInMemory implements IUserGroupRepository {
     return ok(filteredUserGroups.slice((page - 1) * rowsPerPage, page * rowsPerPage))
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     let filteredUserGroups = this.userGroups
 
     filteredUserGroups = filteredUserGroups.filter((userGroup) => {
@@ -56,15 +50,13 @@ class UserGroupRepositoryInMemory implements IUserGroupRepository {
     return ok(filteredUserGroups)
   }
 
-
   // id select
   idSelect(id: string): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 
-
   // count
-  async count (search: string,): Promise<HttpResponse> {
+  async count(search: string): Promise<HttpResponse> {
     let filteredUserGroups = this.userGroups
 
     filteredUserGroups = filteredUserGroups.filter((userGroup) => {
@@ -76,25 +68,19 @@ class UserGroupRepositoryInMemory implements IUserGroupRepository {
     return ok(filteredUserGroups.length)
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     const userGroup = this.userGroups.find((userGroup) => userGroup.id === id)
 
-    if (typeof userGroup === 'undefined') {
+    if (typeof userGroup === "undefined") {
       return notFound()
     } else {
       return ok(userGroup)
     }
   }
 
-
   // update
-  async update ({
-    id,
-    name,
-    disabled
-  }: IUserGroupDTO): Promise<HttpResponse> {
+  async update({ id, name, disabled }: IUserGroupDTO): Promise<HttpResponse> {
     const index = this.userGroups.findIndex((userGroup) => userGroup.id === id)
 
     this.userGroups[index].name = name
@@ -103,9 +89,8 @@ class UserGroupRepositoryInMemory implements IUserGroupRepository {
     return ok(this.userGroups[index])
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     const index = this.userGroups.findIndex((userGroup) => userGroup.id === id)
 
     this.userGroups.splice(index, 1)
@@ -113,10 +98,9 @@ class UserGroupRepositoryInMemory implements IUserGroupRepository {
     return ok(this.userGroups)
   }
 
-
   // multi delete
   multiDelete(ids: string[]): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 }
 

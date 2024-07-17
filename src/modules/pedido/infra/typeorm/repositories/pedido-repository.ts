@@ -1,4 +1,4 @@
-import { Brackets, getRepository, Repository } from "typeorm"
+import { Brackets, EntityManager, getRepository, Repository, TransactionManager } from "typeorm"
 import { IPedidoDTO } from "@modules/pedido/dtos/i-pedido-dto"
 import { IPedidoRepository } from "@modules/pedido/repositories/i-pedido-repository"
 import { Pedido } from "@modules/pedido/infra/typeorm/entities/pedido"
@@ -53,6 +53,48 @@ class PedidoRepository implements IPedidoRepository {
     return result
   }
 
+  async createWithQueryRunner(
+    {
+      sequencial,
+      clienteId,
+      data,
+      hora,
+      valorTotal,
+      desconto,
+      funcionarioId,
+      meioPagamentoId,
+      statusPagamentoId,
+      isPagamentoPosterior,
+      desabilitado,
+    }: IPedidoDTO,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    const pedido = transactionManager.create(Pedido, {
+      sequencial,
+      clienteId,
+      data,
+      hora,
+      valorTotal,
+      desconto,
+      funcionarioId,
+      meioPagamentoId,
+      statusPagamentoId,
+      isPagamentoPosterior,
+      desabilitado,
+    })
+
+    const result = await transactionManager
+      .save(pedido)
+      .then((pedidoResult) => {
+        return ok(pedidoResult)
+      })
+      .catch((error) => {
+        return serverError(error)
+      })
+
+    return result
+  }
+
   // list
   async list(search: string, page: number, rowsPerPage: number, order: string, filter: string): Promise<HttpResponse> {
     let columnName: string
@@ -66,7 +108,7 @@ class PedidoRepository implements IPedidoRepository {
       columnDirection = order.substring(0, 1) === "-" ? "DESC" : "ASC"
     }
 
-    const referenceArray = ["sequencial", "clienteNome", "data", "valorTotal"]
+    const referenceArray = ["data", "sequencial", "clienteNome", "valorTotal"]
     const columnOrder = new Array<"ASC" | "DESC">(2).fill("ASC")
 
     const index = referenceArray.indexOf(columnName)
@@ -98,9 +140,9 @@ class PedidoRepository implements IPedidoRepository {
             query.andWhere("CAST(ped.sequencial AS VARCHAR) ilike :search", { search: `%${search}%` })
           })
         )
-        .addOrderBy("ped.sequencial", columnOrder[0])
-        .addOrderBy("a.nome", columnOrder[1])
-        .addOrderBy("ped.data", columnOrder[2])
+        .addOrderBy("ped.data", "DESC")
+        .addOrderBy("ped.sequencial", columnOrder[1])
+        .addOrderBy("a.nome", columnOrder[2])
         .addOrderBy("ped.valorTotal", columnOrder[3])
         .offset(offset)
         .limit(rowsPerPage)
@@ -148,6 +190,32 @@ class PedidoRepository implements IPedidoRepository {
   async count(search: string, filter: string): Promise<HttpResponse> {
     try {
       let query = this.repository.createQueryBuilder("ped").select(['ped.id as "id"']).leftJoin("ped.clienteId", "a")
+
+      if (filter) {
+        query = query.where(filter)
+      }
+
+      const pedidos = await query
+        .andWhere(
+          new Brackets((query) => {
+            query.andWhere("CAST(ped.sequencial AS VARCHAR) ilike :search", { search: `%${search}%` })
+          })
+        )
+        .getRawMany()
+
+      return ok({ count: pedidos.length })
+    } catch (err) {
+      return serverError(err)
+    }
+  }
+
+  async countWithQueryRunner(
+    search: string,
+    filter: string,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    try {
+      let query = transactionManager.createQueryBuilder(Pedido, "ped").select(['ped.id as "id"']).leftJoin("ped.clienteId", "a")
 
       if (filter) {
         query = query.where(filter)
@@ -224,27 +292,30 @@ class PedidoRepository implements IPedidoRepository {
   }
 
   // update
-  async update({
-    id,
-    sequencial,
-    clienteId,
-    data,
-    hora,
-    valorTotal,
-    desconto,
-    funcionarioId,
-    meioPagamentoId,
-    statusPagamentoId,
-    isPagamentoPosterior,
-    desabilitado,
-  }: IPedidoDTO): Promise<HttpResponse> {
-    const pedido = await this.repository.findOne(id)
+  async update(
+    {
+      id,
+      sequencial,
+      clienteId,
+      data,
+      hora,
+      valorTotal,
+      desconto,
+      funcionarioId,
+      meioPagamentoId,
+      statusPagamentoId,
+      isPagamentoPosterior,
+      desabilitado,
+    }: IPedidoDTO,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    const pedido = await transactionManager.findOne(Pedido, id)
 
     if (!pedido) {
       return notFound()
     }
 
-    const newpedido = this.repository.create({
+    const newpedido = transactionManager.create(Pedido, {
       id,
       sequencial,
       clienteId,
@@ -260,7 +331,7 @@ class PedidoRepository implements IPedidoRepository {
     })
 
     try {
-      await this.repository.save(newpedido)
+      await transactionManager.save(newpedido)
 
       return ok(newpedido)
     } catch (err) {

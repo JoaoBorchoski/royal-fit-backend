@@ -1,4 +1,4 @@
-import { getRepository, Repository } from "typeorm"
+import { EntityManager, getRepository, Repository, TransactionManager } from "typeorm"
 import { IUserDTO } from "@modules/authentication/dtos/i-user-dto"
 import { IUserRepository } from "@modules/authentication/repositories/i-user-repository"
 import { User } from "../entities/user"
@@ -48,9 +48,57 @@ class UserRepository implements IUserRepository {
     }
   }
 
+  async createWithQueryRunner(
+    {
+      id,
+      userGroupId,
+      name,
+      login,
+      password,
+      isAdmin,
+      isSuperUser,
+      isBlocked,
+      blockReasonId,
+      mustChangePasswordNextLogon,
+      avatar,
+      isDisabled,
+    }: IUserDTO,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<User> {
+    try {
+      const user = transactionManager.create(User, {
+        id,
+        userGroupId,
+        name,
+        login,
+        password,
+        isAdmin,
+        isSuperUser,
+        isBlocked,
+        blockReasonId,
+        mustChangePasswordNextLogon,
+        avatar,
+        isDisabled,
+      })
+
+      const result = await transactionManager.save(user)
+
+      return result
+    } catch (error) {
+      return error
+    }
+  }
+
   async findByEmail(login: string): Promise<User> {
     const newLogin = login.toLowerCase()
     const user = await this.repository.findOne({ login: newLogin })
+
+    return user
+  }
+
+  async findByEmailWithQueryRunner(login: string, @TransactionManager() transactionManager: EntityManager): Promise<User> {
+    const newLogin = login.toLowerCase()
+    const user = await transactionManager.findOne(User, { login: newLogin })
 
     return user
   }

@@ -26,6 +26,8 @@ interface IProdutoRepository {
   // get
   get(id: string): Promise<HttpResponse>
 
+  getByname(nome: string): Promise<HttpResponse>
+
   // update
   update(data: IProdutoDTO): Promise<HttpResponse>
 

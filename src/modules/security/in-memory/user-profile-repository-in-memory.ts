@@ -1,21 +1,19 @@
-import { IUserProfileDTO } from '@modules/security/dtos/i-user-profile-dto'
-import { IUserProfileRepository } from '@modules/security/repositories/i-user-profile-repository'
-import { UserProfile } from '@modules/security/infra/typeorm/entities/user-profile'
-import { ok, notFound, HttpResponse } from '@shared/helpers'
+import { IUserProfileDTO } from "@modules/security/dtos/i-user-profile-dto"
+import { IUserProfileRepository } from "@modules/security/repositories/i-user-profile-repository"
+import { UserProfile } from "@modules/security/infra/typeorm/entities/user-profile"
+import { ok, notFound, HttpResponse } from "@shared/helpers"
+import { EntityManager } from "typeorm"
 
 class UserProfileRepositoryInMemory implements IUserProfileRepository {
   usersProfiles: UserProfile[] = []
 
   // create
-  async create ({
-    userId,
-    profileId
-  }: IUserProfileDTO): Promise<HttpResponse> {
+  async create({ userId, profileId }: IUserProfileDTO): Promise<HttpResponse> {
     const userProfile = new UserProfile()
 
     Object.assign(userProfile, {
       userId,
-      profileId
+      profileId,
     })
 
     this.usersProfiles.push(userProfile)
@@ -23,14 +21,12 @@ class UserProfileRepositoryInMemory implements IUserProfileRepository {
     return ok(userProfile)
   }
 
+  createWithQueryRunner({ userId, profileId }: IUserProfileDTO, transactionManager: EntityManager): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
 
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string): Promise<HttpResponse> {
     let filteredUsersProfiles = this.usersProfiles
 
     filteredUsersProfiles = filteredUsersProfiles.filter((userProfile) => {
@@ -43,9 +39,8 @@ class UserProfileRepositoryInMemory implements IUserProfileRepository {
     return ok(filteredUsersProfiles.slice((page - 1) * rowsPerPage, page * rowsPerPage))
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     let filteredUsersProfiles = this.usersProfiles
 
     filteredUsersProfiles = filteredUsersProfiles.filter((userProfile) => {
@@ -58,15 +53,13 @@ class UserProfileRepositoryInMemory implements IUserProfileRepository {
     return ok(filteredUsersProfiles)
   }
 
-
   // id select
   idSelect(id: string): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 
-
   // count
-  async count (search: string,): Promise<HttpResponse> {
+  async count(search: string): Promise<HttpResponse> {
     let filteredUsersProfiles = this.usersProfiles
 
     filteredUsersProfiles = filteredUsersProfiles.filter((userProfile) => {
@@ -79,25 +72,19 @@ class UserProfileRepositoryInMemory implements IUserProfileRepository {
     return ok(filteredUsersProfiles.length)
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     const userProfile = this.usersProfiles.find((userProfile) => userProfile.id === id)
 
-    if (typeof userProfile === 'undefined') {
+    if (typeof userProfile === "undefined") {
       return notFound()
     } else {
       return ok(userProfile)
     }
   }
 
-
   // update
-  async update ({
-    id,
-    userId,
-    profileId
-  }: IUserProfileDTO): Promise<HttpResponse> {
+  async update({ id, userId, profileId }: IUserProfileDTO): Promise<HttpResponse> {
     const index = this.usersProfiles.findIndex((userProfile) => userProfile.id === id)
 
     this.usersProfiles[index].userId = userId
@@ -106,9 +93,8 @@ class UserProfileRepositoryInMemory implements IUserProfileRepository {
     return ok(this.usersProfiles[index])
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     const index = this.usersProfiles.findIndex((userProfile) => userProfile.id === id)
 
     this.usersProfiles.splice(index, 1)
@@ -116,10 +102,9 @@ class UserProfileRepositoryInMemory implements IUserProfileRepository {
     return ok(this.usersProfiles)
   }
 
-
   // multi delete
   multiDelete(ids: string[]): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 }
 

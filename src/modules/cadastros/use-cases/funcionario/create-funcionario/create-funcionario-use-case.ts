@@ -86,7 +86,7 @@ class CreateFuncionarioUseCase {
       const result = await this.funcionarioRepository
         .create({
           nome,
-          cpf,
+          cpf: cpf.toString().replace(/[^\d]+/g, ""),
           email,
           cargo,
           cep,

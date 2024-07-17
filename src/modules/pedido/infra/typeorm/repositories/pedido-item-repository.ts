@@ -1,4 +1,4 @@
-import { Brackets, getRepository, Repository } from "typeorm"
+import { Brackets, EntityManager, getRepository, Repository, TransactionManager } from "typeorm"
 import { IPedidoItemDTO } from "@modules/pedido/dtos/i-pedido-item-dto"
 import { IPedidoItemRepository } from "@modules/pedido/repositories/i-pedido-item-repository"
 import { PedidoItem } from "@modules/pedido/infra/typeorm/entities/pedido-item"
@@ -22,6 +22,29 @@ class PedidoItemRepository implements IPedidoItemRepository {
     })
 
     const result = await this.repository
+      .save(pedidoItem)
+      .then((pedidoItemResult) => {
+        return ok(pedidoItemResult)
+      })
+      .catch((error) => {
+        return serverError(error)
+      })
+
+    return result
+  }
+
+  async createWithQueryRunner(
+    { produtoId, pedidoId, quantidade, desabilitado }: IPedidoItemDTO,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    const pedidoItem = transactionManager.create(PedidoItem, {
+      produtoId,
+      pedidoId,
+      quantidade,
+      desabilitado,
+    })
+
+    const result = await transactionManager
       .save(pedidoItem)
       .then((pedidoItemResult) => {
         return ok(pedidoItemResult)
@@ -162,15 +185,43 @@ class PedidoItemRepository implements IPedidoItemRepository {
     }
   }
 
+  async getByPedidoIdAndProdutoId(pedidoId: string, produtoId: string): Promise<HttpResponse> {
+    try {
+      const pedidoItem = await this.repository
+        .createQueryBuilder("ped")
+        .select([
+          'ped.id as "id"',
+          'ped.produtoId as "produtoId"',
+          'ped.pedidoId as "pedidoId"',
+          'ped.quantidade as "quantidade"',
+          'ped.desabilitado as "desabilitado"',
+        ])
+        .where("ped.pedidoId = :pedidoId", { pedidoId })
+        .andWhere("ped.produtoId = :produtoId", { produtoId })
+        .getRawOne()
+
+      if (typeof pedidoItem === "undefined") {
+        return noContent()
+      }
+
+      return ok(pedidoItem)
+    } catch (err) {
+      return serverError(err)
+    }
+  }
+
   // update
-  async update({ id, produtoId, pedidoId, quantidade, desabilitado }: IPedidoItemDTO): Promise<HttpResponse> {
-    const pedidoItem = await this.repository.findOne(id)
+  async update(
+    { id, produtoId, pedidoId, quantidade, desabilitado }: IPedidoItemDTO,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    const pedidoItem = await transactionManager.findOne(PedidoItem, id)
 
     if (!pedidoItem) {
       return notFound()
     }
 
-    const newpedidoItem = this.repository.create({
+    const newpedidoItem = transactionManager.create(PedidoItem, {
       id,
       produtoId,
       pedidoId,
@@ -179,7 +230,7 @@ class PedidoItemRepository implements IPedidoItemRepository {
     })
 
     try {
-      await this.repository.save(newpedidoItem)
+      await transactionManager.save(newpedidoItem)
 
       return ok(newpedidoItem)
     } catch (err) {

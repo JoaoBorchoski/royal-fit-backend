@@ -276,10 +276,6 @@ class ClienteRepository implements IClienteRepository {
         .where("cli.cpfCnpj = :cpfCnpj", { cpfCnpj })
         .getRawOne()
 
-      if (typeof cliente === "undefined") {
-        return noContent()
-      }
-
       return ok(cliente)
     } catch (err) {
       return serverError(err)

@@ -1,9 +1,9 @@
-import { getRepository, Repository } from 'typeorm'
-import { IUserProfileDTO } from '@modules/security/dtos/i-user-profile-dto'
-import { IUserProfileRepository } from '@modules/security/repositories/i-user-profile-repository'
-import { UserProfile } from '@modules/security/infra/typeorm/entities/user-profile'
-import { noContent, serverError, ok, notFound, HttpResponse } from '@shared/helpers'
-import { AppError } from '@shared/errors/app-error'
+import { EntityManager, getRepository, Repository, TransactionManager } from "typeorm"
+import { IUserProfileDTO } from "@modules/security/dtos/i-user-profile-dto"
+import { IUserProfileRepository } from "@modules/security/repositories/i-user-profile-repository"
+import { UserProfile } from "@modules/security/infra/typeorm/entities/user-profile"
+import { noContent, serverError, ok, notFound, HttpResponse } from "@shared/helpers"
+import { AppError } from "@shared/errors/app-error"
 
 class UserProfileRepository implements IUserProfileRepository {
   private repository: Repository<UserProfile>
@@ -12,53 +12,61 @@ class UserProfileRepository implements IUserProfileRepository {
     this.repository = getRepository(UserProfile)
   }
 
-
   // create
-  async create ({
-    userId,
-    profileId
-  }: IUserProfileDTO): Promise<HttpResponse> {
+  async create({ userId, profileId }: IUserProfileDTO): Promise<HttpResponse> {
     const userProfile = this.repository.create({
       userId,
-      profileId
+      profileId,
     })
 
-    const result = await this.repository.save(userProfile)
-      .then(userProfileResult => {
+    const result = await this.repository
+      .save(userProfile)
+      .then((userProfileResult) => {
         return ok(userProfileResult)
       })
-      .catch(error => {
+      .catch((error) => {
         return serverError(error)
       })
 
     return result
   }
 
+  async createWithQueryRunner(
+    { userId, profileId }: IUserProfileDTO,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    const userProfile = transactionManager.create(UserProfile, {
+      userId,
+      profileId,
+    })
+
+    const result = await transactionManager
+      .save(userProfile)
+      .then((userProfileResult) => {
+        return ok(userProfileResult)
+      })
+      .catch((error) => {
+        return serverError(error)
+      })
+
+    return result
+  }
 
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string,
-    filter?: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string, filter?: string): Promise<HttpResponse> {
     let columnName: string
-    let columnDirection: 'ASC' | 'DESC'
+    let columnDirection: "ASC" | "DESC"
 
-    if ((typeof(order) === 'undefined') || (order === "")) {
-      columnName = 'nome'
-      columnDirection = 'ASC'
+    if (typeof order === "undefined" || order === "") {
+      columnName = "nome"
+      columnDirection = "ASC"
     } else {
-      columnName = order.substring(0, 1) === '-' ? order.substring(1) : order
-      columnDirection = order.substring(0, 1) === '-' ? 'DESC' : 'ASC'
+      columnName = order.substring(0, 1) === "-" ? order.substring(1) : order
+      columnDirection = order.substring(0, 1) === "-" ? "DESC" : "ASC"
     }
 
-    const referenceArray = [
-      "userName",
-      "profileName"
-    ]
-    const columnOrder = new Array<'ASC' | 'DESC'>(2).fill('ASC')
+    const referenceArray = ["userName", "profileName"]
+    const columnOrder = new Array<"ASC" | "DESC">(2).fill("ASC")
 
     const index = referenceArray.indexOf(columnName)
 
@@ -67,7 +75,8 @@ class UserProfileRepository implements IUserProfileRepository {
     const offset = rowsPerPage * page
 
     try {
-      let usersProfiles = await this.repository.createQueryBuilder('use')
+      let usersProfiles = await this.repository
+        .createQueryBuilder("use")
         .select([
           'use.id as "id"',
           'us1.id as "userId"',
@@ -75,11 +84,11 @@ class UserProfileRepository implements IUserProfileRepository {
           'pro.id as "profileId"',
           'pro.name as "profileName"',
         ])
-        .leftJoin('use.userId', 'us1')
-        .leftJoin('use.profileId', 'pro')
-        .where('us1.name ilike :search', { search: `%${search}%` })
-        .addOrderBy('us1.name', columnOrder[0])
-        .addOrderBy('pro.name', columnOrder[1])
+        .leftJoin("use.userId", "us1")
+        .leftJoin("use.profileId", "pro")
+        .where("us1.name ilike :search", { search: `%${search}%` })
+        .addOrderBy("us1.name", columnOrder[0])
+        .addOrderBy("pro.name", columnOrder[1])
         .take(rowsPerPage)
         .skip(offset)
         .getRawMany()
@@ -98,17 +107,14 @@ class UserProfileRepository implements IUserProfileRepository {
     }
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     try {
-      const usersProfiles = await this.repository.createQueryBuilder('use')
-        .select([
-          'use. as "value"',
-          'use. as "label"',
-        ])
-        .where('use. ilike :filter', { filter: `${filter}%` })
-        .addOrderBy('use.')
+      const usersProfiles = await this.repository
+        .createQueryBuilder("use")
+        .select(['use. as "value"', 'use. as "label"'])
+        .where("use. ilike :filter", { filter: `${filter}%` })
+        .addOrderBy("use.")
         .getRawMany()
 
       return ok(usersProfiles)
@@ -117,16 +123,13 @@ class UserProfileRepository implements IUserProfileRepository {
     }
   }
 
-
   // id select
-  async idSelect (id: string): Promise<HttpResponse> {
+  async idSelect(id: string): Promise<HttpResponse> {
     try {
-      const userProfile = await this.repository.createQueryBuilder('use')
-        .select([
-          'use. as "value"',
-          'use. as "label"',
-        ])
-        .where('use. = :id', { id: `${id}` })
+      const userProfile = await this.repository
+        .createQueryBuilder("use")
+        .select(['use. as "value"', 'use. as "label"'])
+        .where("use. = :id", { id: `${id}` })
         .getRawOne()
 
       return ok(userProfile)
@@ -135,20 +138,15 @@ class UserProfileRepository implements IUserProfileRepository {
     }
   }
 
-
   // count
-  async count (
-    search: string,
-    filter?: string
-  ): Promise<HttpResponse> {
+  async count(search: string, filter?: string): Promise<HttpResponse> {
     try {
-      const usersProfiles = await this.repository.createQueryBuilder('use')
-        .select([
-          'use.id as "id"',
-        ])
-        .leftJoin('use.userId', 'us1')
-        .leftJoin('use.profileId', 'pro')
-        .where('us1.name ilike :search', { search: `%${search}%` })
+      const usersProfiles = await this.repository
+        .createQueryBuilder("use")
+        .select(['use.id as "id"'])
+        .leftJoin("use.userId", "us1")
+        .leftJoin("use.profileId", "pro")
+        .where("us1.name ilike :search", { search: `%${search}%` })
         .getRawMany()
 
       return ok({ count: usersProfiles.length })
@@ -157,13 +155,12 @@ class UserProfileRepository implements IUserProfileRepository {
     }
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     try {
       const userProfile = await this.repository.findOne(id)
 
-      if (typeof userProfile === 'undefined') {
+      if (typeof userProfile === "undefined") {
         return noContent()
       }
 
@@ -173,13 +170,8 @@ class UserProfileRepository implements IUserProfileRepository {
     }
   }
 
-
   // update
-  async update ({
-    id,
-    userId,
-    profileId
-  }: IUserProfileDTO): Promise<HttpResponse> {
+  async update({ id, userId, profileId }: IUserProfileDTO): Promise<HttpResponse> {
     const userProfile = await this.repository.findOne(id)
 
     if (!userProfile) {
@@ -189,7 +181,7 @@ class UserProfileRepository implements IUserProfileRepository {
     const newuserProfile = this.repository.create({
       id,
       userId,
-      profileId
+      profileId,
     })
 
     try {
@@ -201,9 +193,8 @@ class UserProfileRepository implements IUserProfileRepository {
     }
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     try {
       await this.repository.delete(id)
 
@@ -213,16 +204,15 @@ class UserProfileRepository implements IUserProfileRepository {
     }
   }
 
-
   // multi delete
-  async multiDelete (ids: string[]): Promise<HttpResponse> {
+  async multiDelete(ids: string[]): Promise<HttpResponse> {
     try {
       await this.repository.delete(ids)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
 
       return serverError(err)

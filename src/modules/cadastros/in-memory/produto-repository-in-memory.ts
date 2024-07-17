@@ -1,25 +1,21 @@
-import { IProdutoDTO } from '@modules/cadastros/dtos/i-produto-dto'
-import { IProdutoRepository } from '@modules/cadastros/repositories/i-produto-repository'
-import { Produto } from '@modules/cadastros/infra/typeorm/entities/produto'
-import { ok, notFound, HttpResponse } from '@shared/helpers'
+import { IProdutoDTO } from "@modules/cadastros/dtos/i-produto-dto"
+import { IProdutoRepository } from "@modules/cadastros/repositories/i-produto-repository"
+import { Produto } from "@modules/cadastros/infra/typeorm/entities/produto"
+import { ok, notFound, HttpResponse } from "@shared/helpers"
+import { EntityManager } from "typeorm"
 
 class ProdutoRepositoryInMemory implements IProdutoRepository {
   produtos: Produto[] = []
 
   // create
-  async create ({
-    nome,
-    preco,
-    descricao,
-    desabilitado
-  }: IProdutoDTO): Promise<HttpResponse> {
+  async create({ nome, preco, descricao, desabilitado }: IProdutoDTO): Promise<HttpResponse> {
     const produto = new Produto()
 
     Object.assign(produto, {
       nome,
       preco,
       descricao,
-      desabilitado
+      desabilitado,
     })
 
     this.produtos.push(produto)
@@ -27,14 +23,19 @@ class ProdutoRepositoryInMemory implements IProdutoRepository {
     return ok(produto)
   }
 
+  createWithQueryRunner(
+    { nome, preco, descricao, desabilitado }: IProdutoDTO,
+    transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
+
+  getByname(nome: string): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
 
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string): Promise<HttpResponse> {
     let filteredProdutos = this.produtos
 
     filteredProdutos = filteredProdutos.filter((produto) => {
@@ -47,9 +48,8 @@ class ProdutoRepositoryInMemory implements IProdutoRepository {
     return ok(filteredProdutos.slice((page - 1) * rowsPerPage, page * rowsPerPage))
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     let filteredProdutos = this.produtos
 
     filteredProdutos = filteredProdutos.filter((produto) => {
@@ -62,16 +62,14 @@ class ProdutoRepositoryInMemory implements IProdutoRepository {
     return ok(filteredProdutos)
   }
 
-
   //
   // id select
   idSelect(id: string): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 
-
   // count
-  async count (search: string,): Promise<HttpResponse> {
+  async count(search: string): Promise<HttpResponse> {
     let filteredProdutos = this.produtos
 
     filteredProdutos = filteredProdutos.filter((produto) => {
@@ -84,27 +82,19 @@ class ProdutoRepositoryInMemory implements IProdutoRepository {
     return ok(filteredProdutos.length)
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     const produto = this.produtos.find((produto) => produto.id === id)
 
-    if (typeof produto === 'undefined') {
+    if (typeof produto === "undefined") {
       return notFound()
     } else {
       return ok(produto)
     }
   }
 
-
   // update
-  async update ({
-    id,
-    nome,
-    preco,
-    descricao,
-    desabilitado
-  }: IProdutoDTO): Promise<HttpResponse> {
+  async update({ id, nome, preco, descricao, desabilitado }: IProdutoDTO): Promise<HttpResponse> {
     const index = this.produtos.findIndex((produto) => produto.id === id)
 
     this.produtos[index].nome = nome
@@ -115,9 +105,8 @@ class ProdutoRepositoryInMemory implements IProdutoRepository {
     return ok(this.produtos[index])
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     const index = this.produtos.findIndex((produto) => produto.id === id)
 
     this.produtos.splice(index, 1)
@@ -125,10 +114,9 @@ class ProdutoRepositoryInMemory implements IProdutoRepository {
     return ok(this.produtos)
   }
 
-
   // multi delete
   multiDelete(ids: string[]): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 }
 

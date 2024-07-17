@@ -1,8 +1,13 @@
+import { IUserRepository } from "@modules/authentication/repositories/i-user-repository"
 import { IFuncionarioDTO } from "@modules/cadastros/dtos/i-funcionario-dto"
 import { IProdutoDTO } from "@modules/cadastros/dtos/i-produto-dto"
 import { IFuncionarioRepository } from "@modules/cadastros/repositories/i-funcionario-repository"
 import { IProdutoRepository } from "@modules/cadastros/repositories/i-produto-repository"
+import { IUserGroupRepository } from "@modules/security/repositories/i-user-group-repository"
+import { IUserProfileRepository } from "@modules/security/repositories/i-user-profile-repository"
+import { AppError } from "@shared/errors/app-error"
 import { HttpResponse, noContent, ok } from "@shared/helpers"
+import { hash } from "bcrypt"
 import fs from "fs"
 import moment from "moment"
 import { inject, injectable } from "tsyringe"
@@ -16,7 +21,13 @@ interface IRequest {
 class ImportFuncionarioUseCase {
   constructor(
     @inject("FuncionarioRepository")
-    private funcionarioRepository: IFuncionarioRepository
+    private funcionarioRepository: IFuncionarioRepository,
+    @inject("UserRepository")
+    private userRepository: IUserRepository,
+    @inject("UserGroupRepository")
+    private userGroupRepository: IUserGroupRepository,
+    @inject("UserProfileRepository")
+    private userProfileRepository: IUserProfileRepository
   ) {}
 
   async importExcelData(row: any): Promise<IFuncionarioDTO> {
@@ -45,16 +56,52 @@ class ImportFuncionarioUseCase {
     const { file } = request
     const queryRunner = getConnection().createQueryRunner()
     await queryRunner.startTransaction()
+    const userGroupId = await this.userGroupRepository.getByName("royalfit")
+    let index = 0
 
     let errors = []
 
     try {
       const rows = await this.parseExcelFile(file)
       for await (const row of rows) {
+        index++
         const funcionario = await this.importExcelData(row)
-        console.log(funcionario)
+
+        const alreadyExists = await this.userRepository.findByEmailWithQueryRunner(funcionario.email, queryRunner.manager)
+
+        if (alreadyExists) {
+          throw new AppError("Funcionários com email duplicado não são permitidos.")
+        }
+
+        const passwordBtoa = btoa(funcionario.cpf)
+        const passwordHash = await hash(passwordBtoa, 8)
+        const resultCreateUser = await this.userRepository.createWithQueryRunner(
+          {
+            userGroupId: userGroupId.data.id,
+            name: funcionario.nome,
+            login: funcionario.email,
+            password: passwordHash,
+            isAdmin: false,
+            isSuperUser: false,
+            isBlocked: false,
+            blockReasonId: null,
+            mustChangePasswordNextLogon: true,
+            avatar: null,
+            isDisabled: false,
+          },
+          queryRunner.manager
+        )
+        funcionario.usuarioId = resultCreateUser.id
+
+        await this.userProfileRepository.createWithQueryRunner(
+          {
+            userId: resultCreateUser.id,
+            profileId: "50e82f3b-779d-4918-8076-e8bce6b738c6",
+          },
+          queryRunner.manager
+        )
+
         const teste = await this.funcionarioRepository.createWithQueryRunner(funcionario, queryRunner.manager)
-        console.log(teste)
       }
 
       fs.unlinkSync(file.path)

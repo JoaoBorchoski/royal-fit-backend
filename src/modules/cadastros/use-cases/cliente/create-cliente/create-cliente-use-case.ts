@@ -1,7 +1,8 @@
-import { inject, injectable } from 'tsyringe'
-import { Cliente } from '@modules/cadastros/infra/typeorm/entities/cliente'
-import { IClienteRepository } from '@modules/cadastros/repositories/i-cliente-repository'
-import { AppError } from '@shared/errors/app-error'
+import { inject, injectable } from "tsyringe"
+import { Cliente } from "@modules/cadastros/infra/typeorm/entities/cliente"
+import { IClienteRepository } from "@modules/cadastros/repositories/i-cliente-repository"
+import { AppError } from "@shared/errors/app-error"
+import { IBonificacaoRepository } from "@modules/cadastros/repositories/i-bonificacao-repository"
 
 interface IRequest {
   nome: string
@@ -21,8 +22,11 @@ interface IRequest {
 
 @injectable()
 class CreateClienteUseCase {
-  constructor(@inject('ClienteRepository')
-    private clienteRepository: IClienteRepository
+  constructor(
+    @inject("ClienteRepository")
+    private clienteRepository: IClienteRepository,
+    @inject("BonificacaoRepository")
+    private bonificacaoRepository: IBonificacaoRepository
   ) {}
 
   async execute({
@@ -38,31 +42,42 @@ class CreateClienteUseCase {
     complemento,
     telefone,
     usuarioId,
-    desabilitado
+    desabilitado,
   }: IRequest): Promise<Cliente> {
-    const result = await this.clienteRepository.create({
-        nome,
-        cpfCnpj,
-        email,
-        cep,
-        estadoId,
-        cidadeId,
-        bairro,
-        endereco,
-        numero,
-        complemento,
-        telefone,
-        usuarioId,
-        desabilitado
-      })
-      .then(clienteResult => {
-        return clienteResult
-      })
-      .catch(error => {
-        return error
+    try {
+      const result = await this.clienteRepository
+        .create({
+          nome,
+          cpfCnpj: cpfCnpj.toString().replace(/[^\d]+/g, ""),
+          email,
+          cep,
+          estadoId,
+          cidadeId,
+          bairro,
+          endereco,
+          numero,
+          complemento,
+          telefone,
+          usuarioId,
+          desabilitado,
+        })
+        .then((clienteResult) => {
+          return clienteResult
+        })
+        .catch((error) => {
+          return error
+        })
+      await this.bonificacaoRepository.create({
+        clienteId: result.data.id,
+        bonificacaoDisponivel: 0,
+        totalVendido: 0,
+        desabilitado: false,
       })
 
-    return result
+      return result
+    } catch (error) {
+      return error
+    }
   }
 }
 

@@ -26,6 +26,8 @@ interface IBonificacaoRepository {
   // get
   get(id: string): Promise<HttpResponse>
 
+  getByClienteId(clienteId: string): Promise<HttpResponse>
+
   // update
   update(data: IBonificacaoDTO): Promise<HttpResponse>
 
