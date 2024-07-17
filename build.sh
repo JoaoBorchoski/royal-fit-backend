@@ -5,5 +5,5 @@ set -o errexit
 
 yarn
 yarn build
-yarn typeorm migration:run 
+yarn typeorm migration:run -d dist/shared/infra/typeorm/index.ts
 yarn seed:seeder
