@@ -5,5 +5,6 @@ set -o errexit
 
 yarn
 yarn build
-yarn typeorm migration:run -- -d dist/shared/infra/typeorm/index.js
+cat <<EOF > package.json
+yarn typeorm migration:run -- -d dist/shared/infra/http/app.js
 yarn seed:seeder
