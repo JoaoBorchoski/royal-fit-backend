@@ -28,6 +28,8 @@ interface IBonificacaoRepository {
 
   getByClienteId(clienteId: string): Promise<HttpResponse>
 
+  getByClienteIdWithQueryRunner(clienteId: string, transactionManager: EntityManager): Promise<HttpResponse>
+
   // update
   update(data: IBonificacaoDTO): Promise<HttpResponse>
 

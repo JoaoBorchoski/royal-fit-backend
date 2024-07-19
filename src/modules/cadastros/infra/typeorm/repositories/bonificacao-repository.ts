@@ -217,6 +217,31 @@ class BonificacaoRepository implements IBonificacaoRepository {
     }
   }
 
+  async getByClienteIdWithQueryRunner(
+    clienteId: string,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    try {
+      const bonificacao = await transactionManager
+        .createQueryBuilder(Bonificacao, "bon")
+        .select([
+          'bon.id as "id"',
+          'bon.clienteId as "clienteId"',
+          'a.nome as "clienteNome"',
+          'bon.totalVendido as "totalVendido"',
+          'bon.bonificacaoDisponivel as "bonificacaoDisponivel"',
+          'bon.desabilitado as "desabilitado"',
+        ])
+        .leftJoin("bon.clienteId", "a")
+        .where("bon.clienteId = :clienteId", { clienteId })
+        .getRawOne()
+
+      return ok(bonificacao)
+    } catch (err) {
+      return serverError(err)
+    }
+  }
+
   // update
   async update({ id, clienteId, totalVendido, bonificacaoDisponivel, desabilitado }: IBonificacaoDTO): Promise<HttpResponse> {
     const bonificacao = await this.repository.findOne(id)

@@ -2,6 +2,7 @@ import { IClienteDTO } from "@modules/cadastros/dtos/i-cliente-dto"
 import { IFuncionarioDTO } from "@modules/cadastros/dtos/i-funcionario-dto"
 import { IBonificacaoRepository } from "@modules/cadastros/repositories/i-bonificacao-repository"
 import { IClienteRepository } from "@modules/cadastros/repositories/i-cliente-repository"
+import { IBalancoRepository } from "@modules/clientes/repositories/i-balanco-repository"
 import { HttpResponse, noContent, ok } from "@shared/helpers"
 import fs from "fs"
 import moment from "moment"
@@ -18,7 +19,9 @@ class ImportClienteUseCase {
     @inject("ClienteRepository")
     private clienteRepository: IClienteRepository,
     @inject("BonificacaoRepository")
-    private bonificacaoRepository: IBonificacaoRepository
+    private bonificacaoRepository: IBonificacaoRepository,
+    @inject("BalancoRepository")
+    private balancoRepository: IBalancoRepository
   ) {}
 
   async importExcelData(row: any): Promise<IFuncionarioDTO> {
@@ -55,16 +58,30 @@ class ImportClienteUseCase {
       for await (const row of rows) {
         const cliente = await this.importExcelData(row)
         const teste = await this.clienteRepository.createWithQueryRunner(cliente, queryRunner.manager)
+        const bonificacaoAlreadyExists = await this.bonificacaoRepository.getByClienteId(teste.data.id)
+        const balancoAlreadyExists = await this.balancoRepository.getByClienteId(teste.data.id)
 
-        await this.bonificacaoRepository.createWithQueryRunner(
-          {
-            clienteId: teste.data.id,
-            bonificacaoDisponivel: 0,
-            totalVendido: 0,
-            desabilitado: false,
-          },
-          queryRunner.manager
-        )
+        if (!bonificacaoAlreadyExists.data) {
+          await this.bonificacaoRepository.createWithQueryRunner(
+            {
+              clienteId: teste.data.id,
+              bonificacaoDisponivel: 0,
+              totalVendido: 0,
+              desabilitado: false,
+            },
+            queryRunner.manager
+          )
+        }
+        if (!balancoAlreadyExists.data) {
+          await this.balancoRepository.createWithQueryRunner(
+            {
+              clienteId: teste.data.id,
+              saldoDevedor: 0,
+              desabilitado: false,
+            },
+            queryRunner.manager
+          )
+        }
       }
 
       fs.unlinkSync(file.path)

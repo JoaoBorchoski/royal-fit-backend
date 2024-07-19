@@ -3,6 +3,8 @@ import { Cliente } from "@modules/cadastros/infra/typeorm/entities/cliente"
 import { IClienteRepository } from "@modules/cadastros/repositories/i-cliente-repository"
 import { AppError } from "@shared/errors/app-error"
 import { IBonificacaoRepository } from "@modules/cadastros/repositories/i-bonificacao-repository"
+import { IBalancoRepository } from "@modules/clientes/repositories/i-balanco-repository"
+import { IUserRepository } from "@modules/authentication/repositories/i-user-repository"
 
 interface IRequest {
   nome: string
@@ -26,7 +28,11 @@ class CreateClienteUseCase {
     @inject("ClienteRepository")
     private clienteRepository: IClienteRepository,
     @inject("BonificacaoRepository")
-    private bonificacaoRepository: IBonificacaoRepository
+    private bonificacaoRepository: IBonificacaoRepository,
+    @inject("BalancoRepository")
+    private balancoRepository: IBalancoRepository,
+    @inject("UserRepository")
+    private UserRepository: IUserRepository
   ) {}
 
   async execute({
@@ -45,6 +51,12 @@ class CreateClienteUseCase {
     desabilitado,
   }: IRequest): Promise<Cliente> {
     try {
+      const findByEmail = await this.UserRepository.findByEmail(email)
+
+      if (findByEmail) {
+        throw new AppError("User already exists", 400)
+      }
+
       const result = await this.clienteRepository
         .create({
           nome,
@@ -67,12 +79,25 @@ class CreateClienteUseCase {
         .catch((error) => {
           return error
         })
-      await this.bonificacaoRepository.create({
-        clienteId: result.data.id,
-        bonificacaoDisponivel: 0,
-        totalVendido: 0,
-        desabilitado: false,
-      })
+
+      const bonificacaoAlreadyExists = await this.bonificacaoRepository.getByClienteId(result.data.id)
+      const balancoAlreadyExists = await this.balancoRepository.getByClienteId(result.data.id)
+
+      if (!bonificacaoAlreadyExists.data) {
+        await this.bonificacaoRepository.create({
+          clienteId: result.data.id,
+          bonificacaoDisponivel: 0,
+          totalVendido: 0,
+          desabilitado: false,
+        })
+      }
+      if (!balancoAlreadyExists.data) {
+        await this.balancoRepository.create({
+          clienteId: result.data.id,
+          saldoDevedor: 0,
+          desabilitado: false,
+        })
+      }
 
       return result
     } catch (error) {

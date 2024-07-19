@@ -1,9 +1,9 @@
-import { Brackets, getRepository, Repository } from 'typeorm'
-import { IBalancoDTO } from '@modules/clientes/dtos/i-balanco-dto'
-import { IBalancoRepository } from '@modules/clientes/repositories/i-balanco-repository'
-import { Balanco } from '@modules/clientes/infra/typeorm/entities/balanco'
-import { noContent, serverError, ok, notFound, HttpResponse } from '@shared/helpers'
-import { AppError } from '@shared/errors/app-error'
+import { Brackets, EntityManager, getRepository, Repository, TransactionManager } from "typeorm"
+import { IBalancoDTO } from "@modules/clientes/dtos/i-balanco-dto"
+import { IBalancoRepository } from "@modules/clientes/repositories/i-balanco-repository"
+import { Balanco } from "@modules/clientes/infra/typeorm/entities/balanco"
+import { noContent, serverError, ok, notFound, HttpResponse } from "@shared/helpers"
+import { AppError } from "@shared/errors/app-error"
 
 class BalancoRepository implements IBalancoRepository {
   private repository: Repository<Balanco>
@@ -12,55 +12,63 @@ class BalancoRepository implements IBalancoRepository {
     this.repository = getRepository(Balanco)
   }
 
-
   // create
-  async create ({
-    clienteId,
-    saldoDevedor,
-    desabilitado
-  }: IBalancoDTO): Promise<HttpResponse> {
+  async create({ clienteId, saldoDevedor, desabilitado }: IBalancoDTO): Promise<HttpResponse> {
     const balanco = this.repository.create({
       clienteId,
       saldoDevedor,
-      desabilitado
+      desabilitado,
     })
 
-    const result = await this.repository.save(balanco)
-      .then(balancoResult => {
+    const result = await this.repository
+      .save(balanco)
+      .then((balancoResult) => {
         return ok(balancoResult)
       })
-      .catch(error => {
+      .catch((error) => {
         return serverError(error)
       })
 
     return result
   }
 
+  async createWithQueryRunner(
+    { clienteId, saldoDevedor, desabilitado }: IBalancoDTO,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    const balanco = transactionManager.create(Balanco, {
+      clienteId,
+      saldoDevedor,
+      desabilitado,
+    })
+
+    const result = await transactionManager
+      .save(balanco)
+      .then((balancoResult) => {
+        return ok(balancoResult)
+      })
+      .catch((error) => {
+        return serverError(error)
+      })
+
+    return result
+  }
 
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string,
-    filter: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string, filter: string): Promise<HttpResponse> {
     let columnName: string
-    let columnDirection: 'ASC' | 'DESC'
+    let columnDirection: "ASC" | "DESC"
 
-    if ((typeof(order) === 'undefined') || (order === "")) {
-      columnName = 'nome'
-      columnDirection = 'ASC'
+    if (typeof order === "undefined" || order === "") {
+      columnName = "nome"
+      columnDirection = "ASC"
     } else {
-      columnName = order.substring(0, 1) === '-' ? order.substring(1) : order
-      columnDirection = order.substring(0, 1) === '-' ? 'DESC' : 'ASC'
+      columnName = order.substring(0, 1) === "-" ? order.substring(1) : order
+      columnDirection = order.substring(0, 1) === "-" ? "DESC" : "ASC"
     }
 
-    const referenceArray = [
-      "clienteNome",
-      "saldoDevedor",
-    ]
-    const columnOrder = new Array<'ASC' | 'DESC'>(2).fill('ASC')
+    const referenceArray = ["clienteNome", "saldoDevedor"]
+    const columnOrder = new Array<"ASC" | "DESC">(2).fill("ASC")
 
     const index = referenceArray.indexOf(columnName)
 
@@ -69,26 +77,30 @@ class BalancoRepository implements IBalancoRepository {
     const offset = rowsPerPage * page
 
     try {
-      let query = this.repository.createQueryBuilder('bal')
+      let query = this.repository
+        .createQueryBuilder("bal")
         .select([
           'bal.id as "id"',
           'a.id as "clienteId"',
           'a.nome as "clienteNome"',
           'bal.saldoDevedor as "saldoDevedor"',
+          'bon.bonificacaoDisponivel as "bonificacaoDisponivel"',
         ])
-        .leftJoin('bal.clienteId', 'a')
+        .leftJoin("bal.clienteId", "a")
+        .leftJoin("bonificacoes", "bon", "bon.clienteId = a.id")
 
       if (filter) {
-        query = query
-          .where(filter)
+        query = query.where(filter)
       }
 
       const balancos = await query
-        .andWhere(new Brackets(query => {
-          query.andWhere('CAST(a.nome AS VARCHAR) ilike :search', { search: `%${search}%` })
-        }))
-        .addOrderBy('a.nome', columnOrder[0])
-        .addOrderBy('bal.saldoDevedor', columnOrder[1])
+        .andWhere(
+          new Brackets((query) => {
+            query.andWhere("CAST(a.nome AS VARCHAR) ilike :search", { search: `%${search}%` })
+          })
+        )
+        .addOrderBy("a.nome", columnOrder[0])
+        .addOrderBy("bal.saldoDevedor", columnOrder[1])
         .offset(offset)
         .limit(rowsPerPage)
         .take(rowsPerPage)
@@ -100,17 +112,14 @@ class BalancoRepository implements IBalancoRepository {
     }
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     try {
-      const balancos = await this.repository.createQueryBuilder('bal')
-        .select([
-          'bal. as "value"',
-          'bal. as "label"',
-        ])
-        .where('bal. ilike :filter', { filter: `${filter}%` })
-        .addOrderBy('bal.')
+      const balancos = await this.repository
+        .createQueryBuilder("bal")
+        .select(['bal. as "value"', 'bal. as "label"'])
+        .where("bal. ilike :filter", { filter: `${filter}%` })
+        .addOrderBy("bal.")
         .getRawMany()
 
       return ok(balancos)
@@ -119,16 +128,13 @@ class BalancoRepository implements IBalancoRepository {
     }
   }
 
-
   // id select
-  async idSelect (id: string): Promise<HttpResponse> {
+  async idSelect(id: string): Promise<HttpResponse> {
     try {
-      const balanco = await this.repository.createQueryBuilder('bal')
-        .select([
-          'bal. as "value"',
-          'bal. as "label"',
-        ])
-        .where('bal. = :id', { id: `${id}` })
+      const balanco = await this.repository
+        .createQueryBuilder("bal")
+        .select(['bal. as "value"', 'bal. as "label"'])
+        .where("bal. = :id", { id: `${id}` })
         .getRawOne()
 
       return ok(balanco)
@@ -137,28 +143,21 @@ class BalancoRepository implements IBalancoRepository {
     }
   }
 
-
   // count
-  async count (
-    search: string,
-    filter: string
-  ): Promise<HttpResponse> {
+  async count(search: string, filter: string): Promise<HttpResponse> {
     try {
-      let query = this.repository.createQueryBuilder('bal')
-        .select([
-          'bal.id as "id"',
-        ])
-        .leftJoin('bal.clienteId', 'a')
+      let query = this.repository.createQueryBuilder("bal").select(['bal.id as "id"']).leftJoin("bal.clienteId", "a")
 
       if (filter) {
-        query = query
-          .where(filter)
+        query = query.where(filter)
       }
 
       const balancos = await query
-        .andWhere(new Brackets(query => {
-          query.andWhere('CAST(a.nome AS VARCHAR) ilike :search', { search: `%${search}%` })
-        }))
+        .andWhere(
+          new Brackets((query) => {
+            query.andWhere("CAST(a.nome AS VARCHAR) ilike :search", { search: `%${search}%` })
+          })
+        )
         .getRawMany()
 
       return ok({ count: balancos.length })
@@ -167,11 +166,11 @@ class BalancoRepository implements IBalancoRepository {
     }
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     try {
-      const balanco = await this.repository.createQueryBuilder('bal')
+      const balanco = await this.repository
+        .createQueryBuilder("bal")
         .select([
           'bal.id as "id"',
           'bal.clienteId as "clienteId"',
@@ -179,11 +178,11 @@ class BalancoRepository implements IBalancoRepository {
           'bal.saldoDevedor as "saldoDevedor"',
           'bal.desabilitado as "desabilitado"',
         ])
-        .leftJoin('bal.clienteId', 'a')
-        .where('bal.id = :id', { id })
+        .leftJoin("bal.clienteId", "a")
+        .where("bal.id = :id", { id })
         .getRawOne()
 
-      if (typeof balanco === 'undefined') {
+      if (typeof balanco === "undefined") {
         return noContent()
       }
 
@@ -193,14 +192,49 @@ class BalancoRepository implements IBalancoRepository {
     }
   }
 
+  async getByClienteId(clienteId: string): Promise<HttpResponse> {
+    try {
+      const balanco = await this.repository
+        .createQueryBuilder("bal")
+        .select([
+          'bal.id as "id"',
+          'bal.clienteId as "clienteId"',
+          'bal.saldoDevedor as "saldoDevedor"',
+          'bal.desabilitado as "desabilitado"',
+        ])
+        .where("bal.clienteId = :clienteId", { clienteId })
+        .getRawOne()
+
+      return ok(balanco)
+    } catch (error) {
+      return serverError(error)
+    }
+  }
+
+  async getByClienteIdWithQueryRunner(
+    clienteId: string,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    try {
+      const balanco = await transactionManager
+        .createQueryBuilder(Balanco, "bal")
+        .select([
+          'bal.id as "id"',
+          'bal.clienteId as "clienteId"',
+          'bal.saldoDevedor as "saldoDevedor"',
+          'bal.desabilitado as "desabilitado"',
+        ])
+        .where("bal.clienteId = :clienteId", { clienteId })
+        .getRawOne()
+
+      return ok(balanco)
+    } catch (error) {
+      return serverError(error)
+    }
+  }
 
   // update
-  async update ({
-    id,
-    clienteId,
-    saldoDevedor,
-    desabilitado
-  }: IBalancoDTO): Promise<HttpResponse> {
+  async update({ id, clienteId, saldoDevedor, desabilitado }: IBalancoDTO): Promise<HttpResponse> {
     const balanco = await this.repository.findOne(id)
 
     if (!balanco) {
@@ -211,7 +245,7 @@ class BalancoRepository implements IBalancoRepository {
       id,
       clienteId,
       saldoDevedor,
-      desabilitado
+      desabilitado,
     })
 
     try {
@@ -223,32 +257,30 @@ class BalancoRepository implements IBalancoRepository {
     }
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     try {
       await this.repository.delete(id)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
 
       return serverError(err)
     }
   }
 
-
   // multi delete
-  async multiDelete (ids: string[]): Promise<HttpResponse> {
+  async multiDelete(ids: string[]): Promise<HttpResponse> {
     try {
       await this.repository.delete(ids)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
 
       return serverError(err)

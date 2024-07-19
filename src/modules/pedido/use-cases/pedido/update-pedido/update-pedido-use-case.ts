@@ -78,23 +78,39 @@ class UpdatePedidoUseCase {
         const estoqueAtual = await this.estoqueRepository.getByProdutoId(pedidoItem.produtoId)
         const produto = await this.produtoRepository.get(pedidoItem.produtoId)
         const item = await this.pedidoItemRepository.getByPedidoIdAndProdutoId(pedido.data.id, pedidoItem.produtoId)
-        const novaQuantidade = estoqueAtual.data.quantidade + item.data.quantidade - pedidoItem.quantidade
 
-        if (!estoqueAtual.data || estoqueAtual.data.quantidade + item.data.quantidade < pedidoItem.quantidade) {
-          throw new AppError(`Estoque insuficiente ou estoque não cadastrado para o produto ${produto.data.nome}`)
+        if (item.data) {
+          const novaQuantidade = estoqueAtual.data.quantidade + item.data.quantidade - pedidoItem.quantidade
+          if (!estoqueAtual.data || estoqueAtual.data.quantidade + item.data.quantidade < pedidoItem.quantidade) {
+            throw new AppError(`Estoque insuficiente ou estoque não cadastrado para o produto ${produto.data.nome}`)
+          }
+
+          await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, novaQuantidade, queryRunner.manager)
+          await this.pedidoItemRepository.update(
+            {
+              id: item.data.id,
+              pedidoId: pedido.data.id,
+              produtoId: pedidoItem.produtoId,
+              quantidade: pedidoItem.quantidade,
+            },
+            queryRunner.manager
+          )
+        } else {
+          const novaQuantidade = estoqueAtual.data.quantidade - pedidoItem.quantidade
+          if (!estoqueAtual.data || estoqueAtual.data.quantidade < pedidoItem.quantidade) {
+            throw new AppError(`Estoque insuficiente ou estoque não cadastrado para o produto ${produto.data.nome}`)
+          }
+
+          await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, novaQuantidade, queryRunner.manager)
+          await this.pedidoItemRepository.createWithQueryRunner(
+            {
+              pedidoId: pedido.data.id,
+              produtoId: pedidoItem.produtoId,
+              quantidade: pedidoItem.quantidade,
+            },
+            queryRunner.manager
+          )
         }
-
-        await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, novaQuantidade, queryRunner.manager)
-
-        await this.pedidoItemRepository.update(
-          {
-            id: item.data.id,
-            pedidoId: pedido.data.id,
-            produtoId: pedidoItem.produtoId,
-            quantidade: pedidoItem.quantidade,
-          },
-          queryRunner.manager
-        )
       }
 
       await queryRunner.commitTransaction()
