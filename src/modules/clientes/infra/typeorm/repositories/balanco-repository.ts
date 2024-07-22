@@ -175,10 +175,14 @@ class BalancoRepository implements IBalancoRepository {
           'bal.id as "id"',
           'bal.clienteId as "clienteId"',
           'a.nome as "clienteNome"',
-          'bal.saldoDevedor as "saldoDevedor"',
+          'bal.saldoDevedor :: float as "saldoDevedor"',
           'bal.desabilitado as "desabilitado"',
+          "bon.bonificacaoDisponivel as bonificacaoDisponivel",
+          'gar.quantidade as "garrafoesDisponivel"',
         ])
         .leftJoin("bal.clienteId", "a")
+        .leftJoin("bonificacoes", "bon", "bon.clienteId = a.id")
+        .leftJoin("garrafoes", "gar", "gar.clienteId = a.id")
         .where("bal.id = :id", { id })
         .getRawOne()
 
@@ -221,7 +225,7 @@ class BalancoRepository implements IBalancoRepository {
         .select([
           'bal.id as "id"',
           'bal.clienteId as "clienteId"',
-          'bal.saldoDevedor as "saldoDevedor"',
+          'bal.saldoDevedor :: float as "saldoDevedor"',
           'bal.desabilitado as "desabilitado"',
         ])
         .where("bal.clienteId = :clienteId", { clienteId })
@@ -250,6 +254,32 @@ class BalancoRepository implements IBalancoRepository {
 
     try {
       await this.repository.save(newbalanco)
+
+      return ok(newbalanco)
+    } catch (err) {
+      return serverError(err)
+    }
+  }
+
+  async updateWithQueryRunner(
+    { id, clienteId, saldoDevedor, desabilitado }: IBalancoDTO,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    const balanco = await transactionManager.findOne(Balanco, id)
+
+    if (!balanco) {
+      return notFound()
+    }
+
+    const newbalanco = transactionManager.create(Balanco, {
+      id,
+      clienteId,
+      saldoDevedor,
+      desabilitado,
+    })
+
+    try {
+      await transactionManager.save(newbalanco)
 
       return ok(newbalanco)
     } catch (err) {

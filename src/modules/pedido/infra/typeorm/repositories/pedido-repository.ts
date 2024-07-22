@@ -291,6 +291,31 @@ class PedidoRepository implements IPedidoRepository {
     }
   }
 
+  async getByClienteId(clienteId: string): Promise<HttpResponse> {
+    try {
+      const pedidos = await this.repository
+        .createQueryBuilder("ped")
+        .select([
+          'ped.id as "id"',
+          'ped.sequencial as "sequencial"',
+          'ped.data as "data"',
+          'ped.valorTotal :: float as "valorTotal"',
+          'ped.statusPagamentoId as "statusPagamentoId"',
+        ])
+        .where("ped.clienteId = :clienteId", { clienteId })
+        .getRawMany()
+
+      for await (const pedido of pedidos) {
+        pedido.statusPagamentoId = pedido.statusPagamentoId == "2798a92f-3412-4ed3-934d-e1209bbad87f" ? "Sim" : "Não	"
+        pedido.data = pedido.data.toLocaleDateString("pt-BR")
+      }
+
+      return ok(pedidos)
+    } catch (err) {
+      return serverError(err)
+    }
+  }
+
   // update
   async update(
     {
@@ -365,6 +390,38 @@ class PedidoRepository implements IPedidoRepository {
         throw new AppError("not null constraint", 404)
       }
 
+      return serverError(err)
+    }
+  }
+
+  async getPedidosByDataAndCliente(dataInicio: Date, dataFim: Date, clienteId: string): Promise<HttpResponse> {
+    try {
+      const pedidos = await this.repository.query(
+        `
+        SELECT 
+          p.id AS "id",
+          p.data AS "data",
+          p.valor_total :: float AS "valorTotal",
+          a.id AS "funcionarioId",
+          a.nome AS "funcionarioNome",
+          c.id AS "clienteId",
+          c.nome AS "clienteNome"
+        FROM 
+          Pedidos p
+        LEFT JOIN 
+          Funcionarios a ON p.funcionario_id = a.id
+        LEFT JOIN
+          Clientes c ON p.cliente_id = c.id
+        WHERE 
+          p.data BETWEEN $1 AND $2
+        AND
+          c.id = $3
+      `,
+        [dataInicio, dataFim, clienteId]
+      )
+
+      return ok(pedidos)
+    } catch (err) {
       return serverError(err)
     }
   }

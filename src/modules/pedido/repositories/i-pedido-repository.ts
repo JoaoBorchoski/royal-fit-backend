@@ -39,6 +39,8 @@ interface IPedidoRepository {
   // get
   get(id: string): Promise<HttpResponse>
 
+  getByClienteId(clienteId: string): Promise<HttpResponse>
+
   // update
   update(
     {
@@ -63,6 +65,8 @@ interface IPedidoRepository {
 
   // multi delete
   multiDelete(ids: string[]): Promise<HttpResponse>
+
+  getPedidosByDataAndCliente(dataInicio: Date, dataFim: Date, clienteId: string): Promise<HttpResponse>
 }
 
 export { IPedidoRepository }

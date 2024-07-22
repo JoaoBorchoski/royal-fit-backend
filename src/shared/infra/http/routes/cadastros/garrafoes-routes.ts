@@ -13,6 +13,7 @@ import multer from "multer"
 import uploadConfig from "@config/upload"
 import { ImportGarrafaoController } from "@modules/cadastros/use-cases/garrafao/import-garrafao/import-garrafao-controller"
 import { ExportGarrafaoExcelController } from "@modules/cadastros/use-cases/garrafao/export-garrafao/export-garrafao-controller"
+import { AddGarrafaoController } from "@modules/cadastros/use-cases/garrafao/add-garrafao/add-garrafao-controller"
 
 const uploadFiles = multer(uploadConfig)
 const garrafoesRoutes = Router()
@@ -28,6 +29,7 @@ const deleteGarrafaoController = new DeleteGarrafaoController()
 const multiDeleteGarrafaoController = new MultiDeleteGarrafaoController()
 const importGarrafaoController = new ImportGarrafaoController()
 const exportGarrafaoExcelController = new ExportGarrafaoExcelController()
+const addGarrafaoController = new AddGarrafaoController()
 
 garrafoesRoutes.post("/", ensureAuthenticated, createGarrafaoController.handle)
 garrafoesRoutes.post("/import-excel", ensureAuthenticated, uploadFiles.single("arquivos"), importGarrafaoController.handle)
@@ -38,6 +40,7 @@ garrafoesRoutes.get("/select", ensureAuthenticated, selectGarrafaoController.han
 garrafoesRoutes.get("/export-excel", ensureAuthenticated, exportGarrafaoExcelController.handle)
 garrafoesRoutes.get("/:id", ensureAuthenticated, getGarrafaoController.handle)
 garrafoesRoutes.put("/:id", ensureAuthenticated, updateGarrafaoController.handle)
+garrafoesRoutes.put("/add-garrafao/:id", ensureAuthenticated, addGarrafaoController.handle)
 garrafoesRoutes.delete("/:id", ensureAuthenticated, deleteGarrafaoController.handle)
 garrafoesRoutes.delete("/", ensureAuthenticated, multiDeleteGarrafaoController.handle)
 

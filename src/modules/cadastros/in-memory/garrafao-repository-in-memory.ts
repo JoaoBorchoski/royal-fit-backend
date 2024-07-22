@@ -79,6 +79,10 @@ class GarrafaoRepositoryInMemory implements IGarrafaoRepository {
     }
   }
 
+  getByClienteId(clienteId: string): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
+
   // update
   async update({ id, clienteId, quantidade, desabilitado }: IGarrafaoDTO): Promise<HttpResponse> {
     const index = this.garrafoes.findIndex((garrafao) => garrafao.id === id)
@@ -88,6 +92,13 @@ class GarrafaoRepositoryInMemory implements IGarrafaoRepository {
     this.garrafoes[index].desabilitado = desabilitado
 
     return ok(this.garrafoes[index])
+  }
+
+  updateWithQueryRunner(
+    { id, clienteId, quantidade, desabilitado }: IGarrafaoDTO,
+    transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
   }
 
   // delete

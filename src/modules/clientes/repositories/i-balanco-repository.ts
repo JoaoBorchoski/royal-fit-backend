@@ -33,6 +33,11 @@ interface IBalancoRepository {
   // update
   update(data: IBalancoDTO): Promise<HttpResponse>
 
+  updateWithQueryRunner(
+    { id, clienteId, saldoDevedor, desabilitado }: IBalancoDTO,
+    transactionManager: EntityManager
+  ): Promise<HttpResponse>
+
   // delete
   delete(id: string): Promise<HttpResponse>
 

@@ -15,7 +15,7 @@ class ExportProdutoExcelUseCase {
   }
 
   private styleColumns(workbook: any, sheetName: string) {
-    workbook.Sheets[sheetName]["!cols"] = [{ wpx: 100 }, { wpx: 100 }]
+    workbook.Sheets[sheetName]["!cols"] = [{ wpx: 150 }, { wpx: 150 }]
   }
 
   private exportEmptyExcel(sheetName: string) {

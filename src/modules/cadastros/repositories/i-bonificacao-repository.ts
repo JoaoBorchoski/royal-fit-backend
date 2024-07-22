@@ -33,6 +33,11 @@ interface IBonificacaoRepository {
   // update
   update(data: IBonificacaoDTO): Promise<HttpResponse>
 
+  updateWithQueryRunner(
+    { id, clienteId, totalVendido, bonificacaoDisponivel, desabilitado }: IBonificacaoDTO,
+    transactionManager: EntityManager
+  ): Promise<HttpResponse>
+
   // delete
   delete(id: string): Promise<HttpResponse>
 

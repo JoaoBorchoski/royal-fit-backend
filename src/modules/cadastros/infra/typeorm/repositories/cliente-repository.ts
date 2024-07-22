@@ -334,7 +334,8 @@ class ClienteRepository implements IClienteRepository {
   // delete
   async delete(id: string): Promise<HttpResponse> {
     try {
-      await this.repository.delete(id)
+      // await this.repository.delete(id)
+      await this.repository.update(id, { desabilitado: true })
 
       return noContent()
     } catch (err) {
@@ -349,7 +350,8 @@ class ClienteRepository implements IClienteRepository {
   // multi delete
   async multiDelete(ids: string[]): Promise<HttpResponse> {
     try {
-      await this.repository.delete(ids)
+      // await this.repository.delete(ids)
+      await this.repository.update(ids, { desabilitado: true })
 
       return noContent()
     } catch (err) {

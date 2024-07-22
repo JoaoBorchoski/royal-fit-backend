@@ -5,6 +5,7 @@ import { AppError } from "@shared/errors/app-error"
 import { IBonificacaoRepository } from "@modules/cadastros/repositories/i-bonificacao-repository"
 import { IBalancoRepository } from "@modules/clientes/repositories/i-balanco-repository"
 import { IUserRepository } from "@modules/authentication/repositories/i-user-repository"
+import { IGarrafaoRepository } from "@modules/cadastros/repositories/i-garrafao-repository"
 
 interface IRequest {
   nome: string
@@ -32,7 +33,9 @@ class CreateClienteUseCase {
     @inject("BalancoRepository")
     private balancoRepository: IBalancoRepository,
     @inject("UserRepository")
-    private UserRepository: IUserRepository
+    private UserRepository: IUserRepository,
+    @inject("GarrafaoRepository")
+    private garrafaoRepository: IGarrafaoRepository
   ) {}
 
   async execute({
@@ -82,6 +85,7 @@ class CreateClienteUseCase {
 
       const bonificacaoAlreadyExists = await this.bonificacaoRepository.getByClienteId(result.data.id)
       const balancoAlreadyExists = await this.balancoRepository.getByClienteId(result.data.id)
+      const garrafaAlreadyExists = await this.garrafaoRepository.getByClienteId(result.data.id)
 
       if (!bonificacaoAlreadyExists.data) {
         await this.bonificacaoRepository.create({
@@ -95,6 +99,13 @@ class CreateClienteUseCase {
         await this.balancoRepository.create({
           clienteId: result.data.id,
           saldoDevedor: 0,
+          desabilitado: false,
+        })
+      }
+      if (!garrafaAlreadyExists.data) {
+        await this.garrafaoRepository.create({
+          clienteId: result.data.id,
+          quantidade: 0,
           desabilitado: false,
         })
       }

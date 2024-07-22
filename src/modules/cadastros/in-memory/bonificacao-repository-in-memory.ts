@@ -83,6 +83,10 @@ class BonificacaoRepositoryInMemory implements IBonificacaoRepository {
     throw new Error("Method not implemented.")
   }
 
+  getByClienteIdWithQueryRunner(clienteId: string, transactionManager: EntityManager): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
+
   // update
   async update({ id, clienteId, totalVendido, bonificacaoDisponivel, desabilitado }: IBonificacaoDTO): Promise<HttpResponse> {
     const index = this.bonificacoes.findIndex((bonificacao) => bonificacao.id === id)
@@ -93,6 +97,13 @@ class BonificacaoRepositoryInMemory implements IBonificacaoRepository {
     this.bonificacoes[index].desabilitado = desabilitado
 
     return ok(this.bonificacoes[index])
+  }
+
+  updateWithQueryRunner(
+    { id, clienteId, totalVendido, bonificacaoDisponivel, desabilitado }: IBonificacaoDTO,
+    transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
   }
 
   // delete

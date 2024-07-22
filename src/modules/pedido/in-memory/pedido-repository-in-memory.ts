@@ -150,6 +150,14 @@ class PedidoRepositoryInMemory implements IPedidoRepository {
   multiDelete(ids: string[]): Promise<HttpResponse<any>> {
     throw new Error("Method not implemented.")
   }
+
+  getPedidosByDataAndCliente(dataInicio: Date, dataFim: Date, clienteId: string): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
+
+  getByClienteId(clienteId: string): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
 }
 
 export { PedidoRepositoryInMemory }

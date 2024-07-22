@@ -185,6 +185,27 @@ class GarrafaoRepository implements IGarrafaoRepository {
     }
   }
 
+  async getByClienteId(clienteId: string): Promise<HttpResponse> {
+    try {
+      const garrafoes = await this.repository
+        .createQueryBuilder("gar")
+        .select([
+          'gar.id as "id"',
+          'gar.clienteId as "clienteId"',
+          'a.nome as "clienteNome"',
+          'gar.quantidade as "quantidade"',
+          'gar.desabilitado as "desabilitado"',
+        ])
+        .leftJoin("gar.clienteId", "a")
+        .where("gar.clienteId = :clienteId", { clienteId })
+        .getRawOne()
+
+      return ok(garrafoes)
+    } catch (err) {
+      return serverError(err)
+    }
+  }
+
   // update
   async update({ id, clienteId, quantidade, desabilitado }: IGarrafaoDTO): Promise<HttpResponse> {
     const garrafao = await this.repository.findOne(id)
@@ -202,6 +223,32 @@ class GarrafaoRepository implements IGarrafaoRepository {
 
     try {
       await this.repository.save(newgarrafao)
+
+      return ok(newgarrafao)
+    } catch (err) {
+      return serverError(err)
+    }
+  }
+
+  async updateWithQueryRunner(
+    { id, clienteId, quantidade, desabilitado }: IGarrafaoDTO,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    const garrafao = await transactionManager.findOne(Garrafao, id)
+
+    if (!garrafao) {
+      return notFound()
+    }
+
+    const newgarrafao = transactionManager.create(Garrafao, {
+      id,
+      clienteId,
+      quantidade,
+      desabilitado,
+    })
+
+    try {
+      await transactionManager.save(newgarrafao)
 
       return ok(newgarrafao)
     } catch (err) {

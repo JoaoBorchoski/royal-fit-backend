@@ -26,8 +26,15 @@ interface IGarrafaoRepository {
   // get
   get(id: string): Promise<HttpResponse>
 
+  getByClienteId(clienteId: string): Promise<HttpResponse>
+
   // update
   update(data: IGarrafaoDTO): Promise<HttpResponse>
+
+  updateWithQueryRunner(
+    { id, clienteId, quantidade, desabilitado }: IGarrafaoDTO,
+    transactionManager: EntityManager
+  ): Promise<HttpResponse>
 
   // delete
   delete(id: string): Promise<HttpResponse>

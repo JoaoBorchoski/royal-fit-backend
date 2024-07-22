@@ -6,6 +6,7 @@ import { IClienteRepository } from "@modules/cadastros/repositories/i-cliente-re
 import { IEstoqueRepository } from "@modules/cadastros/repositories/i-estoque-repository"
 import { IFuncionarioRepository } from "@modules/cadastros/repositories/i-funcionario-repository"
 import { IProdutoRepository } from "@modules/cadastros/repositories/i-produto-repository"
+import { IBalancoRepository } from "@modules/clientes/repositories/i-balanco-repository"
 import { IPedidoDTO } from "@modules/pedido/dtos/i-pedido-dto"
 import { IPedidoItemDTO } from "@modules/pedido/dtos/i-pedido-item-dto"
 import { IPedidoItemRepository } from "@modules/pedido/repositories/i-pedido-item-repository"
@@ -33,7 +34,9 @@ class ImportPedidoUseCase {
     @inject("ClienteRepository")
     private clienteRepository: IClienteRepository,
     @inject("FuncionarioRepository")
-    private funcionarioRepository: IFuncionarioRepository
+    private funcionarioRepository: IFuncionarioRepository,
+    @inject("BalancoRepository")
+    private balancoRepository: IBalancoRepository
   ) {}
 
   async importExcelDataItem(row: any, pedidoId: string): Promise<IPedidoItemDTO> {
@@ -135,7 +138,7 @@ class ImportPedidoUseCase {
       }
 
       for await (const pedido of Object.keys(pedidoSeparado)) {
-        let lastPedido: number
+        let lastPedido: number = 0
         let pedidoId: string
 
         for await (const [index, row] of pedidoSeparado[pedido].entries()) {
@@ -151,6 +154,20 @@ class ImportPedidoUseCase {
             const pedidoCab = await this.importExcelDataCab(row, queryRunner.manager)
             const pedidoCabData = await this.pedidoRepository.createWithQueryRunner(pedidoCab, queryRunner.manager)
             pedidoId = pedidoCabData.data.id
+
+            if (pedidoCab.statusPagamentoId == "58922f62-67e4-4f50-8e0d-2bcb89f95f9a") {
+              console.log(pedidoCab.valorTotal)
+
+              const balanco = await this.balancoRepository.getByClienteIdWithQueryRunner(pedidoCab.clienteId, queryRunner.manager)
+              await this.balancoRepository.updateWithQueryRunner(
+                {
+                  id: balanco.data.id,
+                  clienteId: pedidoCab.clienteId,
+                  saldoDevedor: balanco.data.saldoDevedor + pedidoCab.valorTotal,
+                },
+                queryRunner.manager
+              )
+            }
           }
 
           const pedidoItem = await this.importExcelDataItem(row, pedidoId)

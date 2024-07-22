@@ -13,6 +13,7 @@ import multer from "multer"
 import uploadConfig from "@config/upload"
 import { ImportBonificacaoController } from "@modules/cadastros/use-cases/bonificacao/import-bonificacao/import-bonificacao-controller"
 import { ExportBonificacaoExcelController } from "@modules/cadastros/use-cases/bonificacao/export-bonificacao/export-bonificacao-controller"
+import { RetiradaBonificacaoController } from "@modules/cadastros/use-cases/bonificacao/retirada-bonificacao/retirada-bonificacao-controller"
 
 const uploadFiles = multer(uploadConfig)
 const bonificacoesRoutes = Router()
@@ -28,6 +29,7 @@ const deleteBonificacaoController = new DeleteBonificacaoController()
 const multiDeleteBonificacaoController = new MultiDeleteBonificacaoController()
 const importBonificacaoController = new ImportBonificacaoController()
 const exportBonificacaoExcelController = new ExportBonificacaoExcelController()
+const retiradaBonificacaoController = new RetiradaBonificacaoController()
 
 bonificacoesRoutes.post("/", ensureAuthenticated, createBonificacaoController.handle)
 bonificacoesRoutes.post("/import-excel", ensureAuthenticated, uploadFiles.single("arquivos"), importBonificacaoController.handle)
@@ -38,6 +40,7 @@ bonificacoesRoutes.get("/select", ensureAuthenticated, selectBonificacaoControll
 bonificacoesRoutes.get("/export-excel", ensureAuthenticated, exportBonificacaoExcelController.handle)
 bonificacoesRoutes.get("/:id", ensureAuthenticated, getBonificacaoController.handle)
 bonificacoesRoutes.put("/:id", ensureAuthenticated, updateBonificacaoController.handle)
+bonificacoesRoutes.put("/add-retirada/:id", ensureAuthenticated, retiradaBonificacaoController.handle)
 bonificacoesRoutes.delete("/:id", ensureAuthenticated, deleteBonificacaoController.handle)
 bonificacoesRoutes.delete("/", ensureAuthenticated, multiDeleteBonificacaoController.handle)
 

@@ -267,6 +267,33 @@ class BonificacaoRepository implements IBonificacaoRepository {
     }
   }
 
+  async updateWithQueryRunner(
+    { id, clienteId, totalVendido, bonificacaoDisponivel, desabilitado }: IBonificacaoDTO,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    const bonificacao = await transactionManager.findOne(Bonificacao, id)
+
+    if (!bonificacao) {
+      return notFound()
+    }
+
+    const newbonificacao = transactionManager.create(Bonificacao, {
+      id,
+      clienteId,
+      totalVendido,
+      bonificacaoDisponivel,
+      desabilitado,
+    })
+
+    try {
+      await transactionManager.save(newbonificacao)
+
+      return ok(newbonificacao)
+    } catch (err) {
+      return serverError(err)
+    }
+  }
+
   // delete
   async delete(id: string): Promise<HttpResponse> {
     try {

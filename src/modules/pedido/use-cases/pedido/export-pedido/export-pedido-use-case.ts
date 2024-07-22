@@ -16,12 +16,12 @@ class ExportPedidoExcelUseCase {
 
   private styleColumns(workbook: any, sheetName: string) {
     workbook.Sheets[sheetName]["!cols"] = [
-      { wpx: 100 },
-      { wpx: 250 },
-      { wpx: 250 },
-      { wpx: 100 },
-      { wpx: 250 },
-      { wpx: 100 },
+      { wpx: 150 },
+      { wpx: 150 },
+      { wpx: 150 },
+      { wpx: 150 },
+      { wpx: 150 },
+      { wpx: 150 },
       { wpx: 150 },
       { wpx: 150 },
     ]
