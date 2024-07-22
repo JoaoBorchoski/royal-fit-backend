@@ -2,6 +2,7 @@ import { Request, Response } from "express"
 import { container } from "tsyringe"
 import { CreatePedidoUseCase } from "./create-pedido-use-case"
 import { HttpResponse } from "@shared/helpers"
+import { io } from "@shared/infra/http/server"
 
 class CreatePedidoController {
   async handle(request: Request, response: Response): Promise<Response> {
@@ -43,6 +44,8 @@ class CreatePedidoController {
       .catch((error) => {
         return error
       })
+
+    io.emit("novoPedido", result)
 
     return response.status(result.statusCode).json(result)
   }
