@@ -111,9 +111,9 @@ class CreatePedidoUseCase {
 
           await this.garrafaoRepository.updateWithQueryRunner(
             {
-              id: garrafoes.data[0].id,
+              id: garrafoes.data.id,
               clienteId: clienteId,
-              quantidade: garrafoes.data[0].quantidade - pedidoItem.quantidade,
+              quantidade: garrafoes.data.quantidade - pedidoItem.quantidade,
               desabilitado: false,
             },
             queryRunner.manager
