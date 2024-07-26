@@ -99,10 +99,10 @@ class ImportPedidoUseCase {
       valorTotal: row["valorTotal"],
       clienteId: cliente.data.id,
       funcionarioId: funcionario.data.id,
-      meioPagamentoId: "ea1fc3d7-2ec6-4a7e-8094-99a84131a2b8",
-      statusPagamentoId: returnTrueOrFalse(row["pago"])
-        ? "2798a92f-3412-4ed3-934d-e1209bbad87f"
-        : "58922f62-67e4-4f50-8e0d-2bcb89f95f9a",
+      meioPagamentoId: returnTrueOrFalse(row["pago"])
+        ? "ee350922-4185-4fc0-8537-d8a8c4ffdd47"
+        : "9751732c-4ed8-465f-96f1-2d2580b33a5d",
+      isLiberado: true,
     }
 
     return pedido
@@ -156,8 +156,6 @@ class ImportPedidoUseCase {
             pedidoId = pedidoCabData.data.id
 
             if (pedidoCab.statusPagamentoId == "58922f62-67e4-4f50-8e0d-2bcb89f95f9a") {
-              console.log(pedidoCab.valorTotal)
-
               const balanco = await this.balancoRepository.getByClienteIdWithQueryRunner(pedidoCab.clienteId, queryRunner.manager)
               await this.balancoRepository.updateWithQueryRunner(
                 {

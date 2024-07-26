@@ -238,9 +238,11 @@ class FuncionarioRepository implements IFuncionarioRepository {
           'fun.telefone as "telefone"',
           'fun.usuarioId as "usuarioId"',
           'fun.desabilitado as "desabilitado"',
+          'up.profileId as "profileId"',
         ])
         .leftJoin("fun.estadoId", "a")
         .leftJoin("fun.cidadeId", "b")
+        .leftJoin("users_profiles", "up", "up.user_id = fun.usuario_id")
         .where("fun.id = :id", { id })
         .getRawOne()
 
@@ -250,6 +252,7 @@ class FuncionarioRepository implements IFuncionarioRepository {
 
       return ok(funcionario)
     } catch (err) {
+      console.log(err)
       return serverError(err)
     }
   }

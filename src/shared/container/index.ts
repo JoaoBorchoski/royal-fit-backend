@@ -64,6 +64,8 @@ import { IPagamentoRepository } from "@modules/clientes/repositories/i-pagamento
 import { PagamentoRepository } from "@modules/clientes/infra/typeorm/repositories/pagamento-repository"
 import { IEstoqueRepository } from "@modules/cadastros/repositories/i-estoque-repository"
 import { EstoqueRepository } from "@modules/cadastros/infra/typeorm/repositories/estoque-repository"
+import { IPedidoBonificadoRepository } from "@modules/pedido/repositories/i-pedido-bonificado-repository"
+import { PedidoBonificadoRepository } from "@modules/pedido/infra/typeorm/repositories/pedido-bonificado-repository"
 
 container.registerSingleton<IUserRepository>("UserRepository", UserRepository)
 container.registerSingleton<IUserSecurityRepository>("UserSecurityRepository", UserSecurityRepository)
@@ -91,6 +93,7 @@ container.registerSingleton<IStatusPagamentoRepository>("StatusPagamentoReposito
 container.registerSingleton<IBonificacaoRepository>("BonificacaoRepository", BonificacaoRepository)
 container.registerSingleton<IPedidoRepository>("PedidoRepository", PedidoRepository)
 container.registerSingleton<IPedidoItemRepository>("PedidoItemRepository", PedidoItemRepository)
+container.registerSingleton<IPedidoBonificadoRepository>("PedidoBonificadoRepository", PedidoBonificadoRepository)
 container.registerSingleton<IRelatorioClienteRepository>("RelatorioClienteRepository", RelatorioClienteRepository)
 container.registerSingleton<IRelatorioFuncionarioRepository>("RelatorioFuncionarioRepository", RelatorioFuncionarioRepository)
 container.registerSingleton<IBalancoRepository>("BalancoRepository", BalancoRepository)

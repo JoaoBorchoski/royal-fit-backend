@@ -3,6 +3,7 @@ import { IFuncionarioDTO } from "@modules/cadastros/dtos/i-funcionario-dto"
 import { IProdutoDTO } from "@modules/cadastros/dtos/i-produto-dto"
 import { IFuncionarioRepository } from "@modules/cadastros/repositories/i-funcionario-repository"
 import { IProdutoRepository } from "@modules/cadastros/repositories/i-produto-repository"
+import { IProfileRepository } from "@modules/security/repositories/i-profile-repository"
 import { IUserGroupRepository } from "@modules/security/repositories/i-user-group-repository"
 import { IUserProfileRepository } from "@modules/security/repositories/i-user-profile-repository"
 import { AppError } from "@shared/errors/app-error"
@@ -27,7 +28,9 @@ class ImportFuncionarioUseCase {
     @inject("UserGroupRepository")
     private userGroupRepository: IUserGroupRepository,
     @inject("UserProfileRepository")
-    private userProfileRepository: IUserProfileRepository
+    private userProfileRepository: IUserProfileRepository,
+    @inject("ProfileRepository")
+    private profileRepository: IProfileRepository
   ) {}
 
   async importExcelData(row: any): Promise<IFuncionarioDTO> {
@@ -66,11 +69,15 @@ class ImportFuncionarioUseCase {
       for await (const row of rows) {
         index++
         const funcionario = await this.importExcelData(row)
-
         const alreadyExists = await this.userRepository.findByEmailWithQueryRunner(funcionario.email, queryRunner.manager)
+        const profileId = await this.profileRepository.getByName(row["Nível de Acesso"], queryRunner.manager)
 
         if (alreadyExists) {
           throw new AppError("Funcionários com email duplicado não são permitidos.")
+        }
+
+        if (!profileId.data) {
+          throw new AppError(`Nível de Acesso não encontrado.`)
         }
 
         const passwordBtoa = btoa(funcionario.cpf)
@@ -96,7 +103,7 @@ class ImportFuncionarioUseCase {
         await this.userProfileRepository.createWithQueryRunner(
           {
             userId: resultCreateUser.id,
-            profileId: "50e82f3b-779d-4918-8076-e8bce6b738c6",
+            profileId: profileId.data.id,
           },
           queryRunner.manager
         )

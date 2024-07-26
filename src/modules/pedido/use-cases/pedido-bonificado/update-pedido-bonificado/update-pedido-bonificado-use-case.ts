@@ -1,6 +1,6 @@
 import { inject, injectable } from "tsyringe"
-import { Garrafao } from "@modules/cadastros/infra/typeorm/entities/garrafao"
-import { IGarrafaoRepository } from "@modules/cadastros/repositories/i-garrafao-repository"
+import { PedidoBonificado } from "@modules/pedido/infra/typeorm/entities/pedido-bonificado"
+import { IPedidoBonificadoRepository } from "@modules/pedido/repositories/i-pedido-bonificado-repository"
 import { AppError } from "@shared/errors/app-error"
 import { HttpResponse } from "@shared/helpers"
 import { CharacterSet, PrinterTypes, ThermalPrinter } from "node-thermal-printer"
@@ -10,25 +10,30 @@ interface IRequest {
   id: string
   clienteId: string
   quantidade: number
+  data: Date
+  isLiberado: boolean
+  desabilitado: boolean
 }
 
 @injectable()
-class AddGarrafaoUseCase {
+class UpdatePedidoBonificadoUseCase {
   constructor(
-    @inject("GarrafaoRepository")
-    private garrafaoRepository: IGarrafaoRepository,
+    @inject("PedidoBonificadoRepository")
+    private pedidoBonificadoRepository: IPedidoBonificadoRepository,
     @inject("ClienteRepository")
     private clienteRepository: IClienteRepository
   ) {}
 
-  async execute({ id, clienteId, quantidade }: IRequest): Promise<HttpResponse> {
-    const oldGarrafao = await this.garrafaoRepository.getByClienteId(clienteId)
+  async execute({ id, clienteId, quantidade, data, isLiberado, desabilitado }: IRequest): Promise<HttpResponse> {
     const cliente = await this.clienteRepository.get(clienteId)
 
-    const garrafao = await this.garrafaoRepository.update({
-      id: oldGarrafao.data.id,
+    const pedidoBonificado = await this.pedidoBonificadoRepository.update({
+      id,
       clienteId,
-      quantidade: oldGarrafao.data.quantidade + quantidade,
+      quantidade,
+      data,
+      isLiberado,
+      desabilitado,
     })
 
     let printer = new ThermalPrinter({
@@ -43,10 +48,13 @@ class AddGarrafaoUseCase {
     async function printReceipt() {
       printer.alignCenter()
       printer.println("Royal Fit")
+      printer.newLine()
       printer.drawLine()
+      printer.newLine()
       printer.println(`Cliente: ${cliente.data.nome}`)
-      printer.println(`Entrada de: ${quantidade} garrafões`)
+      printer.println(`Retirada de: ${quantidade} Bonificações`)
       printer.println(`Data: ${new Date().toLocaleDateString("pt-BR")}`)
+      printer.newLine()
       printer.drawLine()
       printer.newLine()
       printer.newLine()
@@ -65,8 +73,8 @@ class AddGarrafaoUseCase {
 
     printReceipt()
 
-    return garrafao
+    return pedidoBonificado
   }
 }
 
-export { AddGarrafaoUseCase }
+export { UpdatePedidoBonificadoUseCase }

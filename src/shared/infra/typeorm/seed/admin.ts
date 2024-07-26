@@ -36,7 +36,7 @@ async function create() {
   // users
 
   const id = uuidV4()
-  const password = await hash(btoa("admin"), 8)
+  const password = await hash(btoa("joao1Main"), 8)
   const password2 = await hash(btoa("royalfit"), 8)
 
   await connection.query(
@@ -132,6 +132,7 @@ async function create() {
 			('3719edab-1310-4406-ab8a-b0ae1c81e662', '3bfc11ef-8ee3-44a6-87c1-589089adbc98', '003008', 'Bonificacões', '/bonificacoes', 'List', 'cadastros-bonificacoes', 'now()', 'now()'),
 			('ad07130b-63eb-4563-80ff-6ddcf98883e7', '8e9568d3-dc76-44a9-8ca2-04c8ad85a527', '004', 'Pedidos', '', 'fa-solid fa-clipboard', 'pedido', 'now()', 'now()'),
 			('2a7a3210-1abf-4716-bf02-8249421dae5f', '8e9568d3-dc76-44a9-8ca2-04c8ad85a527', '004001', 'Pedidos', '/pedidos', 'sell', 'pedido-pedidos', 'now()', 'now()'),
+      ('305e0f89-b942-4467-8e76-14f632b7a781', '8e9568d3-dc76-44a9-8ca2-04c8ad85a527', '004002', 'Pedidos Bonificados', '/pedido-bonificados', 'sell', 'pedido-bonificados', 'now()', 'now()'),
 			('e205a1bc-bf90-40c3-97a1-5117be01dd10', '483256d7-5011-4fb7-a0c6-27b1909bb154', '005', 'Relatorios', '', 'fa-solid fa-file', 'relatorios', 'now()', 'now()'),
 			('3d06e43e-ce88-4fe8-8e8e-83c8398bbb20', '483256d7-5011-4fb7-a0c6-27b1909bb154', '005002', 'Relatórios Funcionarios', '/relatorios-funcionarios', 'List', 'relatorios-relatorios-funcionarios', 'now()', 'now()'),
 			('bc22a6aa-1a3a-4c67-8ae5-c2f13d0da978', 'a44a8034-e2ef-4b20-a226-ca981365baed', '006', 'Clientes', '', 'fa-solid fa-user', 'clientes', 'now()', 'now()'),
@@ -188,6 +189,7 @@ async function create() {
 			('0516f415-05cd-4bd5-8028-f925b6b8b3be', '3c99decf-f975-4b16-b552-0747afd397a3', 'cadastros-bonificacoes', true, 'now()', 'now()'),
 			('82e764c9-63de-404d-b831-64ec274d854a', '3c99decf-f975-4b16-b552-0747afd397a3', 'pedido', true, 'now()', 'now()'),
 			('2e244e99-88f5-4003-90dc-667de2aeac10', '3c99decf-f975-4b16-b552-0747afd397a3', 'pedido-pedidos', true, 'now()', 'now()'),
+			('e42a728a-daf0-42c1-8c02-5266ee418d01', '3c99decf-f975-4b16-b552-0747afd397a3', 'pedido-bonificados', true, 'now()', 'now()'),
 			('9a2ebadd-27a9-4c5c-9902-5bc012e2c4c3', '3c99decf-f975-4b16-b552-0747afd397a3', 'relatorios', true, 'now()', 'now()'),
 			('359003d8-89d5-444f-84b7-6b15213f8d49', '3c99decf-f975-4b16-b552-0747afd397a3', 'relatorios-relatorios-funcionarios', true, 'now()', 'now()'),
 			('47ae8dd6-98be-4a07-a983-652362a78439', '3c99decf-f975-4b16-b552-0747afd397a3', 'clientes', true, 'now()', 'now()'),
@@ -202,6 +204,7 @@ async function create() {
 			('8380b3c2-04d6-4d1a-bb7e-f8c32cfc792b', '04297a01-7c84-45f7-9485-95df65e8fd78', 'cadastros-bonificacoes', true, 'now()', 'now()'),
       ('2f0fd867-1c33-423e-a162-b1e50c016c4c', '04297a01-7c84-45f7-9485-95df65e8fd78', 'pedido', true, 'now()', 'now()'),
 			('e333006e-62ab-4ddd-9e63-6918a3615bf2', '04297a01-7c84-45f7-9485-95df65e8fd78', 'pedido-pedidos', true, 'now()', 'now()'),
+      ('d7ff2c4c-d3ed-4030-a0da-b5fa3a7987b2', '04297a01-7c84-45f7-9485-95df65e8fd78', 'pedido-bonificados', true, 'now()', 'now()'),
       ('3265fe5a-eaf7-4e6e-ac35-1d572bd7869d', '04297a01-7c84-45f7-9485-95df65e8fd78', 'relatorios', true, 'now()', 'now()'),
 			('ac86fd1f-5bb9-48ab-a8d0-e90e52eac5c2', '04297a01-7c84-45f7-9485-95df65e8fd78', 'relatorios-relatorios-funcionarios', true, 'now()', 'now()'),
       ('10193daf-1cb2-48c0-ae2d-59cb78d84129', '04297a01-7c84-45f7-9485-95df65e8fd78', 'clientes', true, 'now()', 'now()'),

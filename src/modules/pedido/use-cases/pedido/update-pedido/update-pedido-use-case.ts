@@ -8,6 +8,9 @@ import { IEstoqueRepository } from "@modules/cadastros/repositories/i-estoque-re
 import { IProdutoRepository } from "@modules/cadastros/repositories/i-produto-repository"
 import { getConnection } from "typeorm"
 import { IBalancoRepository } from "@modules/clientes/repositories/i-balanco-repository"
+import { CharacterSet, PrinterTypes, ThermalPrinter } from "node-thermal-printer"
+import { IClienteRepository } from "@modules/cadastros/repositories/i-cliente-repository"
+import { IMeioPagamentoRepository } from "@modules/cadastros/repositories/i-meio-pagamento-repository"
 
 interface IRequest {
   id: string
@@ -27,6 +30,12 @@ interface IRequest {
   pedidoItemForm: any[]
 }
 
+interface IPedidoItemCanhoto {
+  produtoNome: string
+  quantidade: number
+  valorTotal: number
+}
+
 @injectable()
 class UpdatePedidoUseCase {
   constructor(
@@ -39,7 +48,11 @@ class UpdatePedidoUseCase {
     @inject("PedidoItemRepository")
     private pedidoItemRepository: IPedidoItemRepository,
     @inject("BalancoRepository")
-    private balancoRepository: IBalancoRepository
+    private balancoRepository: IBalancoRepository,
+    @inject("ClienteRepository")
+    private clienteRepository: IClienteRepository,
+    @inject("MeioPagamentoRepository")
+    private meioPagamentoRepository: IMeioPagamentoRepository
   ) {}
 
   async execute({
@@ -65,6 +78,9 @@ class UpdatePedidoUseCase {
     try {
       const oldPedido = await this.pedidoRepository.get(id)
       const oldBalanco = await this.balancoRepository.getByClienteId(clienteId)
+      const cliente = await this.clienteRepository.get(clienteId)
+      const meioPagamento = await this.meioPagamentoRepository.get(meioPagamentoId)
+      let pedidoItemCanhoto: IPedidoItemCanhoto[] = []
 
       const pedido = await this.pedidoRepository.update(
         {
@@ -109,7 +125,7 @@ class UpdatePedidoUseCase {
           }
 
           await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, novaQuantidade, queryRunner.manager)
-          await this.pedidoItemRepository.update(
+          const prod = await this.pedidoItemRepository.update(
             {
               id: item.data.id,
               pedidoId: pedido.data.id,
@@ -118,6 +134,12 @@ class UpdatePedidoUseCase {
             },
             queryRunner.manager
           )
+
+          pedidoItemCanhoto.push({
+            produtoNome: produto.data.nome,
+            quantidade: +prod.data.quantidade,
+            valorTotal: +prod.data.quantidade * +produto.data.preco,
+          })
         } else {
           const novaQuantidade = estoqueAtual.data.quantidade - pedidoItem.quantidade
           if (!estoqueAtual.data || estoqueAtual.data.quantidade < pedidoItem.quantidade) {
@@ -125,7 +147,7 @@ class UpdatePedidoUseCase {
           }
 
           await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, novaQuantidade, queryRunner.manager)
-          await this.pedidoItemRepository.createWithQueryRunner(
+          const prod = await this.pedidoItemRepository.createWithQueryRunner(
             {
               pedidoId: pedido.data.id,
               produtoId: pedidoItem.produtoId,
@@ -133,8 +155,70 @@ class UpdatePedidoUseCase {
             },
             queryRunner.manager
           )
+
+          pedidoItemCanhoto.push({
+            produtoNome: produto.data.nome,
+            quantidade: +prod.data.quantidade,
+            valorTotal: +prod.data.quantidade * +produto.data.preco,
+          })
         }
       }
+
+      let printer = new ThermalPrinter({
+        type: PrinterTypes.EPSON, // recomendar usar EPSON
+        interface: "tcp://IP_DA_IMPRESSORA:PORTA", // Pode ser 'tcp://', 'usb://', ou 'serial://'
+        characterSet: CharacterSet.PC860_PORTUGUESE,
+        options: {
+          timeout: 5000,
+        },
+      })
+
+      async function printReceipt() {
+        printer.alignCenter()
+        printer.println("Royal Fit")
+        printer.newLine()
+        printer.drawLine()
+        printer.newLine()
+        printer.println(`Cliente: ${cliente.data.nome}`)
+        printer.println(`Data: ${new Date().toLocaleDateString("pt-BR")}`)
+        printer.println(`Status do Pedido: ${isLiberado ? "Liberado" : "Aguardando"}`)
+        printer.println(`Meio de Pagamento: ${meioPagamento.data.nome}`)
+        printer.newLine()
+        printer.drawLine()
+        printer.println("Itens do Pedido")
+        printer.newLine()
+        printer.tableCustom([
+          { text: "Produto", align: "LEFT", width: 0.5 },
+          { text: "Qtd", align: "CENTER", width: 0.2 },
+          { text: "Preço", align: "RIGHT", width: 0.3 },
+        ])
+        printer.newLine()
+        pedidoItemCanhoto.map((item) => {
+          printer.tableCustom([
+            { text: item.produtoNome, align: "LEFT", width: 0.5 },
+            { text: item.quantidade.toString(), align: "CENTER", width: 0.2 },
+            { text: `R$ ${item.valorTotal.toString()}`, align: "RIGHT", width: 0.3 },
+          ])
+        })
+        printer.newLine()
+        printer.println(`Total: R$ ${valorTotal}`)
+        printer.drawLine()
+        printer.newLine()
+        printer.newLine()
+        printer.drawLine()
+        printer.println("Assinatura")
+        printer.cut()
+
+        try {
+          // console.log(printer.getText())
+          // await printer.execute();
+          console.log("Print success!")
+        } catch (error) {
+          console.error("Print failed:", error)
+        }
+      }
+
+      printReceipt()
 
       await queryRunner.commitTransaction()
       return pedido

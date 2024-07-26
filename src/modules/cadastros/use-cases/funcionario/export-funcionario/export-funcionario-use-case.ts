@@ -15,11 +15,11 @@ class ExportFornecedorExcelUseCase {
   }
 
   private styleColumns(workbook: any, sheetName: string) {
-    workbook.Sheets[sheetName]["!cols"] = [{ wpx: 150 }, { wpx: 150 }, { wpx: 150 }, { wpx: 150 }]
+    workbook.Sheets[sheetName]["!cols"] = [{ wpx: 150 }, { wpx: 150 }, { wpx: 150 }, { wpx: 150 }, { wpx: 150 }]
   }
 
   private exportEmptyExcel(sheetName: string) {
-    const header = ["nome", "cpf", "email", "telefone"]
+    const header = ["nome", "cpf", "email", "telefone", "Nível de Acesso"]
 
     const emptyData = [header]
 

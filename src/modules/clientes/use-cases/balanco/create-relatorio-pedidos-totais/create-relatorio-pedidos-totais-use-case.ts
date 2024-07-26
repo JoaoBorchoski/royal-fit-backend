@@ -4,6 +4,7 @@ import { AppError } from "@shared/errors/app-error"
 import { HttpResponse, noContent, ok } from "@shared/helpers"
 import * as XLSX from "xlsx"
 import { IPedidoRepository } from "@modules/pedido/repositories/i-pedido-repository"
+import { IPedidoBonificadoRepository } from "@modules/pedido/repositories/i-pedido-bonificado-repository"
 
 interface IRequest {
   dataInicio: Date
@@ -14,7 +15,9 @@ interface IRequest {
 class CreateRelatorioPedidosTotaisUseCase {
   constructor(
     @inject("PedidoRepository")
-    private pedidoRepository: IPedidoRepository
+    private pedidoRepository: IPedidoRepository,
+    @inject("PedidoBonificadoRepository")
+    private pedidoBonificadoRepository: IPedidoBonificadoRepository
   ) {}
 
   async execute({ dataInicio, dataFim }: IRequest): Promise<HttpResponse> {
@@ -30,7 +33,7 @@ class CreateRelatorioPedidosTotaisUseCase {
 
       const sheetName = "Sheet1"
       const emptyWorkbook = this.exportEmptyExcel(sheetName)
-      await this.addDataToSheet(emptyWorkbook, sheetName, pedidos.data)
+      await this.addDataToSheet(emptyWorkbook, sheetName, pedidos.data, dataInicioFormatada, dataFimFormatada)
       this.styleColumns(emptyWorkbook, sheetName)
       const wbout = XLSX.write(emptyWorkbook, { bookType: "xlsx", type: "binary" })
       return ok(wbout)
@@ -41,11 +44,18 @@ class CreateRelatorioPedidosTotaisUseCase {
   }
 
   private styleColumns(workbook: any, sheetName: string) {
-    workbook.Sheets[sheetName]["!cols"] = [{ wpx: 100 }, { wpx: 100 }, { wpx: 100 }, { wpx: 100 }, { wpx: 150 }]
+    workbook.Sheets[sheetName]["!cols"] = [{ wpx: 100 }, { wpx: 100 }, { wpx: 130 }, { wpx: 100 }, { wpx: 100 }, { wpx: 150 }]
   }
 
   private exportEmptyExcel(sheetName: string) {
-    const header = ["Cliente", "Total de Pedidos", "Valor Total (R$)", "Saldo Devedor (R$)", "Total Pagamentos (R$)"]
+    const header = [
+      "Cliente",
+      "Total de Pedidos",
+      "Bonificações Retiradas",
+      "Saldo Devedor (R$)",
+      "Total Pagamentos (R$)",
+      "Valor Total (R$)",
+    ]
 
     const emptyData = [header]
 
@@ -57,14 +67,26 @@ class CreateRelatorioPedidosTotaisUseCase {
     return workbook
   }
 
-  private async addDataToSheet(workbook: any, sheetName: string, data: any) {
+  private async addDataToSheet(workbook: any, sheetName: string, data: any, dataInicio: Date, dataFim: Date) {
     const dataForExcel = []
     for await (const item of data) {
-      console.log(item)
-      const total = await item.pedidos.reduce((acc: number, pedido: any) => acc + pedido.valorTotal, 0)
-      console.log(total)
+      const pedidosBonificados = await this.pedidoBonificadoRepository.getAllByClienteIdAndData(
+        item.clienteId,
+        dataInicio,
+        dataFim
+      )
 
-      dataForExcel.push([item.clienteNome, item.pedidos.length, total, item.saldoDevedor, total - item.saldoDevedor])
+      const total = await item.pedidos.reduce((acc: number, pedido: any) => acc + pedido.valorTotal, 0)
+      const totalBonificado = await pedidosBonificados.data.reduce((acc: number, pedido: any) => acc + pedido.quantidade, 0)
+
+      dataForExcel.push([
+        item.clienteNome,
+        item.pedidos.length,
+        totalBonificado,
+        item.saldoDevedor,
+        total - item.saldoDevedor,
+        total,
+      ])
     }
 
     XLSX.utils.sheet_add_aoa(workbook.Sheets[sheetName], dataForExcel, { origin: -1 })

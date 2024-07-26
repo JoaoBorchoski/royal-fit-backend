@@ -32,6 +32,7 @@ import { relatoriosFuncionariosRoutes } from "./relatorios/relatorios-funcionari
 import { balancosRoutes } from "./clientes/balancos-routes"
 import { pagamentosRoutes } from "./clientes/pagamentos-routes"
 import { estoquesRoutes } from "./cadastros/estoques-routes"
+import { pedidoBonificadosRoutes } from "./pedido/pedido-bonificados-routes"
 
 const router = Router()
 
@@ -64,6 +65,7 @@ router.use("/status-pagamento", statusPagamentoRoutes)
 router.use("/bonificacoes", bonificacoesRoutes)
 router.use("/pedidos", pedidosRoutes)
 router.use("/pedido-itens", pedidoItensRoutes)
+router.use("/pedido-bonificados", pedidoBonificadosRoutes)
 router.use("/relatorios-clientes", relatoriosClientesRoutes)
 router.use("/relatorios-funcionarios", relatoriosFuncionariosRoutes)
 router.use("/balancos", balancosRoutes)

@@ -10,6 +10,9 @@ import { IBonificacaoRepository } from "@modules/cadastros/repositories/i-bonifi
 import { IGarrafaoRepository } from "@modules/cadastros/repositories/i-garrafao-repository"
 import { IBalancoRepository } from "@modules/clientes/repositories/i-balanco-repository"
 import { noContent } from "@shared/helpers"
+import { IClienteRepository } from "@modules/cadastros/repositories/i-cliente-repository"
+import { CharacterSet, PrinterTypes, ThermalPrinter } from "node-thermal-printer"
+import { IMeioPagamentoRepository } from "@modules/cadastros/repositories/i-meio-pagamento-repository"
 
 interface IRequest {
   sequencial: number
@@ -28,6 +31,12 @@ interface IRequest {
   pedidoItemForm: any[]
 }
 
+interface IPedidoItemCanhoto {
+  produtoNome: string
+  quantidade: number
+  valorTotal: number
+}
+
 @injectable()
 class CreatePedidoUseCase {
   constructor(
@@ -44,7 +53,11 @@ class CreatePedidoUseCase {
     @inject("GarrafaoRepository")
     private garrafaoRepository: IGarrafaoRepository,
     @inject("BalancoRepository")
-    private balancoRepository: IBalancoRepository
+    private balancoRepository: IBalancoRepository,
+    @inject("ClienteRepository")
+    private clienteRepository: IClienteRepository,
+    @inject("MeioPagamentoRepository")
+    private meioPagamentoRepository: IMeioPagamentoRepository
   ) {}
 
   async execute({
@@ -69,8 +82,11 @@ class CreatePedidoUseCase {
     try {
       const totalPedidos = await this.pedidoRepository.count("", "")
       const bonificacao = await this.bonificacaoRepository.getByClienteId(clienteId)
+      const cliente = await this.clienteRepository.get(clienteId)
+      const meioPagamento = await this.meioPagamentoRepository.get(meioPagamentoId)
       let newBonificacao = 0
       let newTotalVendido = 0
+      let pedidoItemCanhoto: IPedidoItemCanhoto[] = []
 
       const result = await this.pedidoRepository
         .createWithQueryRunner(
@@ -140,7 +156,7 @@ class CreatePedidoUseCase {
           queryRunner.manager
         )
 
-        await this.pedidoItemRepository.createWithQueryRunner(
+        const prod = await this.pedidoItemRepository.createWithQueryRunner(
           {
             pedidoId: result.data.id,
             produtoId: pedidoItem.produtoId,
@@ -148,6 +164,12 @@ class CreatePedidoUseCase {
           },
           queryRunner.manager
         )
+
+        pedidoItemCanhoto.push({
+          produtoNome: produto.data.nome,
+          quantidade: +prod.data.quantidade,
+          valorTotal: +prod.data.quantidade * +produto.data.preco,
+        })
       }
 
       // if (statusPagamentoId == "58922f62-67e4-4f50-8e0d-2bcb89f95f9a") {
@@ -172,6 +194,62 @@ class CreatePedidoUseCase {
         },
         queryRunner.manager
       )
+
+      let printer = new ThermalPrinter({
+        type: PrinterTypes.EPSON, // recomendar usar EPSON
+        interface: "tcp://IP_DA_IMPRESSORA:PORTA", // Pode ser 'tcp://', 'usb://', ou 'serial://'
+        characterSet: CharacterSet.PC860_PORTUGUESE,
+        options: {
+          timeout: 5000,
+        },
+      })
+
+      async function printReceipt() {
+        printer.alignCenter()
+        printer.println("Royal Fit")
+        printer.newLine()
+        printer.drawLine()
+        printer.newLine()
+        printer.println(`Cliente: ${cliente.data.nome}`)
+        printer.println(`Data: ${new Date().toLocaleDateString("pt-BR")}`)
+        printer.println(`Status do Pedido: ${isLiberado ? "Liberado" : "Aguardando"}`)
+        printer.println(`Meio de Pagamento: ${meioPagamento.data.nome}`)
+        printer.newLine()
+        printer.drawLine()
+        printer.println("Itens do Pedido")
+        printer.newLine()
+        printer.tableCustom([
+          { text: "Produto", align: "LEFT", width: 0.5 },
+          { text: "Qtd", align: "CENTER", width: 0.2 },
+          { text: "Preço", align: "RIGHT", width: 0.3 },
+        ])
+        printer.newLine()
+        pedidoItemCanhoto.map((item) => {
+          printer.tableCustom([
+            { text: item.produtoNome, align: "LEFT", width: 0.5 },
+            { text: item.quantidade.toString(), align: "CENTER", width: 0.2 },
+            { text: `R$ ${item.valorTotal.toString()}`, align: "RIGHT", width: 0.3 },
+          ])
+        })
+        printer.newLine()
+        printer.println(`Total: R$ ${valorTotal}`)
+        printer.drawLine()
+        printer.newLine()
+        printer.newLine()
+        printer.drawLine()
+        printer.println("Assinatura")
+        printer.cut()
+
+        try {
+          // console.log(printer.getText())
+          // await printer.execute();
+          console.log("Print success!")
+        } catch (error) {
+          console.error("Print failed:", error)
+        }
+      }
+
+      printReceipt()
 
       await queryRunner.commitTransaction()
       return result

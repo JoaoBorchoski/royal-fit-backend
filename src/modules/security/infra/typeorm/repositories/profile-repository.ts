@@ -1,4 +1,4 @@
-import { getRepository, Repository, getManager, Brackets } from "typeorm"
+import { getRepository, Repository, getManager, Brackets, TransactionManager, EntityManager } from "typeorm"
 import { IProfileDTO } from "@modules/security/dtos/i-profile-dto"
 import { IProfileRepository } from "@modules/security/repositories/i-profile-repository"
 import { Profile } from "@modules/security/infra/typeorm/entities/profile"
@@ -305,6 +305,22 @@ class ProfileRepository implements IProfileRepository {
         throw new AppError("not null constraint", 404)
       }
 
+      return serverError(err)
+    }
+  }
+
+  async getByName(name: string, @TransactionManager() transactionManager: EntityManager): Promise<HttpResponse> {
+    const nameRegex = name.split(" ").join(".*")
+
+    try {
+      const profile = await this.repository
+        .createQueryBuilder("pro")
+        .select(['pro.id as "id"', 'pro.userGroupId as "userGroupId"', 'pro.name as "name"', 'pro.disabled as "disabled"'])
+        .where("pro.name ~* :name", { name: nameRegex })
+        .getRawOne()
+
+      return ok(profile)
+    } catch (err) {
       return serverError(err)
     }
   }
