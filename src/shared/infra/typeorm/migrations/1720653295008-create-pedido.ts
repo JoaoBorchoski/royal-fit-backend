@@ -42,6 +42,11 @@ export class CreatePedido1720653295008 implements MigrationInterface {
             isNullable: true,
           },
           {
+            name: "descricao",
+            type: "varchar",
+            isNullable: true,
+          },
+          {
             name: "funcionario_id",
             type: "uuid",
             isNullable: false,
@@ -54,10 +59,16 @@ export class CreatePedido1720653295008 implements MigrationInterface {
           {
             name: "status_pagamento_id",
             type: "uuid",
-            isNullable: false,
+            isNullable: true,
           },
           {
             name: "is_pagamento_posterior",
+            type: "boolean",
+            default: false,
+            isNullable: true,
+          },
+          {
+            name: "is_liberado",
             type: "boolean",
             default: false,
             isNullable: true,

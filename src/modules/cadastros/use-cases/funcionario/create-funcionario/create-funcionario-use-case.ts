@@ -6,7 +6,7 @@ import { IUserRepository } from "@modules/authentication/repositories/i-user-rep
 import { IUserGroupRepository } from "@modules/security/repositories/i-user-group-repository"
 import { hash } from "bcrypt"
 import { IUserProfileRepository } from "@modules/security/repositories/i-user-profile-repository"
-import { HttpResponse } from "@shared/helpers"
+import { HttpResponse, noContent } from "@shared/helpers"
 
 interface IRequest {
   nome: string
@@ -22,6 +22,7 @@ interface IRequest {
   complemento: string
   telefone: string
   usuarioId: string
+  profileId: string
   desabilitado: boolean
 }
 
@@ -52,6 +53,7 @@ class CreateFuncionarioUseCase {
     complemento,
     telefone,
     usuarioId,
+    profileId,
     desabilitado,
   }: IRequest): Promise<HttpResponse> {
     try {
@@ -80,7 +82,7 @@ class CreateFuncionarioUseCase {
 
       await this.userProfileRepository.create({
         userId: resultCreateUser.id,
-        profileId: "50e82f3b-779d-4918-8076-e8bce6b738c6",
+        profileId,
       })
 
       const result = await this.funcionarioRepository

@@ -6,10 +6,12 @@ interface IPedidoDTO {
   hora?: string
   valorTotal?: number
   desconto?: number
+  descricao?: string
   funcionarioId?: string
   meioPagamentoId?: string
   statusPagamentoId?: string
   isPagamentoPosterior?: boolean
+  isLiberado?: boolean
   desabilitado?: boolean
   createdAt?: Date
   updatedAt?: Date

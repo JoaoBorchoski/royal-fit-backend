@@ -5,6 +5,7 @@ import { Pedido } from "@modules/pedido/infra/typeorm/entities/pedido"
 import { noContent, serverError, ok, notFound, HttpResponse } from "@shared/helpers"
 import { AppError } from "@shared/errors/app-error"
 import { PedidoItem } from "../entities/pedido-item"
+import { destructor } from "@utils/destructor"
 
 class PedidoRepository implements IPedidoRepository {
   private repository: Repository<Pedido>
@@ -61,10 +62,12 @@ class PedidoRepository implements IPedidoRepository {
       hora,
       valorTotal,
       desconto,
+      descricao,
       funcionarioId,
       meioPagamentoId,
       statusPagamentoId,
       isPagamentoPosterior,
+      isLiberado,
       desabilitado,
     }: IPedidoDTO,
     @TransactionManager() transactionManager: EntityManager
@@ -76,10 +79,12 @@ class PedidoRepository implements IPedidoRepository {
       hora,
       valorTotal,
       desconto,
+      descricao,
       funcionarioId,
       meioPagamentoId,
       statusPagamentoId,
       isPagamentoPosterior,
+      isLiberado,
       desabilitado,
     })
 
@@ -127,6 +132,7 @@ class PedidoRepository implements IPedidoRepository {
           'a.nome as "clienteNome"',
           'ped.data as "data"',
           'ped.valorTotal :: float as "valorTotal"',
+          'ped.isLiberado as "isLiberado"',
         ])
         .leftJoin("ped.clienteId", "a")
 
@@ -138,6 +144,8 @@ class PedidoRepository implements IPedidoRepository {
         .andWhere(
           new Brackets((query) => {
             query.andWhere("CAST(ped.sequencial AS VARCHAR) ilike :search", { search: `%${search}%` })
+            query.orWhere("a.nome ilike :search", { search: `%${search}%` })
+            query.orWhere("TO_CHAR(ped.data, 'YYYY-MM-DD HH24:MI:SS') ILIKE :search", { search: `%${search}%` })
           })
         )
         .addOrderBy("ped.data", "DESC")
@@ -151,6 +159,7 @@ class PedidoRepository implements IPedidoRepository {
 
       return ok(pedidos)
     } catch (err) {
+      console.log(err)
       return serverError(err)
     }
   }
@@ -252,7 +261,9 @@ class PedidoRepository implements IPedidoRepository {
           'ped.meioPagamentoId as "meioPagamentoId"',
           'ped.statusPagamentoId as "statusPagamentoId"',
           'ped.isPagamentoPosterior as "isPagamentoPosterior"',
+          'ped.isLiberado as "isLiberado"',
           'ped.desabilitado as "desabilitado"',
+          'ped.descricao as "descricao"',
         ])
         .leftJoin("ped.clienteId", "a")
         .leftJoin("ped.funcionarioId", "b")
@@ -326,6 +337,8 @@ class PedidoRepository implements IPedidoRepository {
       hora,
       valorTotal,
       desconto,
+      descricao,
+      isLiberado,
       funcionarioId,
       meioPagamentoId,
       statusPagamentoId,
@@ -348,6 +361,8 @@ class PedidoRepository implements IPedidoRepository {
       hora,
       valorTotal,
       desconto,
+      descricao,
+      isLiberado,
       funcionarioId,
       meioPagamentoId,
       statusPagamentoId,
@@ -421,6 +436,46 @@ class PedidoRepository implements IPedidoRepository {
       )
 
       return ok(pedidos)
+    } catch (err) {
+      return serverError(err)
+    }
+  }
+
+  async getAllPedidosByData(dataInicio: Date, dataFim: Date): Promise<HttpResponse> {
+    try {
+      const pedidos = await this.repository.query(
+        `
+        SELECT 
+          p.id AS "id",
+          p.data AS "data",
+          p.valor_total :: float AS "valorTotal",
+          a.id AS "funcionarioId",
+          a.nome AS "funcionarioNome",
+          c.id AS "clienteId",
+          c.nome AS "clienteNome",
+          b.saldo_devedor :: float AS "saldoDevedor"
+        FROM 
+          Pedidos p
+        LEFT JOIN 
+          Funcionarios a ON p.funcionario_id = a.id
+        LEFT JOIN
+          Clientes c ON p.cliente_id = c.id
+        LEFT JOIN
+          Balancos b ON c.id = b.cliente_id
+        WHERE 
+          p.data BETWEEN $1 AND $2
+      `,
+        [dataInicio, dataFim]
+      )
+
+      const newPedidos = destructor({
+        data: pedidos,
+        ref: "clienteId",
+        variablesToArray: ["id", "data", "valorTotal", "funcionarioId", "funcionarioNome"],
+        nameArrayVariable: "pedidos",
+      })
+
+      return ok(newPedidos)
     } catch (err) {
       return serverError(err)
     }

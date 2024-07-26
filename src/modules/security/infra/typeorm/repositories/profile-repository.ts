@@ -1,11 +1,11 @@
-import { getRepository, Repository, getManager } from 'typeorm'
-import { IProfileDTO } from '@modules/security/dtos/i-profile-dto'
-import { IProfileRepository } from '@modules/security/repositories/i-profile-repository'
-import { Profile } from '@modules/security/infra/typeorm/entities/profile'
-import { noContent, serverError, ok, notFound, HttpResponse } from '@shared/helpers'
-import { ProfileOption } from '../entities/profile-option'
-import { MenuOption } from '../entities/menu-option'
-import { AppError } from '@shared/errors/app-error'
+import { getRepository, Repository, getManager, Brackets } from "typeorm"
+import { IProfileDTO } from "@modules/security/dtos/i-profile-dto"
+import { IProfileRepository } from "@modules/security/repositories/i-profile-repository"
+import { Profile } from "@modules/security/infra/typeorm/entities/profile"
+import { noContent, serverError, ok, notFound, HttpResponse } from "@shared/helpers"
+import { ProfileOption } from "../entities/profile-option"
+import { MenuOption } from "../entities/menu-option"
+import { AppError } from "@shared/errors/app-error"
 
 class ProfileRepository implements IProfileRepository {
   private repository: Repository<Profile>
@@ -18,26 +18,20 @@ class ProfileRepository implements IProfileRepository {
     this.menuOptionRepository = getRepository(MenuOption)
   }
 
-
   // create
-  async create ({
-    userGroupId,
-    name,
-    disabled,
-    menuOptions
-  }: IProfileDTO): Promise<HttpResponse> {
+  async create({ userGroupId, name, disabled, menuOptions }: IProfileDTO): Promise<HttpResponse> {
     try {
       // profile
 
       const profile = this.repository.create({
         userGroupId,
         name,
-        disabled
+        disabled,
       })
 
-      const result = await this.repository.save(profile)
-        .then(async profileResult => {
-          
+      const result = await this.repository
+        .save(profile)
+        .then(async (profileResult) => {
           // menu options and rights
 
           for (let i = 0; i < menuOptions.length; i = i + 1) {
@@ -49,7 +43,7 @@ class ProfileRepository implements IProfileRepository {
               permitRestore: menuOptions[i].permitRestore,
               permitUpdate: menuOptions[i].permitUpdate,
               permitDelete: menuOptions[i].permitDelete,
-              disabled: menuOptions[i].disabled
+              disabled: menuOptions[i].disabled,
             })
 
             await this.profileOptionRepository.save(newProfileOption)
@@ -62,12 +56,12 @@ class ProfileRepository implements IProfileRepository {
             userGroupId: profileResult.userGroupId,
             createdAt: profileResult.createdAt,
             updatedAt: profileResult.updatedAt,
-            menuOptions: menuOptions
+            menuOptions: menuOptions,
           }
 
           return newProfileResult
         })
-        .catch(error => {
+        .catch((error) => {
           throw error
         })
 
@@ -77,31 +71,21 @@ class ProfileRepository implements IProfileRepository {
     }
   }
 
-
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string,
-    filter?: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string, filter?: string): Promise<HttpResponse> {
     let columnName: string
-    let columnDirection: 'ASC' | 'DESC'
+    let columnDirection: "ASC" | "DESC"
 
-    if ((typeof(order) === 'undefined') || (order === "")) {
-      columnName = 'nome'
-      columnDirection = 'ASC'
+    if (typeof order === "undefined" || order === "") {
+      columnName = "nome"
+      columnDirection = "ASC"
     } else {
-      columnName = order.substring(0, 1) === '-' ? order.substring(1) : order
-      columnDirection = order.substring(0, 1) === '-' ? 'DESC' : 'ASC'
+      columnName = order.substring(0, 1) === "-" ? order.substring(1) : order
+      columnDirection = order.substring(0, 1) === "-" ? "DESC" : "ASC"
     }
 
-    const referenceArray = [
-      "userGroupName",
-      "name"
-    ]
-    const columnOrder = new Array<'ASC' | 'DESC'>(2).fill('ASC')
+    const referenceArray = ["userGroupName", "name"]
+    const columnOrder = new Array<"ASC" | "DESC">(2).fill("ASC")
 
     const index = referenceArray.indexOf(columnName)
 
@@ -110,18 +94,22 @@ class ProfileRepository implements IProfileRepository {
     const offset = rowsPerPage * page
 
     try {
-      let profiles = await this.repository.createQueryBuilder('pro')
-        .select([
-          'pro.id as "id"',
-          'use.id as "userGroupId"',
-          'use.name as "userGroupName"',
-          'pro.name as "name"',
-        ])
-        .leftJoin('pro.userGroupId', 'use')
-        .where('use.name ilike :search', { search: `%${search}%` })
-        .orWhere('pro.name ilike :search', { search: `%${search}%` })
-        .addOrderBy('use.name', columnOrder[0])
-        .addOrderBy('pro.name', columnOrder[1])
+      let profiles = await this.repository
+        .createQueryBuilder("pro")
+        .select(['pro.id as "id"', 'use.id as "userGroupId"', 'use.name as "userGroupName"', 'pro.name as "name"'])
+        .leftJoin("pro.userGroupId", "use")
+        .where("pro.name != 'Admin'")
+        // .andWhere("use.name ilike :search", { search: `%${search}%` })
+        // .orWhere("pro.name ilike :search", { search: `%${search}%` })
+        .andWhere(
+          new Brackets((qb) => {
+            qb.where("use.name ilike :search", { search: `%${search}%` }).orWhere("pro.name ilike :search", {
+              search: `%${search}%`,
+            })
+          })
+        )
+        .addOrderBy("use.name", columnOrder[0])
+        .addOrderBy("pro.name", columnOrder[1])
         .take(rowsPerPage)
         .skip(offset)
         .getRawMany()
@@ -140,17 +128,15 @@ class ProfileRepository implements IProfileRepository {
     }
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     try {
-      const profiles = await this.repository.createQueryBuilder('pro')
-        .select([
-          'pro.id as "value"',
-          'pro.name as "label"',
-        ])
-        .where('pro.name ilike :filter', { filter: `${filter}%` })
-        .addOrderBy('pro.name')
+      const profiles = await this.repository
+        .createQueryBuilder("pro")
+        .select(['pro.id as "value"', 'pro.name as "label"'])
+        .where("pro.name != 'Admin'")
+        .andWhere("pro.name ilike :filter", { filter: `${filter}%` })
+        .addOrderBy("pro.name")
         .getRawMany()
 
       return ok(profiles)
@@ -159,16 +145,13 @@ class ProfileRepository implements IProfileRepository {
     }
   }
 
-
   // id select
-  async idSelect (id: string): Promise<HttpResponse> {
+  async idSelect(id: string): Promise<HttpResponse> {
     try {
-      const profile = await this.repository.createQueryBuilder('pro')
-        .select([
-          'pro.id as "value"',
-          'pro.name as "label"',
-        ])
-        .where('pro.id = :id', { id: `${id}` })
+      const profile = await this.repository
+        .createQueryBuilder("pro")
+        .select(['pro.id as "value"', 'pro.name as "label"'])
+        .where("pro.id = :id", { id: `${id}` })
         .getRawOne()
 
       return ok(profile)
@@ -177,20 +160,15 @@ class ProfileRepository implements IProfileRepository {
     }
   }
 
-
   // count
-  async count (
-    search: string,
-    filter?: string
-  ): Promise<HttpResponse> {
+  async count(search: string, filter?: string): Promise<HttpResponse> {
     try {
-      const profiles = await this.repository.createQueryBuilder('pro')
-        .select([
-          'pro.id as "id"',
-        ])
-        .leftJoin('pro.userGroupId', 'use')
-        .where('use.name ilike :search', { search: `%${search}%` })
-        .orWhere('pro.name ilike :search', { search: `%${search}%` })
+      const profiles = await this.repository
+        .createQueryBuilder("pro")
+        .select(['pro.id as "id"'])
+        .leftJoin("pro.userGroupId", "use")
+        .where("use.name ilike :search", { search: `%${search}%` })
+        .orWhere("pro.name ilike :search", { search: `%${search}%` })
         .getRawMany()
 
       return ok({ count: profiles.length })
@@ -199,20 +177,15 @@ class ProfileRepository implements IProfileRepository {
     }
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     try {
-      const manager = getManager();
+      const manager = getManager()
 
-      let profile = await this.repository.createQueryBuilder('pro')
-        .select([
-          'pro.id as "id"',
-          'pro.userGroupId as "userGroupId"',
-          'pro.name as "name"',
-          'pro.disabled as "disabled"'
-        ])
-        .where('pro.id = :id', { id: `${id}` })
+      let profile = await this.repository
+        .createQueryBuilder("pro")
+        .select(['pro.id as "id"', 'pro.userGroupId as "userGroupId"', 'pro.name as "name"', 'pro.disabled as "disabled"'])
+        .where("pro.id = :id", { id: `${id}` })
         .getRawOne()
 
       let profileOptions = await manager.query(`
@@ -250,15 +223,8 @@ class ProfileRepository implements IProfileRepository {
     }
   }
 
-
   // update
-  async update ({
-    id,
-    userGroupId,
-    name,
-    disabled,
-    menuOptions
-  }: IProfileDTO): Promise<HttpResponse> {
+  async update({ id, userGroupId, name, disabled, menuOptions }: IProfileDTO): Promise<HttpResponse> {
     const profile = await this.repository.findOne(id)
 
     if (!profile) {
@@ -269,15 +235,15 @@ class ProfileRepository implements IProfileRepository {
       id,
       userGroupId,
       name,
-      disabled
+      disabled,
     })
 
     try {
       this.profileOptionRepository.delete({ profileId: id })
 
-      const result = await this.repository.save(newprofile)
-        .then(async profileResult => {
-          
+      const result = await this.repository
+        .save(newprofile)
+        .then(async (profileResult) => {
           // menu options and rights
 
           for (let i = 0; i < menuOptions.length; i = i + 1) {
@@ -289,7 +255,7 @@ class ProfileRepository implements IProfileRepository {
               permitRestore: menuOptions[i].permitRestore,
               permitUpdate: menuOptions[i].permitUpdate,
               permitDelete: menuOptions[i].permitDelete,
-              disabled: menuOptions[i].disabled
+              disabled: menuOptions[i].disabled,
             })
 
             await this.profileOptionRepository.save(newProfileOption)
@@ -302,12 +268,12 @@ class ProfileRepository implements IProfileRepository {
             userGroupId: profileResult.userGroupId,
             createdAt: profileResult.createdAt,
             updatedAt: profileResult.updatedAt,
-            menuOptions: menuOptions
+            menuOptions: menuOptions,
           }
 
           return newProfileResult
         })
-        .catch(error => {
+        .catch((error) => {
           throw error
         })
 
@@ -317,9 +283,8 @@ class ProfileRepository implements IProfileRepository {
     }
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     try {
       await this.repository.delete(id)
 
@@ -329,16 +294,15 @@ class ProfileRepository implements IProfileRepository {
     }
   }
 
-
   // multi delete
-  async multiDelete (ids: string[]): Promise<HttpResponse> {
+  async multiDelete(ids: string[]): Promise<HttpResponse> {
     try {
       await this.repository.delete(ids)
 
       return noContent()
     } catch (err) {
-      if(err.message.slice(0, 10) === 'null value') {
-        throw new AppError('not null constraint', 404)
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
       }
 
       return serverError(err)

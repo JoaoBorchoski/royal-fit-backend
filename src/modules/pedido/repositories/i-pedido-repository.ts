@@ -67,6 +67,8 @@ interface IPedidoRepository {
   multiDelete(ids: string[]): Promise<HttpResponse>
 
   getPedidosByDataAndCliente(dataInicio: Date, dataFim: Date, clienteId: string): Promise<HttpResponse>
+
+  getAllPedidosByData(dataInicio: Date, dataFim: Date): Promise<HttpResponse>
 }
 
 export { IPedidoRepository }

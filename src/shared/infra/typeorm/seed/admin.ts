@@ -65,8 +65,8 @@ async function create() {
     ),(
       'd4f4b872-b273-49d1-856d-b2c415c2d860', 
       'ca49908a-28cd-4573-808c-36c5f42a2e68',
-      'Royal Fit Gerente', 
-      'gerente@royalfitpg.com.br', 
+      'Royal Fit Diretor', 
+      'diretor@royalfitpg.com.br', 
       '${password2}', 
       false, 
       false, 
@@ -133,11 +133,9 @@ async function create() {
 			('ad07130b-63eb-4563-80ff-6ddcf98883e7', '8e9568d3-dc76-44a9-8ca2-04c8ad85a527', '004', 'Pedidos', '', 'fa-solid fa-clipboard', 'pedido', 'now()', 'now()'),
 			('2a7a3210-1abf-4716-bf02-8249421dae5f', '8e9568d3-dc76-44a9-8ca2-04c8ad85a527', '004001', 'Pedidos', '/pedidos', 'sell', 'pedido-pedidos', 'now()', 'now()'),
 			('e205a1bc-bf90-40c3-97a1-5117be01dd10', '483256d7-5011-4fb7-a0c6-27b1909bb154', '005', 'Relatorios', '', 'fa-solid fa-file', 'relatorios', 'now()', 'now()'),
-			('e037ea49-5769-46f1-9483-671105cb01fe', '483256d7-5011-4fb7-a0c6-27b1909bb154', '005001', 'Relatórios Cliente', '/relatorios-clientes', 'List', 'relatorios-relatorios-clientes', 'now()', 'now()'),
 			('3d06e43e-ce88-4fe8-8e8e-83c8398bbb20', '483256d7-5011-4fb7-a0c6-27b1909bb154', '005002', 'Relatórios Funcionarios', '/relatorios-funcionarios', 'List', 'relatorios-relatorios-funcionarios', 'now()', 'now()'),
 			('bc22a6aa-1a3a-4c67-8ae5-c2f13d0da978', 'a44a8034-e2ef-4b20-a226-ca981365baed', '006', 'Clientes', '', 'fa-solid fa-user', 'clientes', 'now()', 'now()'),
-			('7e10b4b1-c3a4-4aad-83b4-47c64671aeaa', 'a44a8034-e2ef-4b20-a226-ca981365baed', '006001', 'Balanços Clientes', '/balancos', 'List', 'clientes-balancos', 'now()', 'now()'),
-			('62b653ce-e08c-45da-a1e1-d8287e6377c5', 'a44a8034-e2ef-4b20-a226-ca981365baed', '006002', 'Pagamentos Clientes', '/pagamentos', 'List', 'clientes-pagamentos', 'now()', 'now()')`
+			('7e10b4b1-c3a4-4aad-83b4-47c64671aeaa', 'a44a8034-e2ef-4b20-a226-ca981365baed', '006001', 'Balanços Clientes', '/balancos', 'List', 'clientes-balancos', 'now()', 'now()')`
   )
 
   // profiles
@@ -151,8 +149,7 @@ async function create() {
       updated_at
     ) values 
       ('3c99decf-f975-4b16-b552-0747afd397a3', 'ca49908a-28cd-4573-808c-36c5f42a2e68', 'Admin', 'now()', 'now()'),
-      ('04297a01-7c84-45f7-9485-95df65e8fd78', 'ca49908a-28cd-4573-808c-36c5f42a2e68', 'Gerente', 'now()', 'now()'),
-      ('50e82f3b-779d-4918-8076-e8bce6b738c6', 'ca49908a-28cd-4573-808c-36c5f42a2e68', 'Funcionario', 'now()', 'now()')`
+      ('04297a01-7c84-45f7-9485-95df65e8fd78', 'ca49908a-28cd-4573-808c-36c5f42a2e68', 'Diretor', 'now()', 'now()')`
   )
 
   // profile options
@@ -209,15 +206,8 @@ async function create() {
 			('ac86fd1f-5bb9-48ab-a8d0-e90e52eac5c2', '04297a01-7c84-45f7-9485-95df65e8fd78', 'relatorios-relatorios-funcionarios', true, 'now()', 'now()'),
       ('10193daf-1cb2-48c0-ae2d-59cb78d84129', '04297a01-7c84-45f7-9485-95df65e8fd78', 'clientes', true, 'now()', 'now()'),
 			('9d79a096-b2e9-49db-8de4-bbf94c44e50b', '04297a01-7c84-45f7-9485-95df65e8fd78', 'clientes-balancos', true, 'now()', 'now()'),
-      ('bcc3caba-e47d-4d90-a4b3-693c45f99915', '50e82f3b-779d-4918-8076-e8bce6b738c6', 'cadastros', true, 'now()', 'now()'),
-			('db165a16-db4d-4692-8376-3f46147815f7', '50e82f3b-779d-4918-8076-e8bce6b738c6', 'cadastros-clientes', true, 'now()', 'now()'),
-			('e1d6cc1f-a027-495a-aeec-5a1afb4e0488', '50e82f3b-779d-4918-8076-e8bce6b738c6', 'cadastros-produtos', true, 'now()', 'now()'),
-      ('4f005460-9948-4195-a98f-abb60a3d91c9', '50e82f3b-779d-4918-8076-e8bce6b738c6', 'cadastros-estoques', true, 'now()', 'now()'),
-			('fc9cc680-2e06-4a9a-a601-ecab862a6da3', '50e82f3b-779d-4918-8076-e8bce6b738c6', 'cadastros-garrafoes', true, 'now()', 'now()'),
-			('16a8ee0d-84c9-44d5-bfe0-f86ee5a25ccb', '50e82f3b-779d-4918-8076-e8bce6b738c6', 'cadastros-meios-pagamento', true, 'now()', 'now()'),
-			('71033d33-6fc1-4712-a235-7f20e6a16874', '50e82f3b-779d-4918-8076-e8bce6b738c6', 'cadastros-bonificacoes', true, 'now()', 'now()'),
-      ('1b94f96d-d45f-474c-817d-ec342b5c2f60', '50e82f3b-779d-4918-8076-e8bce6b738c6', 'pedido', true, 'now()', 'now()'),
-			('0ef9623c-f360-4f65-af1d-4c7e1c409534', '50e82f3b-779d-4918-8076-e8bce6b738c6', 'pedido-pedidos', true, 'now()', 'now()')`
+      ('0d8dfdcc-e8ba-437c-819c-6dbe0a1a027b', '04297a01-7c84-45f7-9485-95df65e8fd78', 'security', true, 'now()', 'now()'),
+      ('8ce2943f-7a7f-4d57-9113-930f5bd3c505', '04297a01-7c84-45f7-9485-95df65e8fd78', 'security-profiles', true, 'now()', 'now()')`
   )
 
   // user x profile
@@ -262,7 +252,8 @@ async function create() {
       ('b5dc109d-88db-442c-b33e-0fcafad9ebf0', 'Crédito 1X', 'Crédito 1X', 'now()', 'now()'),
       ('e2c55718-9589-4e88-83c3-c95a739c5088', 'Crédito 2X', 'Crédito 2X', 'now()', 'now()'),
       ('ef5a1b5b-e34b-43c8-84d6-87e24e57c045', 'Crédito 3X', 'Crédito 3X', 'now()', 'now()'),
-      ('d67f0df4-566a-46ba-b25f-206aa8932211', 'Crédito 6X', 'Crédito 6X', 'now()', 'now()')`
+      ('d67f0df4-566a-46ba-b25f-206aa8932211', 'Crédito 6X', 'Crédito 6X', 'now()', 'now()'),
+      ('9751732c-4ed8-465f-96f1-2d2580b33a5d', 'Crediário Próprio', 'Crediário Próprio', 'now()', 'now()')`
   )
 
   await connection.query(

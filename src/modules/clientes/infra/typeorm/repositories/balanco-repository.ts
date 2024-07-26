@@ -203,7 +203,7 @@ class BalancoRepository implements IBalancoRepository {
         .select([
           'bal.id as "id"',
           'bal.clienteId as "clienteId"',
-          'bal.saldoDevedor as "saldoDevedor"',
+          'bal.saldoDevedor :: float as "saldoDevedor"',
           'bal.desabilitado as "desabilitado"',
         ])
         .where("bal.clienteId = :clienteId", { clienteId })

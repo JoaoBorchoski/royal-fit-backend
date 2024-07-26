@@ -19,6 +19,7 @@ class CreateFuncionarioController {
       complemento,
       telefone,
       usuarioId,
+      profileId,
       desabilitado,
     } = request.body
 
@@ -39,6 +40,7 @@ class CreateFuncionarioController {
         complemento,
         telefone,
         usuarioId,
+        profileId,
         desabilitado,
       })
       .then((funcionarioResult) => {

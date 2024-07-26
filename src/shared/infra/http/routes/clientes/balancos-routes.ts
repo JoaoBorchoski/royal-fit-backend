@@ -10,6 +10,7 @@ import { DeleteBalancoController } from "@modules/clientes/use-cases/balanco/del
 import { MultiDeleteBalancoController } from "@modules/clientes/use-cases/balanco/multi-delete-balanco/multi-delete-balanco-controller"
 import { ensureAuthenticated } from "@shared/infra/http/middlewares/ensure-authenticated"
 import { AddPagamentoBalancoController } from "@modules/clientes/use-cases/balanco/add-pagamento-balanco/add-pagamento-balanco-controller"
+import { CreateRelatorioPedidosTotaisController } from "@modules/clientes/use-cases/balanco/create-relatorio-pedidos-totais/create-relatorio-pedidos-totais-controller"
 
 const balancosRoutes = Router()
 
@@ -23,8 +24,10 @@ const updateBalancoController = new UpdateBalancoController()
 const deleteBalancoController = new DeleteBalancoController()
 const multiDeleteBalancoController = new MultiDeleteBalancoController()
 const addPagamentoBalancoController = new AddPagamentoBalancoController()
+const createRelatorioPedidosTotaisController = new CreateRelatorioPedidosTotaisController()
 
 balancosRoutes.post("/", ensureAuthenticated, createBalancoController.handle)
+balancosRoutes.post("/relatorio-all", ensureAuthenticated, createRelatorioPedidosTotaisController.handle)
 balancosRoutes.post("/list", ensureAuthenticated, listBalancoController.handle)
 balancosRoutes.post("/count", ensureAuthenticated, countBalancoController.handle)
 balancosRoutes.get("/select/:id", ensureAuthenticated, idSelectBalancoController.handle)

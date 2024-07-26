@@ -7,6 +7,7 @@ import { IPedidoItemRepository } from "@modules/pedido/repositories/i-pedido-ite
 import { IEstoqueRepository } from "@modules/cadastros/repositories/i-estoque-repository"
 import { IProdutoRepository } from "@modules/cadastros/repositories/i-produto-repository"
 import { getConnection } from "typeorm"
+import { IBalancoRepository } from "@modules/clientes/repositories/i-balanco-repository"
 
 interface IRequest {
   id: string
@@ -16,6 +17,8 @@ interface IRequest {
   hora: string
   valorTotal: number
   desconto: number
+  descricao: string
+  isLiberado: boolean
   funcionarioId: string
   meioPagamentoId: string
   statusPagamentoId: string
@@ -34,7 +37,9 @@ class UpdatePedidoUseCase {
     @inject("ProdutoRepository")
     private produtoRepository: IProdutoRepository,
     @inject("PedidoItemRepository")
-    private pedidoItemRepository: IPedidoItemRepository
+    private pedidoItemRepository: IPedidoItemRepository,
+    @inject("BalancoRepository")
+    private balancoRepository: IBalancoRepository
   ) {}
 
   async execute({
@@ -45,6 +50,8 @@ class UpdatePedidoUseCase {
     hora,
     valorTotal,
     desconto,
+    descricao,
+    isLiberado,
     funcionarioId,
     meioPagamentoId,
     statusPagamentoId,
@@ -56,6 +63,9 @@ class UpdatePedidoUseCase {
     await queryRunner.startTransaction()
 
     try {
+      const oldPedido = await this.pedidoRepository.get(id)
+      const oldBalanco = await this.balancoRepository.getByClienteId(clienteId)
+
       const pedido = await this.pedidoRepository.update(
         {
           id,
@@ -65,6 +75,8 @@ class UpdatePedidoUseCase {
           hora,
           valorTotal,
           desconto,
+          descricao,
+          isLiberado,
           funcionarioId,
           meioPagamentoId,
           statusPagamentoId,
@@ -73,6 +85,17 @@ class UpdatePedidoUseCase {
         },
         queryRunner.manager
       )
+
+      if (meioPagamentoId == "9751732c-4ed8-465f-96f1-2d2580b33a5d") {
+        await this.balancoRepository.updateWithQueryRunner(
+          {
+            id: oldBalanco.data.id,
+            clienteId,
+            saldoDevedor: oldBalanco.data.saldoDevedor - oldPedido.data.valorTotal + valorTotal,
+          },
+          queryRunner.manager
+        )
+      }
 
       for await (const pedidoItem of pedidoItemForm) {
         const estoqueAtual = await this.estoqueRepository.getByProdutoId(pedidoItem.produtoId)

@@ -3,6 +3,7 @@ import { IRelatorioFuncionarioRepository } from "@modules/relatorios/repositorie
 import { AppError } from "@shared/errors/app-error"
 import { HttpResponse, noContent, ok } from "@shared/helpers"
 import * as XLSX from "xlsx"
+import { IPedidoRepository } from "@modules/pedido/repositories/i-pedido-repository"
 
 interface IRequest {
   dataInicio: Date
@@ -10,10 +11,10 @@ interface IRequest {
 }
 
 @injectable()
-class CreateRelatorioFuncionarioUseCase {
+class CreateRelatorioPedidosTotaisUseCase {
   constructor(
-    @inject("RelatorioFuncionarioRepository")
-    private relatorioFuncionarioRepository: IRelatorioFuncionarioRepository
+    @inject("PedidoRepository")
+    private pedidoRepository: IPedidoRepository
   ) {}
 
   async execute({ dataInicio, dataFim }: IRequest): Promise<HttpResponse> {
@@ -25,7 +26,7 @@ class CreateRelatorioFuncionarioUseCase {
         throw new AppError("Data de início não pode ser maior que a data de fim")
       }
 
-      const pedidos = await this.relatorioFuncionarioRepository.getPedidosByData(dataInicioFormatada, dataFimFormatada)
+      const pedidos = await this.pedidoRepository.getAllPedidosByData(dataInicioFormatada, dataFimFormatada)
 
       const sheetName = "Sheet1"
       const emptyWorkbook = this.exportEmptyExcel(sheetName)
@@ -34,15 +35,17 @@ class CreateRelatorioFuncionarioUseCase {
       const wbout = XLSX.write(emptyWorkbook, { bookType: "xlsx", type: "binary" })
       return ok(wbout)
     } catch (error) {
+      console.log(error)
       return error
     }
   }
+
   private styleColumns(workbook: any, sheetName: string) {
-    workbook.Sheets[sheetName]["!cols"] = [{ wpx: 100 }, { wpx: 100 }]
+    workbook.Sheets[sheetName]["!cols"] = [{ wpx: 100 }, { wpx: 100 }, { wpx: 100 }, { wpx: 100 }, { wpx: 150 }]
   }
 
   private exportEmptyExcel(sheetName: string) {
-    const header = ["Funcionário", "Valor Total (R$)"]
+    const header = ["Cliente", "Total de Pedidos", "Valor Total (R$)", "Saldo Devedor (R$)", "Total Pagamentos (R$)"]
 
     const emptyData = [header]
 
@@ -56,16 +59,16 @@ class CreateRelatorioFuncionarioUseCase {
 
   private async addDataToSheet(workbook: any, sheetName: string, data: any) {
     const dataForExcel = []
-    let valorTotal = 0
     for await (const item of data) {
-      dataForExcel.push([item.pedidos[0].funcionarioNome, item.pedidos.reduce((acc, curr) => acc + curr.valorTotal, 0)])
-      valorTotal += item.pedidos.reduce((acc, curr) => acc + curr.valorTotal, 0)
-    }
+      console.log(item)
+      const total = await item.pedidos.reduce((acc: number, pedido: any) => acc + pedido.valorTotal, 0)
+      console.log(total)
 
-    dataForExcel.push(["Total", valorTotal])
+      dataForExcel.push([item.clienteNome, item.pedidos.length, total, item.saldoDevedor, total - item.saldoDevedor])
+    }
 
     XLSX.utils.sheet_add_aoa(workbook.Sheets[sheetName], dataForExcel, { origin: -1 })
   }
 }
 
-export { CreateRelatorioFuncionarioUseCase }
+export { CreateRelatorioPedidosTotaisUseCase }

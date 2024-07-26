@@ -9,6 +9,7 @@ import { IProdutoRepository } from "@modules/cadastros/repositories/i-produto-re
 import { IBonificacaoRepository } from "@modules/cadastros/repositories/i-bonificacao-repository"
 import { IGarrafaoRepository } from "@modules/cadastros/repositories/i-garrafao-repository"
 import { IBalancoRepository } from "@modules/clientes/repositories/i-balanco-repository"
+import { noContent } from "@shared/helpers"
 
 interface IRequest {
   sequencial: number
@@ -17,10 +18,12 @@ interface IRequest {
   hora: string
   valorTotal: number
   desconto: number
+  descricao: string
   funcionarioId: string
   meioPagamentoId: string
   statusPagamentoId: string
   isPagamentoPosterior: boolean
+  isLiberado: boolean
   desabilitado: boolean
   pedidoItemForm: any[]
 }
@@ -51,6 +54,8 @@ class CreatePedidoUseCase {
     hora,
     valorTotal,
     desconto,
+    descricao,
+    isLiberado,
     funcionarioId,
     meioPagamentoId,
     statusPagamentoId,
@@ -76,10 +81,11 @@ class CreatePedidoUseCase {
             hora,
             valorTotal,
             desconto,
+            descricao,
             funcionarioId,
             meioPagamentoId,
-            statusPagamentoId,
             isPagamentoPosterior,
+            isLiberado,
             desabilitado,
           },
           queryRunner.manager
@@ -144,8 +150,9 @@ class CreatePedidoUseCase {
         )
       }
 
-      if (statusPagamentoId == "58922f62-67e4-4f50-8e0d-2bcb89f95f9a") {
-        const balanco = await this.balancoRepository.getByClienteId(clienteId)
+      // if (statusPagamentoId == "58922f62-67e4-4f50-8e0d-2bcb89f95f9a") {
+      if (meioPagamentoId == "9751732c-4ed8-465f-96f1-2d2580b33a5d") {
+        const balanco = await this.balancoRepository.getByClienteIdWithQueryRunner(clienteId, queryRunner.manager)
         await this.balancoRepository.updateWithQueryRunner(
           {
             id: balanco.data.id,
@@ -168,6 +175,7 @@ class CreatePedidoUseCase {
 
       await queryRunner.commitTransaction()
       return result
+      // return noContent()
     } catch (error) {
       console.log("error", error)
       await queryRunner.rollbackTransaction()

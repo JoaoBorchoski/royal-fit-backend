@@ -2,6 +2,7 @@ import { IClienteDTO } from "@modules/cadastros/dtos/i-cliente-dto"
 import { IFuncionarioDTO } from "@modules/cadastros/dtos/i-funcionario-dto"
 import { IBonificacaoRepository } from "@modules/cadastros/repositories/i-bonificacao-repository"
 import { IClienteRepository } from "@modules/cadastros/repositories/i-cliente-repository"
+import { IGarrafaoRepository } from "@modules/cadastros/repositories/i-garrafao-repository"
 import { IBalancoRepository } from "@modules/clientes/repositories/i-balanco-repository"
 import { HttpResponse, noContent, ok } from "@shared/helpers"
 import fs from "fs"
@@ -20,6 +21,8 @@ class ImportClienteUseCase {
     private clienteRepository: IClienteRepository,
     @inject("BonificacaoRepository")
     private bonificacaoRepository: IBonificacaoRepository,
+    @inject("GarrafaoRepository")
+    private garrafaoRepository: IGarrafaoRepository,
     @inject("BalancoRepository")
     private balancoRepository: IBalancoRepository
   ) {}
@@ -60,6 +63,7 @@ class ImportClienteUseCase {
         const teste = await this.clienteRepository.createWithQueryRunner(cliente, queryRunner.manager)
         const bonificacaoAlreadyExists = await this.bonificacaoRepository.getByClienteId(teste.data.id)
         const balancoAlreadyExists = await this.balancoRepository.getByClienteId(teste.data.id)
+        const garrafaAlreadyExists = await this.garrafaoRepository.getByClienteId(teste.data.id)
 
         if (!bonificacaoAlreadyExists.data) {
           await this.bonificacaoRepository.createWithQueryRunner(
@@ -77,6 +81,17 @@ class ImportClienteUseCase {
             {
               clienteId: teste.data.id,
               saldoDevedor: 0,
+              desabilitado: false,
+            },
+            queryRunner.manager
+          )
+        }
+
+        if (!garrafaAlreadyExists.data) {
+          await this.garrafaoRepository.createWithQueryRunner(
+            {
+              clienteId: teste.data.id,
+              quantidade: 0,
               desabilitado: false,
             },
             queryRunner.manager
