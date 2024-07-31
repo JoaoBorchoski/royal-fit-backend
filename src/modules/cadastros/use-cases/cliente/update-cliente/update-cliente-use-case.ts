@@ -1,14 +1,16 @@
-import { inject, injectable } from 'tsyringe'
-import { Cliente } from '@modules/cadastros/infra/typeorm/entities/cliente'
-import { IClienteRepository } from '@modules/cadastros/repositories/i-cliente-repository'
-import { AppError } from '@shared/errors/app-error'
-import { HttpResponse } from '@shared/helpers'
+import { inject, injectable } from "tsyringe"
+import { Cliente } from "@modules/cadastros/infra/typeorm/entities/cliente"
+import { IClienteRepository } from "@modules/cadastros/repositories/i-cliente-repository"
+import { AppError } from "@shared/errors/app-error"
+import { HttpResponse } from "@shared/helpers"
 
 interface IRequest {
   id: string
   nome: string
   cpfCnpj: string
   email: string
+  isBonificado: boolean
+  desconto: number
   cep: string
   estadoId: string
   cidadeId: string
@@ -23,7 +25,8 @@ interface IRequest {
 
 @injectable()
 class UpdateClienteUseCase {
-  constructor(@inject('ClienteRepository')
+  constructor(
+    @inject("ClienteRepository")
     private clienteRepository: IClienteRepository
   ) {}
 
@@ -32,6 +35,8 @@ class UpdateClienteUseCase {
     nome,
     cpfCnpj,
     email,
+    isBonificado,
+    desconto,
     cep,
     estadoId,
     cidadeId,
@@ -41,13 +46,15 @@ class UpdateClienteUseCase {
     complemento,
     telefone,
     usuarioId,
-    desabilitado
+    desabilitado,
   }: IRequest): Promise<HttpResponse> {
     const cliente = await this.clienteRepository.update({
       id,
       nome,
       cpfCnpj,
       email,
+      isBonificado,
+      desconto,
       cep,
       estadoId,
       cidadeId,
@@ -57,7 +64,7 @@ class UpdateClienteUseCase {
       complemento,
       telefone,
       usuarioId,
-      desabilitado
+      desabilitado,
     })
 
     return cliente

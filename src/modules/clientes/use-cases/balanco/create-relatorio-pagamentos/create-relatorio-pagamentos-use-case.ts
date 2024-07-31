@@ -49,7 +49,7 @@ class CreateRelatorioPagamentoUseCase {
   }
 
   private exportEmptyExcel(sheetName: string) {
-    const header = ["Data", "Valor Pago (R$)"]
+    const header = ["Data", "Valor Pago (R$)", "Meio de Pagamento"]
 
     const emptyData = [header]
 
@@ -64,7 +64,7 @@ class CreateRelatorioPagamentoUseCase {
   private async addDataToSheet(workbook: any, sheetName: string, data: any) {
     const dataForExcel = []
     for await (const item of data) {
-      dataForExcel.push([item.data.toLocaleDateString("pt-BR"), item.valorPago])
+      dataForExcel.push([item.data.toLocaleDateString("pt-BR"), item.valorPago, item.meioPagamento])
     }
 
     XLSX.utils.sheet_add_aoa(workbook.Sheets[sheetName], dataForExcel, { origin: -1 })

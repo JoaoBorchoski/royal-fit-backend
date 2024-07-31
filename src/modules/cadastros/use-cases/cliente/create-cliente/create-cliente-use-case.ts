@@ -11,6 +11,8 @@ interface IRequest {
   nome: string
   cpfCnpj: string
   email: string
+  isBonificado: boolean
+  desconto: number
   cep: string
   estadoId: string
   cidadeId: string
@@ -42,6 +44,8 @@ class CreateClienteUseCase {
     nome,
     cpfCnpj,
     email,
+    isBonificado,
+    desconto,
     cep,
     estadoId,
     cidadeId,
@@ -65,6 +69,8 @@ class CreateClienteUseCase {
           nome,
           cpfCnpj: cpfCnpj.toString().replace(/[^\d]+/g, ""),
           email,
+          isBonificado,
+          desconto,
           cep,
           estadoId,
           cidadeId,

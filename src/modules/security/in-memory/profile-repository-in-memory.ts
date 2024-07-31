@@ -1,23 +1,20 @@
-import { IProfileDTO } from '@modules/security/dtos/i-profile-dto'
-import { IProfileRepository } from '@modules/security/repositories/i-profile-repository'
-import { Profile } from '@modules/security/infra/typeorm/entities/profile'
-import { ok, notFound, HttpResponse } from '@shared/helpers'
+import { IProfileDTO } from "@modules/security/dtos/i-profile-dto"
+import { IProfileRepository } from "@modules/security/repositories/i-profile-repository"
+import { Profile } from "@modules/security/infra/typeorm/entities/profile"
+import { ok, notFound, HttpResponse } from "@shared/helpers"
+import { EntityManager } from "typeorm"
 
 class ProfileRepositoryInMemory implements IProfileRepository {
   profiles: Profile[] = []
 
   // create
-  async create ({
-    userGroupId,
-    name,
-    disabled
-  }: IProfileDTO): Promise<HttpResponse> {
+  async create({ userGroupId, name, disabled }: IProfileDTO): Promise<HttpResponse> {
     const profile = new Profile()
 
     Object.assign(profile, {
       userGroupId,
       name,
-      disabled
+      disabled,
     })
 
     this.profiles.push(profile)
@@ -25,14 +22,8 @@ class ProfileRepositoryInMemory implements IProfileRepository {
     return ok(profile)
   }
 
-
   // list
-  async list (
-    search: string,
-    page: number,
-    rowsPerPage: number,
-    order: string
-  ): Promise<HttpResponse> {
+  async list(search: string, page: number, rowsPerPage: number, order: string): Promise<HttpResponse> {
     let filteredProfiles = this.profiles
 
     filteredProfiles = filteredProfiles.filter((profile) => {
@@ -45,9 +36,8 @@ class ProfileRepositoryInMemory implements IProfileRepository {
     return ok(filteredProfiles.slice((page - 1) * rowsPerPage, page * rowsPerPage))
   }
 
-
   // select
-  async select (filter: string): Promise<HttpResponse> {
+  async select(filter: string): Promise<HttpResponse> {
     let filteredProfiles = this.profiles
 
     filteredProfiles = filteredProfiles.filter((profile) => {
@@ -60,15 +50,13 @@ class ProfileRepositoryInMemory implements IProfileRepository {
     return ok(filteredProfiles)
   }
 
-
   // id select
   idSelect(id: string): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 
-
   // count
-  async count (search: string,): Promise<HttpResponse> {
+  async count(search: string): Promise<HttpResponse> {
     let filteredProfiles = this.profiles
 
     filteredProfiles = filteredProfiles.filter((profile) => {
@@ -81,26 +69,19 @@ class ProfileRepositoryInMemory implements IProfileRepository {
     return ok(filteredProfiles.length)
   }
 
-
   // get
-  async get (id: string): Promise<HttpResponse> {
+  async get(id: string): Promise<HttpResponse> {
     const profile = this.profiles.find((profile) => profile.id === id)
 
-    if (typeof profile === 'undefined') {
+    if (typeof profile === "undefined") {
       return notFound()
     } else {
       return ok(profile)
     }
   }
 
-
   // update
-  async update ({
-    id,
-    userGroupId,
-    name,
-    disabled
-  }: IProfileDTO): Promise<HttpResponse> {
+  async update({ id, userGroupId, name, disabled }: IProfileDTO): Promise<HttpResponse> {
     const index = this.profiles.findIndex((profile) => profile.id === id)
 
     this.profiles[index].userGroupId = userGroupId
@@ -110,9 +91,8 @@ class ProfileRepositoryInMemory implements IProfileRepository {
     return ok(this.profiles[index])
   }
 
-
   // delete
-  async delete (id: string): Promise<HttpResponse> {
+  async delete(id: string): Promise<HttpResponse> {
     const index = this.profiles.findIndex((profile) => profile.id === id)
 
     this.profiles.splice(index, 1)
@@ -120,10 +100,13 @@ class ProfileRepositoryInMemory implements IProfileRepository {
     return ok(this.profiles)
   }
 
-
   // multi delete
   multiDelete(ids: string[]): Promise<HttpResponse<any>> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
+  }
+
+  getByName(name: string, transactionManager: EntityManager): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
   }
 }
 

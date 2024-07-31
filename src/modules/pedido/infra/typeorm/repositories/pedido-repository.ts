@@ -264,6 +264,7 @@ class PedidoRepository implements IPedidoRepository {
           'ped.isLiberado as "isLiberado"',
           'ped.desabilitado as "desabilitado"',
           'ped.descricao as "descricao"',
+          'a.desconto :: float as "desconto"',
         ])
         .leftJoin("ped.clienteId", "a")
         .leftJoin("ped.funcionarioId", "b")
@@ -282,7 +283,7 @@ class PedidoRepository implements IPedidoRepository {
           'pedItem.id as "id"',
           'pedItem.produtoId as "produtoId"',
           'prod.nome as "produtoNome"',
-          'prod.preco as "preco"',
+          'prod.preco :: float as "preco"',
           'pedItem.quantidade as "quantidade"',
           // 'pedItem.valorTotal as "valor"',
           'CAST(pedItem.quantidade * prod.preco AS float) as "valor"',

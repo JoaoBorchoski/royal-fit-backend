@@ -258,11 +258,14 @@ class PagamentoRepository implements IPagamentoRepository {
         SELECT 
           p.id AS "id",
           p.data AS "data",
-          p.valor_pago :: float AS "valorPago"
+          p.valor_pago :: float AS "valorPago",
+          mp.nome AS "meioPagamento"
         FROM 
           Pagamentos p
         LEFT JOIN
           Clientes c ON p.cliente_id = c.id
+        LEFT JOIN
+          meios_pagamento mp ON p.meio_pagamento_id = mp.id
         WHERE 
           p.data BETWEEN $1 AND $2
         AND

@@ -1,23 +1,19 @@
-import { inject, injectable } from 'tsyringe'
-import { Profile } from '@modules/security/infra/typeorm/entities/profile'
-import { IProfileRepository } from '@modules/security/repositories/i-profile-repository'
-import { IProfileDTO } from '@modules/security/dtos/i-profile-dto'
+import { inject, injectable } from "tsyringe"
+import { Profile } from "@modules/security/infra/typeorm/entities/profile"
+import { IProfileRepository } from "@modules/security/repositories/i-profile-repository"
+import { IProfileDTO } from "@modules/security/dtos/i-profile-dto"
 
 @injectable()
 class CreateProfileUseCase {
-  constructor(@inject('ProfileRepository')
+  constructor(
+    @inject("ProfileRepository")
     private profileRepository: IProfileRepository
   ) {}
 
-  async execute({
-    userGroupId,
-    name,
-    disabled,
-    menuOptions
-  }: IProfileDTO): Promise<Profile> {
+  async execute({ userGroupId, name, disabled, menuOptions }: IProfileDTO): Promise<Profile> {
     const newMenuOptions = []
 
-    menuOptions.map(menuOption => {
+    for await (const menuOption of menuOptions) {
       newMenuOptions.push({
         menuOptionKey: menuOption.menuOptionKey,
         permitAll: false,
@@ -25,23 +21,39 @@ class CreateProfileUseCase {
         permitDelete: false,
         permitRestore: false,
         permitUpdate: false,
-        disabled: false
+        disabled: false,
       })
 
-      menuOption.data.map(menuItem => newMenuOptions.push(menuItem))
-    })
+      for await (const menuItem of menuOption.data) {
+        newMenuOptions.push(menuItem)
+      }
+    }
 
+    // menuOptions.map((menuOption) => {
+    //   newMenuOptions.push({
+    //     menuOptionKey: menuOption.menuOptionKey,
+    //     permitAll: false,
+    //     permitCreate: false,
+    //     permitDelete: false,
+    //     permitRestore: false,
+    //     permitUpdate: false,
+    //     disabled: false,
+    //   })
 
-    const result = await this.profileRepository.create({
+    //   menuOption.data.map((menuItem) => newMenuOptions.push(menuItem))
+    // })
+
+    const result = await this.profileRepository
+      .create({
         userGroupId,
         name,
         disabled,
-        menuOptions: newMenuOptions
+        menuOptions: newMenuOptions,
       })
-      .then(profileResult => {
+      .then((profileResult) => {
         return profileResult
       })
-      .catch(error => {
+      .catch((error) => {
         return error
       })
 

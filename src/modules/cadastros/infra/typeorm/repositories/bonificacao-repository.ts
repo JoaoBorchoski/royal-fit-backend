@@ -88,6 +88,7 @@ class BonificacaoRepository implements IBonificacaoRepository {
           'bon.totalVendido as "totalVendido"',
           'bon.bonificacaoDisponivel as "bonificacaoDisponivel"',
         ])
+        .where("a.isBonificado = true")
         .leftJoin("bon.clienteId", "a")
 
       if (filter) {

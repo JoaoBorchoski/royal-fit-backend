@@ -3,6 +3,8 @@ interface IClienteDTO {
   nome?: string
   cpfCnpj?: string
   email?: string
+  isBonificado?: boolean
+  desconto?: number
   cep?: string
   estadoId?: string
   cidadeId?: string

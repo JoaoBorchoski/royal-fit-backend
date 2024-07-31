@@ -66,6 +66,8 @@ import { IEstoqueRepository } from "@modules/cadastros/repositories/i-estoque-re
 import { EstoqueRepository } from "@modules/cadastros/infra/typeorm/repositories/estoque-repository"
 import { IPedidoBonificadoRepository } from "@modules/pedido/repositories/i-pedido-bonificado-repository"
 import { PedidoBonificadoRepository } from "@modules/pedido/infra/typeorm/repositories/pedido-bonificado-repository"
+import { AlmoxarifadoItemRepository } from "@modules/almoxarifado/infra/typeorm/repositories/almoxarifado-item-repository"
+import { IAlmoxarifadoItemRepository } from "@modules/almoxarifado/repositories/i-almoxarifado-item-repository"
 
 container.registerSingleton<IUserRepository>("UserRepository", UserRepository)
 container.registerSingleton<IUserSecurityRepository>("UserSecurityRepository", UserSecurityRepository)
@@ -99,3 +101,4 @@ container.registerSingleton<IRelatorioFuncionarioRepository>("RelatorioFuncionar
 container.registerSingleton<IBalancoRepository>("BalancoRepository", BalancoRepository)
 container.registerSingleton<IPagamentoRepository>("PagamentoRepository", PagamentoRepository)
 container.registerSingleton<IEstoqueRepository>("EstoqueRepository", EstoqueRepository)
+container.registerSingleton<IAlmoxarifadoItemRepository>("AlmoxarifadoItemRepository", AlmoxarifadoItemRepository)

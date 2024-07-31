@@ -158,6 +158,10 @@ class PedidoRepositoryInMemory implements IPedidoRepository {
   getByClienteId(clienteId: string): Promise<HttpResponse> {
     throw new Error("Method not implemented.")
   }
+
+  getAllPedidosByData(dataInicio: Date, dataFim: Date): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
 }
 
 export { PedidoRepositoryInMemory }

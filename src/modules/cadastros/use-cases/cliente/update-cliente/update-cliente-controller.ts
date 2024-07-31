@@ -1,6 +1,6 @@
-import { Request, Response } from 'express'
-import { container } from 'tsyringe'
-import { UpdateClienteUseCase } from './update-cliente-use-case'
+import { Request, Response } from "express"
+import { container } from "tsyringe"
+import { UpdateClienteUseCase } from "./update-cliente-use-case"
 
 class UpdateClienteController {
   async handle(request: Request, response: Response): Promise<Response> {
@@ -8,6 +8,8 @@ class UpdateClienteController {
       nome,
       cpfCnpj,
       email,
+      isBonificado,
+      desconto,
       cep,
       estadoId,
       cidadeId,
@@ -17,18 +19,21 @@ class UpdateClienteController {
       complemento,
       telefone,
       usuarioId,
-      desabilitado
+      desabilitado,
     } = request.body
 
     const { id } = request.params
 
     const updateClienteUseCase = container.resolve(UpdateClienteUseCase)
 
-    const result = await updateClienteUseCase.execute({
+    const result = await updateClienteUseCase
+      .execute({
         id,
         nome,
         cpfCnpj,
         email,
+        isBonificado,
+        desconto,
         cep,
         estadoId,
         cidadeId,
@@ -38,12 +43,12 @@ class UpdateClienteController {
         complemento,
         telefone,
         usuarioId,
-        desabilitado
+        desabilitado,
       })
-      .then(clienteResult => {
+      .then((clienteResult) => {
         return clienteResult
       })
-      .catch(error => {
+      .catch((error) => {
         return error
       })
 

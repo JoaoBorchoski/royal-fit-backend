@@ -33,6 +33,7 @@ import { balancosRoutes } from "./clientes/balancos-routes"
 import { pagamentosRoutes } from "./clientes/pagamentos-routes"
 import { estoquesRoutes } from "./cadastros/estoques-routes"
 import { pedidoBonificadosRoutes } from "./pedido/pedido-bonificados-routes"
+import { almoxarifadoItensRoutes } from "./almoxarifado/almoxarifado-itens-routes"
 
 const router = Router()
 
@@ -70,5 +71,6 @@ router.use("/relatorios-clientes", relatoriosClientesRoutes)
 router.use("/relatorios-funcionarios", relatoriosFuncionariosRoutes)
 router.use("/balancos", balancosRoutes)
 router.use("/pagamentos", pagamentosRoutes)
+router.use("/almoxarifado-itens", almoxarifadoItensRoutes)
 
 export { router }

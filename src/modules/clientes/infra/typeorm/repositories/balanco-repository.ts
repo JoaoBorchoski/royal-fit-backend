@@ -84,10 +84,11 @@ class BalancoRepository implements IBalancoRepository {
           'a.id as "clienteId"',
           'a.nome as "clienteNome"',
           'bal.saldoDevedor as "saldoDevedor"',
-          'bon.bonificacaoDisponivel as "bonificacaoDisponivel"',
+          'gar.quantidade as "bonificacaoDisponivel"',
         ])
         .leftJoin("bal.clienteId", "a")
         .leftJoin("bonificacoes", "bon", "bon.clienteId = a.id")
+        .leftJoin("garrafoes", "gar", "gar.clienteId = a.id")
 
       if (filter) {
         query = query.where(filter)
@@ -179,6 +180,7 @@ class BalancoRepository implements IBalancoRepository {
           'bal.desabilitado as "desabilitado"',
           "bon.bonificacaoDisponivel as bonificacaoDisponivel",
           'gar.quantidade as "garrafoesDisponivel"',
+          'a.isBonificado as "isBonificado"',
         ])
         .leftJoin("bal.clienteId", "a")
         .leftJoin("bonificacoes", "bon", "bon.clienteId = a.id")

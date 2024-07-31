@@ -1,7 +1,7 @@
-import { Request, Response } from 'express'
-import { container } from 'tsyringe'
-import { CreateClienteUseCase } from './create-cliente-use-case'
-import { HttpResponse } from '@shared/helpers'
+import { Request, Response } from "express"
+import { container } from "tsyringe"
+import { CreateClienteUseCase } from "./create-cliente-use-case"
+import { HttpResponse } from "@shared/helpers"
 
 class CreateClienteController {
   async handle(request: Request, response: Response): Promise<Response> {
@@ -9,6 +9,8 @@ class CreateClienteController {
       nome,
       cpfCnpj,
       email,
+      isBonificado,
+      desconto,
       cep,
       estadoId,
       cidadeId,
@@ -18,15 +20,18 @@ class CreateClienteController {
       complemento,
       telefone,
       usuarioId,
-      desabilitado
+      desabilitado,
     } = request.body
 
     const createClienteUseCase = container.resolve(CreateClienteUseCase)
 
-    const result = await createClienteUseCase.execute({
+    const result = await createClienteUseCase
+      .execute({
         nome,
         cpfCnpj,
         email,
+        isBonificado,
+        desconto,
         cep,
         estadoId,
         cidadeId,
@@ -36,12 +41,12 @@ class CreateClienteController {
         complemento,
         telefone,
         usuarioId,
-        desabilitado
+        desabilitado,
       })
-      .then(clienteResult => {
+      .then((clienteResult) => {
         return clienteResult
       })
-      .catch(error => {
+      .catch((error) => {
         return error
       })
 

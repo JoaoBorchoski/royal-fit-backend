@@ -90,7 +90,8 @@ async function create() {
 			('3bfc11ef-8ee3-44a6-87c1-589089adbc98', 'Cadastros', 'now()', 'now()'),
 			('8e9568d3-dc76-44a9-8ca2-04c8ad85a527', 'Pedidos', 'now()', 'now()'),
 			('483256d7-5011-4fb7-a0c6-27b1909bb154', 'Relatórios', 'now()', 'now()'),
-			('a44a8034-e2ef-4b20-a226-ca981365baed', 'Clientes', 'now()', 'now()')`
+			('a44a8034-e2ef-4b20-a226-ca981365baed', 'Clientes', 'now()', 'now()'),
+			('597b9008-efb0-4350-8806-0de0221a14ec', 'Almoxarifado', 'now()', 'now()')`
   )
 
   // menu options
@@ -136,7 +137,9 @@ async function create() {
 			('e205a1bc-bf90-40c3-97a1-5117be01dd10', '483256d7-5011-4fb7-a0c6-27b1909bb154', '005', 'Relatorios', '', 'fa-solid fa-file', 'relatorios', 'now()', 'now()'),
 			('3d06e43e-ce88-4fe8-8e8e-83c8398bbb20', '483256d7-5011-4fb7-a0c6-27b1909bb154', '005002', 'Relatórios Funcionarios', '/relatorios-funcionarios', 'List', 'relatorios-relatorios-funcionarios', 'now()', 'now()'),
 			('bc22a6aa-1a3a-4c67-8ae5-c2f13d0da978', 'a44a8034-e2ef-4b20-a226-ca981365baed', '006', 'Clientes', '', 'fa-solid fa-user', 'clientes', 'now()', 'now()'),
-			('7e10b4b1-c3a4-4aad-83b4-47c64671aeaa', 'a44a8034-e2ef-4b20-a226-ca981365baed', '006001', 'Balanços Clientes', '/balancos', 'List', 'clientes-balancos', 'now()', 'now()')`
+			('7e10b4b1-c3a4-4aad-83b4-47c64671aeaa', 'a44a8034-e2ef-4b20-a226-ca981365baed', '006001', 'Balanços Clientes', '/balancos', 'List', 'clientes-balancos', 'now()', 'now()'),
+      ('295e46ee-2a49-4ff8-a54c-71badc109684', '597b9008-efb0-4350-8806-0de0221a14ec', '007', 'Almoxarifado', '', 'fa-solid fa-industry', 'almoxarifado', 'now()', 'now'),
+			('7332523d-acb6-4dbc-abee-385212815842', '597b9008-efb0-4350-8806-0de0221a14ec', '007001', 'Almoxarifado Itens', '/almoxarifado-itens', 'List','almoxarifado-almoxarifado-itens', 'now()', 'now()')`
   )
 
   // profiles
@@ -185,7 +188,6 @@ async function create() {
 			('c9415986-f58e-49d7-a40e-fadb4bb051c4', '3c99decf-f975-4b16-b552-0747afd397a3', 'cadastros-estoques', true, 'now()', 'now()'),
 			('99bfda37-fd0e-4cfc-b730-07af90023c34', '3c99decf-f975-4b16-b552-0747afd397a3', 'cadastros-garrafoes', true, 'now()', 'now()'),
 			('f7af98f8-daf7-4a36-b43a-b6f170fa03f8', '3c99decf-f975-4b16-b552-0747afd397a3', 'cadastros-meios-pagamento', true, 'now()', 'now()'),
-			('4192ca2d-46e7-4172-9acc-bb0b13d4a5ea', '3c99decf-f975-4b16-b552-0747afd397a3', 'cadastros-status-pagamento', true, 'now()', 'now()'),
 			('0516f415-05cd-4bd5-8028-f925b6b8b3be', '3c99decf-f975-4b16-b552-0747afd397a3', 'cadastros-bonificacoes', true, 'now()', 'now()'),
 			('82e764c9-63de-404d-b831-64ec274d854a', '3c99decf-f975-4b16-b552-0747afd397a3', 'pedido', true, 'now()', 'now()'),
 			('2e244e99-88f5-4003-90dc-667de2aeac10', '3c99decf-f975-4b16-b552-0747afd397a3', 'pedido-pedidos', true, 'now()', 'now()'),
@@ -194,6 +196,8 @@ async function create() {
 			('359003d8-89d5-444f-84b7-6b15213f8d49', '3c99decf-f975-4b16-b552-0747afd397a3', 'relatorios-relatorios-funcionarios', true, 'now()', 'now()'),
 			('47ae8dd6-98be-4a07-a983-652362a78439', '3c99decf-f975-4b16-b552-0747afd397a3', 'clientes', true, 'now()', 'now()'),
 			('0c2286a8-6799-4cea-81d6-f0992b401d3c', '3c99decf-f975-4b16-b552-0747afd397a3', 'clientes-balancos', true, 'now()', 'now()'),
+      ('bdd61f92-f541-490f-95fb-561572f36b55', '3c99decf-f975-4b16-b552-0747afd397a3', 'almoxarifado', true, 'now()', 'now()'),
+			('b8e46045-589f-460a-9a42-2cc09048e0da', '3c99decf-f975-4b16-b552-0747afd397a3', 'almoxarifado-almoxarifado-itens', true, 'now()', 'now()'),
       ('ec4c0d98-52ac-4140-980d-0bcb88190cf6', '04297a01-7c84-45f7-9485-95df65e8fd78', 'cadastros', true, 'now()', 'now()'),
       ('d0b71b84-4b5f-4367-9704-d5590c9a1fd6', '04297a01-7c84-45f7-9485-95df65e8fd78', 'cadastros-funcionarios', true, 'now()', 'now()'),
 			('11272bcb-5301-4dbd-9119-694958c53d1f', '04297a01-7c84-45f7-9485-95df65e8fd78', 'cadastros-clientes', true, 'now()', 'now()'),
@@ -210,7 +214,10 @@ async function create() {
       ('10193daf-1cb2-48c0-ae2d-59cb78d84129', '04297a01-7c84-45f7-9485-95df65e8fd78', 'clientes', true, 'now()', 'now()'),
 			('9d79a096-b2e9-49db-8de4-bbf94c44e50b', '04297a01-7c84-45f7-9485-95df65e8fd78', 'clientes-balancos', true, 'now()', 'now()'),
       ('0d8dfdcc-e8ba-437c-819c-6dbe0a1a027b', '04297a01-7c84-45f7-9485-95df65e8fd78', 'security', true, 'now()', 'now()'),
-      ('8ce2943f-7a7f-4d57-9113-930f5bd3c505', '04297a01-7c84-45f7-9485-95df65e8fd78', 'security-profiles', true, 'now()', 'now()')`
+      ('8ce2943f-7a7f-4d57-9113-930f5bd3c505', '04297a01-7c84-45f7-9485-95df65e8fd78', 'security-profiles', true, 'now()', 'now()'),
+      ('6dbac50a-9687-4cdd-a5a1-5fcf4effe7a6', '04297a01-7c84-45f7-9485-95df65e8fd78', 'almoxarifado', true, 'now()', 'now()'),
+			('b73c30d1-c8df-412c-8082-9ab4bf7491c5', '04297a01-7c84-45f7-9485-95df65e8fd78', 'almoxarifado-almoxarifado-itens', true, 'now()', 'now()')
+      `
   )
 
   // user x profile
@@ -259,17 +266,17 @@ async function create() {
       ('9751732c-4ed8-465f-96f1-2d2580b33a5d', 'Crediário Próprio', 'Crediário Próprio', 'now()', 'now()')`
   )
 
-  await connection.query(
-    `INSERT INTO status_pagamento (
-      id,
-      nome,
-      descricao,
-      created_at,
-      updated_at
-    ) values 
-      ('2798a92f-3412-4ed3-934d-e1209bbad87f', 'Pagamento Imediato', 'Pagamento Imediato', 'now()', 'now()'),
-      ('58922f62-67e4-4f50-8e0d-2bcb89f95f9a', 'Pagamento Posterior', 'Pagamento Posterior', 'now()', 'now()')`
-  )
+  // await connection.query(
+  //   `INSERT INTO status_pagamento (
+  //     id,
+  //     nome,
+  //     descricao,
+  //     created_at,
+  //     updated_at
+  //   ) values
+  //     ('2798a92f-3412-4ed3-934d-e1209bbad87f', 'Pagamento Imediato', 'Pagamento Imediato', 'now()', 'now()'),
+  //     ('58922f62-67e4-4f50-8e0d-2bcb89f95f9a', 'Pagamento Posterior', 'Pagamento Posterior', 'now()', 'now()')`
+  // )
 
   await connection.close()
 }
