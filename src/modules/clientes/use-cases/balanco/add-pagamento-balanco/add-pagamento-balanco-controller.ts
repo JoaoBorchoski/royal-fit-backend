@@ -17,6 +17,7 @@ class AddPagamentoBalancoController {
         valor,
         data,
         meioPagamentoId,
+        userId: request.user.id,
       })
       .then((balancoResult) => {
         return balancoResult

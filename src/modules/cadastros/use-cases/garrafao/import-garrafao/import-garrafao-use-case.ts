@@ -61,7 +61,6 @@ class ImportGarrafaoUseCase {
       for await (const row of rows) {
         const garrafao = await this.importExcelData(row)
         const teste = await this.garrafaoRepository.createWithQueryRunner(garrafao, queryRunner.manager)
-        console.log(teste)
       }
 
       fs.unlinkSync(file.path)

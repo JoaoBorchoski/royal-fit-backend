@@ -20,6 +20,10 @@ class Pagamento {
   @JoinColumn({ name: "meio_pagamento_id", referencedColumnName: "id" })
   meioPagamentoId?: string
 
+  @ManyToOne(() => StatusPagamento, { nullable: true, eager: true })
+  @JoinColumn({ name: "user_id", referencedColumnName: "id" })
+  userId?: string
+
   @Column({ name: "data", nullable: true, type: "timestamptz" })
   data?: Date
 

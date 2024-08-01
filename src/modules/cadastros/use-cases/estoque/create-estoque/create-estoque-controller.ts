@@ -22,8 +22,6 @@ class CreateEstoqueController {
         return error
       })
 
-    console.log(result)
-
     return response.status(result.statusCode).json(result)
   }
 }

@@ -21,8 +21,8 @@ class CreateRelatorioPagamentoUseCase {
 
   async execute({ clienteId, dataInicio, dataFim }: IRequest): Promise<HttpResponse> {
     try {
-      const dataInicioFormatada = new Date(dataInicio)
-      const dataFimFormatada = new Date(dataFim)
+      const dataInicioFormatada = new Date(new Date(dataInicio).setDate(new Date(dataInicio).getDate() - 1))
+      const dataFimFormatada = new Date(new Date(dataFim).setDate(new Date(dataFim).getDate() + 1))
 
       if (dataInicioFormatada > dataFimFormatada) {
         throw new AppError("Data de início não pode ser maior que a data de fim")
@@ -45,11 +45,11 @@ class CreateRelatorioPagamentoUseCase {
     }
   }
   private styleColumns(workbook: any, sheetName: string) {
-    workbook.Sheets[sheetName]["!cols"] = [{ wpx: 100 }, { wpx: 100 }, { wpx: 100 }]
+    workbook.Sheets[sheetName]["!cols"] = [{ wpx: 100 }, { wpx: 100 }, { wpx: 100 }, { wpx: 100 }]
   }
 
   private exportEmptyExcel(sheetName: string) {
-    const header = ["Data", "Valor Pago (R$)", "Meio de Pagamento"]
+    const header = ["Data", "Valor Pago (R$)", "Meio de Pagamento", "Recebido por"]
 
     const emptyData = [header]
 
@@ -64,7 +64,7 @@ class CreateRelatorioPagamentoUseCase {
   private async addDataToSheet(workbook: any, sheetName: string, data: any) {
     const dataForExcel = []
     for await (const item of data) {
-      dataForExcel.push([item.data.toLocaleDateString("pt-BR"), item.valorPago, item.meioPagamento])
+      dataForExcel.push([item.data.toLocaleDateString("pt-BR"), item.valorPago, item.meioPagamento, item.userName])
     }
 
     XLSX.utils.sheet_add_aoa(workbook.Sheets[sheetName], dataForExcel, { origin: -1 })

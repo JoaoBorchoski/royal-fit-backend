@@ -3,6 +3,7 @@ interface IPagamentoDTO {
   clienteId?: string
   valorPago?: number
   meioPagamentoId?: string
+  userId?: string
   data?: Date
   desabilitado?: boolean
   createdAt?: Date

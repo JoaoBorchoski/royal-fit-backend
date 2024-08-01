@@ -27,6 +27,11 @@ export class CreatePagamento1720653295011 implements MigrationInterface {
             isNullable: false,
           },
           {
+            name: "user_id",
+            type: "uuid",
+            isNullable: true,
+          },
+          {
             name: "data",
             type: "timestamp",
             isNullable: false,

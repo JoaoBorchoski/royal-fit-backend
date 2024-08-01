@@ -13,11 +13,12 @@ class PagamentoRepository implements IPagamentoRepository {
   }
 
   // create
-  async create({ clienteId, valorPago, meioPagamentoId, data, desabilitado }: IPagamentoDTO): Promise<HttpResponse> {
+  async create({ clienteId, valorPago, meioPagamentoId, userId, data, desabilitado }: IPagamentoDTO): Promise<HttpResponse> {
     const pagamento = this.repository.create({
       clienteId,
       valorPago,
       meioPagamentoId,
+      userId,
       data,
       desabilitado,
     })
@@ -259,6 +260,8 @@ class PagamentoRepository implements IPagamentoRepository {
           p.id AS "id",
           p.data AS "data",
           p.valor_pago :: float AS "valorPago",
+          p.user_id AS "userId",
+          u.name AS "userName",
           mp.nome AS "meioPagamento"
         FROM 
           Pagamentos p
@@ -266,6 +269,8 @@ class PagamentoRepository implements IPagamentoRepository {
           Clientes c ON p.cliente_id = c.id
         LEFT JOIN
           meios_pagamento mp ON p.meio_pagamento_id = mp.id
+        LEFT JOIN
+          users u ON p.user_id = u.id
         WHERE 
           p.data BETWEEN $1 AND $2
         AND

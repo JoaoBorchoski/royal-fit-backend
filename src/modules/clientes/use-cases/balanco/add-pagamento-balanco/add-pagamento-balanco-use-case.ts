@@ -9,6 +9,7 @@ interface IRequest {
   valor: number
   data: Date
   meioPagamentoId: string
+  userId: string
 }
 
 @injectable()
@@ -20,7 +21,7 @@ class AddPagamentoBalancoUseCase {
     private pagamentoRepository: IPagamentoRepository
   ) {}
 
-  async execute({ id, clienteId, valor, meioPagamentoId, data }: IRequest): Promise<HttpResponse> {
+  async execute({ id, clienteId, valor, meioPagamentoId, userId, data }: IRequest): Promise<HttpResponse> {
     const oldBalanco = await this.balancoRepository.get(id)
     const saldoDevedor = oldBalanco.data.saldoDevedor - valor
 
@@ -28,6 +29,7 @@ class AddPagamentoBalancoUseCase {
       clienteId,
       valorPago: valor,
       meioPagamentoId,
+      userId,
       data,
     })
 

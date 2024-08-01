@@ -19,15 +19,12 @@ class CreateRelatorioDataAndFuncionarioUseCase {
 
   async execute({ dataInicio, dataFim, id }: IRequest): Promise<HttpResponse> {
     try {
-      const dataInicioFormatada = new Date(dataInicio)
-      const dataFimFormatada = new Date(dataFim)
+      const dataInicioFormatada = new Date(new Date(dataInicio).setDate(new Date(dataInicio).getDate() - 1))
+      const dataFimFormatada = new Date(new Date(dataFim).setDate(new Date(dataFim).getDate() + 1))
 
       if (dataInicioFormatada > dataFimFormatada) {
         throw new AppError("Data de início não pode ser maior que a data de fim")
       }
-
-      console.log(dataInicioFormatada)
-      console.log(dataFimFormatada)
 
       const pedidos = await this.relatorioFuncionarioRepository.getPedidosByDataAndFuncionario(
         dataInicioFormatada,
@@ -69,8 +66,6 @@ class CreateRelatorioDataAndFuncionarioUseCase {
     for await (const item of data) {
       dataForExcel.push([item.clienteNome, item.data, item.valorTotal.toString().split("T")[0]])
     }
-
-    console.log(dataForExcel)
 
     XLSX.utils.sheet_add_aoa(workbook.Sheets[sheetName], dataForExcel, { origin: -1 })
   }

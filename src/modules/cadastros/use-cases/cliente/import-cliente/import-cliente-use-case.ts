@@ -28,11 +28,28 @@ class ImportClienteUseCase {
   ) {}
 
   async importExcelData(row: any): Promise<IFuncionarioDTO> {
+    const returnTrueOrFalse = (row: any) => {
+      if (!row) {
+        return false
+      }
+      if (typeof row === "boolean") {
+        return row
+      }
+      if (row.toString().toLowerCase() === "sim") {
+        return true
+      }
+      if (row.toString().toLowerCase() === "nao" || row.toString().toLowerCase() === "não") {
+        return false
+      }
+    }
+
     const cliente: IClienteDTO = {
       nome: row["nome"],
       cpfCnpj: row["cpfCnpj"].toString().replace(/[^\d]+/g, ""),
       email: row["email"],
       telefone: row["telefone"],
+      isBonificado: returnTrueOrFalse(row["Bonificacao Disponivel"]),
+      desconto: row["desconto"],
     }
 
     return cliente

@@ -68,7 +68,6 @@ class ImportBonificacaoUseCase {
       for await (const row of rows) {
         const bonificacao = await this.importExcelData(row)
         const teste = await this.bonificacaoRepository.createWithQueryRunner(bonificacao, queryRunner.manager)
-        console.log(teste)
       }
 
       fs.unlinkSync(file.path)
