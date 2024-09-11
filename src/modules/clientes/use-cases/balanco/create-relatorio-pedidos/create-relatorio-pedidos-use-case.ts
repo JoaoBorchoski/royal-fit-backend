@@ -29,6 +29,8 @@ class CreateRelatorioPedidoUseCase {
 
       const pedidos = await this.pedidoRepository.getPedidosByDataAndCliente(dataInicioFormatada, dataFimFormatada, clienteId)
 
+      console.log(pedidos.data)
+
       const sheetName = "Sheet1"
       const emptyWorkbook = this.exportEmptyExcel(sheetName)
       await this.addDataToSheet(emptyWorkbook, sheetName, pedidos.data)
@@ -43,18 +45,18 @@ class CreateRelatorioPedidoUseCase {
     workbook.Sheets[sheetName]["!cols"] = [
       { wpx: 100 },
       { wpx: 100 },
+      { wpx: 150 },
       { wpx: 100 },
       { wpx: 100 },
       { wpx: 100 },
-      { wpx: 100 },
-      { wpx: 100 },
+      { wpx: 160 },
       { wpx: 100 },
     ]
   }
 
   private exportEmptyExcel(sheetName: string) {
     const header = [
-      "Sequencial",
+      "Pedido",
       "Data",
       "Valor Total Pedido (R$)",
       "Funcionário",
@@ -92,7 +94,7 @@ class CreateRelatorioPedidoUseCase {
       }
     }
     dataForExcel.push(["", "", "", "", "", "", "", ""])
-    dataForExcel.push(["", "", "", "", "", "", "Valor Total", valorTotalPedidos])
+    dataForExcel.push(["", "", "", "", "", "", "Valor Total do período", `R$ ${valorTotalPedidos}`])
 
     XLSX.utils.sheet_add_aoa(workbook.Sheets[sheetName], dataForExcel, { origin: -1 })
   }

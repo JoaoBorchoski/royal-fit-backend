@@ -242,6 +242,51 @@ class EntradaGarrafaoRepository implements IEntradaGarrafaoRepository {
       return serverError(err)
     }
   }
+
+  async getEntradasByDataAndCliente(dataInicio: Date, dataFim: Date, clienteId: string): Promise<HttpResponse> {
+    try {
+      const entradas = await this.repository.query(
+        `
+        SELECT 
+          ent.id as "id",
+          ent.created_at as "data",
+          ent.quantidade as "quantidade",
+          ent.is_royalfit as "isRoyalfit"
+        FROM 
+          entrada_garrafao ent
+        LEFT JOIN
+          Clientes c ON ent.cliente_id = c.id
+        WHERE 
+          ent.created_at BETWEEN $1 AND $2
+        AND
+          c.id = $3
+        ORDER BY
+          ent.created_at 
+      `,
+        [dataInicio, dataFim, clienteId]
+      )
+
+      // const entradasGarrafao = await this.repository
+      //   .createQueryBuilder("ent")
+      //   .select([
+      //     'ent.id as "id"',
+      //     'ent.clienteId as "clienteId"',
+      //     'a.name as "clienteName"',
+      //     'ent.quantidade as "quantidade"',
+      //     'ent.isRoyalfit as "isRoyalfit"',
+      //     'ent.desabilitado as "desabilitado"',
+      //   ])
+      //   .leftJoin("ent.clienteId", "a")
+      //   .where("ent.clienteId = :clienteId", { clienteId })
+      //   .andWhere("ent.createdAt >= :dataInicio", { dataInicio })
+      //   .andWhere("ent.createdAt <= :dataFim", { dataFim })
+      //   .getRawMany()
+
+      return ok(entradas)
+    } catch (err) {
+      return serverError(err)
+    }
+  }
 }
 
 export { EntradaGarrafaoRepository }

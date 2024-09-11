@@ -310,13 +310,14 @@ class PedidoRepository implements IPedidoRepository {
           'ped.sequencial as "sequencial"',
           'ped.data as "data"',
           'ped.valorTotal :: float as "valorTotal"',
-          'ped.statusPagamentoId as "statusPagamentoId"',
+          'ped.meioPagamentoId as "meioPagamentoId"',
         ])
         .where("ped.clienteId = :clienteId", { clienteId })
+        .orderBy("ped.sequencial", "DESC")
         .getRawMany()
 
       for await (const pedido of pedidos) {
-        pedido.statusPagamentoId = pedido.statusPagamentoId == "2798a92f-3412-4ed3-934d-e1209bbad87f" ? "Sim" : "Não	"
+        pedido.statusPagamentoId = pedido.meioPagamentoId == "9751732c-4ed8-465f-96f1-2d2580b33a5d" ? "Não" : "Sim"
         pedido.data = pedido.data.toLocaleDateString("pt-BR")
       }
 
@@ -415,11 +416,12 @@ class PedidoRepository implements IPedidoRepository {
         SELECT 
           p.id AS "id",
           p.data AS "data",
-          p.valor_total :: float AS "valorTotal",
+          CAST(p.valor_total - p.desconto AS float) AS "valorTotal",
+          p.desconto :: float AS "desconto",
           a.id AS "funcionarioId",
           a.nome AS "funcionarioNome",
           c.id AS "clienteId",
-          c.nome AS "clienteNome"
+          c.nome AS "clienteNome",
           p.sequencial AS "sequencial"
         FROM 
           Pedidos p
@@ -456,6 +458,7 @@ class PedidoRepository implements IPedidoRepository {
 
       return ok(pedidos)
     } catch (err) {
+      console.log(err)
       return serverError(err)
     }
   }

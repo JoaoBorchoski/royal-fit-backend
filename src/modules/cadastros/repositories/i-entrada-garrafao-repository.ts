@@ -34,6 +34,7 @@ interface IEntradaGarrafaoRepository {
 
   // multi delete
   multiDelete(ids: string[]): Promise<HttpResponse>
+  getEntradasByDataAndCliente(dataInicio: Date, dataFim: Date, clienteId: string): Promise<HttpResponse>
 }
 
 export { IEntradaGarrafaoRepository }

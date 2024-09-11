@@ -9,6 +9,7 @@ import { GetEntradaGarrafaoController } from "@modules/cadastros/use-cases/entra
 import { UpdateEntradaGarrafaoController } from "@modules/cadastros/use-cases/entrada-garrafao/update-entrada-garrafao/update-entrada-garrafao-controller"
 import { DeleteEntradaGarrafaoController } from "@modules/cadastros/use-cases/entrada-garrafao/delete-entrada-garrafao/delete-entrada-garrafao-controller"
 import { MultiDeleteEntradaGarrafaoController } from "@modules/cadastros/use-cases/entrada-garrafao/multi-delete-entrada-garrafao/multi-delete-entrada-garrafao-controller"
+import { CreateRelatorioGarrafaoController } from "@modules/cadastros/use-cases/entrada-garrafao/create-relatorios-garrafoes/create-relatorios-garrafoes-controller"
 
 const entradasGarrafaoRoutes = Router()
 
@@ -21,9 +22,11 @@ const getEntradaGarrafaoController = new GetEntradaGarrafaoController()
 const updateEntradaGarrafaoController = new UpdateEntradaGarrafaoController()
 const deleteEntradaGarrafaoController = new DeleteEntradaGarrafaoController()
 const multiDeleteEntradaGarrafaoController = new MultiDeleteEntradaGarrafaoController()
+const createRelatorioGarrafoesController = new CreateRelatorioGarrafaoController()
 
 entradasGarrafaoRoutes.post("/", ensureAuthenticated, createEntradaGarrafaoController.handle)
 entradasGarrafaoRoutes.post("/list", ensureAuthenticated, listEntradaGarrafaoController.handle)
+entradasGarrafaoRoutes.post("/relatorio-cliente/:id", ensureAuthenticated, createRelatorioGarrafoesController.handle)
 entradasGarrafaoRoutes.post("/count", ensureAuthenticated, countEntradaGarrafaoController.handle)
 entradasGarrafaoRoutes.get("/select/:id", ensureAuthenticated, idSelectEntradaGarrafaoController.handle)
 entradasGarrafaoRoutes.get("/select", ensureAuthenticated, selectEntradaGarrafaoController.handle)

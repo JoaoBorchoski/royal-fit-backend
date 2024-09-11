@@ -144,10 +144,7 @@ class CreatePedidoUseCase {
           )
         }
 
-        if (
-          produto.data.id == "fbe43047-093b-496b-9c59-ce5c2ce66b34" ||
-          produto.data.id == "907a8147-dada-4532-82a7-0346666792c9"
-        ) {
+        if (produto.data.id == "fbe43047-093b-496b-9c59-ce5c2ce66b34" || produto.data.id == "907a8147-dada-4532-82a7-0346666792c9") {
           newBonificacao += Math.floor(pedidoItem.quantidade / 10)
           newTotalVendido += pedidoItem.quantidade
         }
@@ -241,9 +238,7 @@ class CreatePedidoUseCase {
           ])
         })
         printer.newLine()
-        printer.println(
-          `Desconto: R$ ${parseFloat(desconto.toString().replace(",", ".")).toFixed(2).replace(".", ",")} ${desconto}`
-        )
+        printer.println(`Desconto: R$ ${parseFloat(desconto.toString().replace(",", ".")).toFixed(2).replace(".", ",")} ${desconto}`)
         printer.println(
           `Total: R$ ${parseFloat((valorTotal - desconto).toString().replace(",", "."))
             .toFixed(2)
@@ -289,9 +284,7 @@ class CreatePedidoUseCase {
           ])
         })
         printer.newLine()
-        printer.println(
-          `Desconto: R$ ${parseFloat(desconto.toString().replace(",", ".")).toFixed(2).replace(".", ",")} ${desconto}`
-        )
+        printer.println(`Desconto: R$ ${parseFloat(desconto.toString().replace(",", ".")).toFixed(2).replace(".", ",")} ${desconto}`)
         printer.println(
           `Total: R$ ${parseFloat((valorTotal - desconto).toString().replace(",", "."))
             .toFixed(2)
@@ -308,7 +301,7 @@ class CreatePedidoUseCase {
 
         try {
           // console.log(printer.getText())
-          await printer.execute()
+          // await printer.execute()
           console.log("Print success!")
         } catch (error) {
           console.error("Print failed:", error)
