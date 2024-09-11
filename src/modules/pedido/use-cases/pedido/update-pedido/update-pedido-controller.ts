@@ -20,6 +20,7 @@ class UpdatePedidoController {
       isPagamentoPosterior,
       desabilitado,
       pedidoItemForm,
+      impressoraIp,
     } = request.body
 
     const { id } = request.params
@@ -43,6 +44,7 @@ class UpdatePedidoController {
         isPagamentoPosterior,
         desabilitado,
         pedidoItemForm,
+        impressoraIp,
       })
       .then((pedidoResult) => {
         return pedidoResult
@@ -51,7 +53,9 @@ class UpdatePedidoController {
         return error
       })
 
-    io.emit("novoPedido", result)
+    if (result.statusCode === 200) {
+      io.emit("novoPedido", result)
+    }
 
     return response.status(result.statusCode).json(result)
   }

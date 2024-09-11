@@ -14,6 +14,7 @@ interface IRequest {
   id: string
   clienteId: string
   quantidade: number
+  impressoraIp: string
 }
 
 @injectable()
@@ -33,7 +34,7 @@ class RetiradaBonificacaoUseCase {
     private clienteRepository: IClienteRepository
   ) {}
 
-  async execute({ id, clienteId, quantidade }: IRequest): Promise<HttpResponse> {
+  async execute({ id, clienteId, quantidade, impressoraIp = "45.227.182.222:9100" }: IRequest): Promise<HttpResponse> {
     try {
       const garrafao = await this.garrafaoRepository.getByClienteId(clienteId)
       const oldBonificacao = await this.bonificacaoRepository.getByClienteId(clienteId)
@@ -81,8 +82,9 @@ class RetiradaBonificacaoUseCase {
       })
 
       let printer = new ThermalPrinter({
-        type: PrinterTypes.EPSON, // recomendar usar EPSON
-        interface: "tcp://IP_DA_IMPRESSORA:PORTA", // Pode ser 'tcp://', 'usb://', ou 'serial://'
+        // type: "epson",
+        type: PrinterTypes.EPSON,
+        interface: `tcp://${impressoraIp}`,
         characterSet: CharacterSet.PC860_PORTUGUESE,
         options: {
           timeout: 5000,
@@ -91,6 +93,7 @@ class RetiradaBonificacaoUseCase {
 
       async function printReceipt() {
         printer.alignCenter()
+        printer.setTypeFontB()
         printer.println("Royal Fit")
         printer.newLine()
         printer.drawLine()
@@ -98,17 +101,18 @@ class RetiradaBonificacaoUseCase {
         printer.println(`Cliente: ${cliente.data.nome}`)
         printer.println(`Retirada de: ${quantidade} Bonificações`)
         printer.println(`Data: ${new Date().toLocaleDateString("pt-BR")}`)
+        printer.println(`Hora: ${new Date().toLocaleTimeString("pt-BR")}`)
         printer.newLine()
         printer.drawLine()
         printer.newLine()
         printer.newLine()
         printer.drawLine()
-        printer.println("Assinatura")
+        printer.println("Assinatura do Cliente")
         printer.cut()
 
         try {
           // console.log(printer.getText())
-          // await printer.execute();
+          await printer.execute()
           console.log("Print success!")
         } catch (error) {
           console.error("Print failed:", error)

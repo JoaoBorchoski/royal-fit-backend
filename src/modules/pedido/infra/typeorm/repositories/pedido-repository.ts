@@ -135,6 +135,7 @@ class PedidoRepository implements IPedidoRepository {
           'ped.isLiberado as "isLiberado"',
         ])
         .leftJoin("ped.clienteId", "a")
+        .where("ped.desabilitado = false")
 
       if (filter) {
         query = query.where(filter)
@@ -148,10 +149,7 @@ class PedidoRepository implements IPedidoRepository {
             query.orWhere("TO_CHAR(ped.data, 'YYYY-MM-DD HH24:MI:SS') ILIKE :search", { search: `%${search}%` })
           })
         )
-        .addOrderBy("ped.data", "DESC")
-        // .addOrderBy("ped.sequencial", columnOrder[1])
-        // .addOrderBy("a.nome", columnOrder[2])
-        // .addOrderBy("ped.valorTotal", columnOrder[3])
+        .addOrderBy("ped.sequencial", "DESC")
         .offset(offset)
         .limit(rowsPerPage)
         .take(rowsPerPage)
@@ -256,7 +254,7 @@ class PedidoRepository implements IPedidoRepository {
           'ped.data as "data"',
           'ped.hora as "hora"',
           'ped.valorTotal :: float as "valorTotal"',
-          'ped.desconto as "desconto"',
+          'ped.desconto :: float as "desconto"',
           'ped.funcionarioId as "funcionarioId"',
           'ped.meioPagamentoId as "meioPagamentoId"',
           'ped.statusPagamentoId as "statusPagamentoId"',
@@ -264,7 +262,7 @@ class PedidoRepository implements IPedidoRepository {
           'ped.isLiberado as "isLiberado"',
           'ped.desabilitado as "desabilitado"',
           'ped.descricao as "descricao"',
-          'a.desconto :: float as "desconto"',
+          // 'a.desconto :: float as "desconto"',
         ])
         .leftJoin("ped.clienteId", "a")
         .leftJoin("ped.funcionarioId", "b")
@@ -383,7 +381,7 @@ class PedidoRepository implements IPedidoRepository {
   // delete
   async delete(id: string): Promise<HttpResponse> {
     try {
-      await this.repository.delete(id)
+      await this.repository.update(id, { desabilitado: true })
 
       return noContent()
     } catch (err) {
@@ -398,7 +396,7 @@ class PedidoRepository implements IPedidoRepository {
   // multi delete
   async multiDelete(ids: string[]): Promise<HttpResponse> {
     try {
-      await this.repository.delete(ids)
+      await this.repository.update(ids, { desabilitado: true })
 
       return noContent()
     } catch (err) {
@@ -422,6 +420,7 @@ class PedidoRepository implements IPedidoRepository {
           a.nome AS "funcionarioNome",
           c.id AS "clienteId",
           c.nome AS "clienteNome"
+          p.sequencial AS "sequencial"
         FROM 
           Pedidos p
         LEFT JOIN 
@@ -435,6 +434,25 @@ class PedidoRepository implements IPedidoRepository {
       `,
         [dataInicio, dataFim, clienteId]
       )
+
+      for await (const pedido of pedidos) {
+        const pedidoItens = await getRepository(PedidoItem)
+          .createQueryBuilder("pedItem")
+          .select([
+            'pedItem.id as "id"',
+            'pedItem.produtoId as "produtoId"',
+            'prod.nome as "produtoNome"',
+            'prod.preco :: float as "preco"',
+            'pedItem.quantidade as "quantidade"',
+            'CAST(pedItem.quantidade * prod.preco AS float) as "valor"',
+          ])
+          .leftJoin("pedItem.pedidoId", "ped")
+          .leftJoin("pedItem.produtoId", "prod")
+          .where("pedItem.pedidoId = :id", { id: pedido.id })
+          .getRawMany()
+
+        pedido["pedidoItens"] = [...pedidoItens]
+      }
 
       return ok(pedidos)
     } catch (err) {

@@ -20,6 +20,7 @@ class CreatePedidoController {
       isPagamentoPosterior,
       isLiberado,
       desabilitado,
+      impressoraIp,
       pedidoItemForm,
     } = request.body
 
@@ -40,6 +41,7 @@ class CreatePedidoController {
         isPagamentoPosterior,
         isLiberado,
         desabilitado,
+        impressoraIp,
         pedidoItemForm,
       })
       .then((pedidoResult) => {
@@ -49,7 +51,9 @@ class CreatePedidoController {
         return error
       })
 
-    io.emit("novoPedido", result)
+    if (result.statusCode === 200) {
+      io.emit("novoPedido", result)
+    }
 
     return response.status(result.statusCode).json(result)
   }

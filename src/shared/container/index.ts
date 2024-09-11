@@ -68,6 +68,8 @@ import { IPedidoBonificadoRepository } from "@modules/pedido/repositories/i-pedi
 import { PedidoBonificadoRepository } from "@modules/pedido/infra/typeorm/repositories/pedido-bonificado-repository"
 import { AlmoxarifadoItemRepository } from "@modules/almoxarifado/infra/typeorm/repositories/almoxarifado-item-repository"
 import { IAlmoxarifadoItemRepository } from "@modules/almoxarifado/repositories/i-almoxarifado-item-repository"
+import { EntradaGarrafaoRepository } from "@modules/cadastros/infra/typeorm/repositories/entrada-garrafao-repository"
+import { IEntradaGarrafaoRepository } from "@modules/cadastros/repositories/i-entrada-garrafao-repository"
 
 container.registerSingleton<IUserRepository>("UserRepository", UserRepository)
 container.registerSingleton<IUserSecurityRepository>("UserSecurityRepository", UserSecurityRepository)
@@ -102,3 +104,4 @@ container.registerSingleton<IBalancoRepository>("BalancoRepository", BalancoRepo
 container.registerSingleton<IPagamentoRepository>("PagamentoRepository", PagamentoRepository)
 container.registerSingleton<IEstoqueRepository>("EstoqueRepository", EstoqueRepository)
 container.registerSingleton<IAlmoxarifadoItemRepository>("AlmoxarifadoItemRepository", AlmoxarifadoItemRepository)
+container.registerSingleton<IEntradaGarrafaoRepository>("EntradaGarrafaoRepository", EntradaGarrafaoRepository)

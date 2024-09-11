@@ -1,9 +1,15 @@
-import { IPedidoBonificadoDTO } from "@modules/pedido/dtos/i-pedido-bonificado-dto"
 import { HttpResponse } from "@shared/helpers"
+import { IEntradaGarrafaoDTO } from "../dtos/i-entrada-garrafao-dto"
+import { EntityManager } from "typeorm"
 
-interface IPedidoBonificadoRepository {
+interface IEntradaGarrafaoRepository {
   // create
-  create(data: IPedidoBonificadoDTO): Promise<HttpResponse>
+  create(data: IEntradaGarrafaoDTO): Promise<HttpResponse>
+
+  createWithQueryRunner(
+    { clienteId, quantidade, isRoyalfit, desabilitado }: IEntradaGarrafaoDTO,
+    transactionManager: EntityManager
+  ): Promise<HttpResponse>
 
   // list
   list(search: string, page: number, rowsPerPage: number, order: string, filter: string): Promise<HttpResponse>
@@ -21,17 +27,13 @@ interface IPedidoBonificadoRepository {
   get(id: string): Promise<HttpResponse>
 
   // update
-  update(data: IPedidoBonificadoDTO): Promise<HttpResponse>
+  update(data: IEntradaGarrafaoDTO): Promise<HttpResponse>
 
   // delete
   delete(id: string): Promise<HttpResponse>
 
   // multi delete
   multiDelete(ids: string[]): Promise<HttpResponse>
-
-  getAllByClienteIdAndData(clienteId: string, dataInicio: Date, dataFim: Date): Promise<HttpResponse>
-
-  getBonificacoesUsadas(clienteId: string): Promise<HttpResponse>
 }
 
-export { IPedidoBonificadoRepository }
+export { IEntradaGarrafaoRepository }

@@ -4,7 +4,7 @@ import { RetiradaBonificacaoUseCase } from "./retirada-bonificacao-use-case"
 
 class RetiradaBonificacaoController {
   async handle(request: Request, response: Response): Promise<Response> {
-    const { clienteId, quantidade } = request.body
+    const { clienteId, quantidade, impressoraIp } = request.body
 
     const { id } = request.params
 
@@ -15,6 +15,7 @@ class RetiradaBonificacaoController {
         id,
         clienteId,
         quantidade,
+        impressoraIp,
       })
       .then((bonificacaoResult) => {
         return bonificacaoResult

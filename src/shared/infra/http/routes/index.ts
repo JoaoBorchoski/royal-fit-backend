@@ -34,6 +34,7 @@ import { pagamentosRoutes } from "./clientes/pagamentos-routes"
 import { estoquesRoutes } from "./cadastros/estoques-routes"
 import { pedidoBonificadosRoutes } from "./pedido/pedido-bonificados-routes"
 import { almoxarifadoItensRoutes } from "./almoxarifado/almoxarifado-itens-routes"
+import { entradasGarrafaoRoutes } from "./cadastros/entradas-garrafao-routes"
 
 const router = Router()
 
@@ -72,5 +73,6 @@ router.use("/relatorios-funcionarios", relatoriosFuncionariosRoutes)
 router.use("/balancos", balancosRoutes)
 router.use("/pagamentos", pagamentosRoutes)
 router.use("/almoxarifado-itens", almoxarifadoItensRoutes)
+router.use("/entradas-garrafao", entradasGarrafaoRoutes)
 
 export { router }

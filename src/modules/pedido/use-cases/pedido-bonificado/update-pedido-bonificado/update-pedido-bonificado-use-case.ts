@@ -13,6 +13,7 @@ interface IRequest {
   data: Date
   isLiberado: boolean
   desabilitado: boolean
+  impressoraIp?: string
 }
 
 @injectable()
@@ -24,7 +25,15 @@ class UpdatePedidoBonificadoUseCase {
     private clienteRepository: IClienteRepository
   ) {}
 
-  async execute({ id, clienteId, quantidade, data, isLiberado, desabilitado }: IRequest): Promise<HttpResponse> {
+  async execute({
+    id,
+    clienteId,
+    quantidade,
+    data,
+    isLiberado,
+    impressoraIp = "45.227.182.222:9100",
+    desabilitado,
+  }: IRequest): Promise<HttpResponse> {
     const cliente = await this.clienteRepository.get(clienteId)
 
     const pedidoBonificado = await this.pedidoBonificadoRepository.update({
@@ -37,8 +46,9 @@ class UpdatePedidoBonificadoUseCase {
     })
 
     let printer = new ThermalPrinter({
-      type: PrinterTypes.EPSON, // recomendar usar EPSON
-      interface: "tcp://IP_DA_IMPRESSORA:PORTA", // Pode ser 'tcp://', 'usb://', ou 'serial://'
+      // type: "epson",
+      type: PrinterTypes.EPSON,
+      interface: `tcp://${impressoraIp}`,
       characterSet: CharacterSet.PC860_PORTUGUESE,
       options: {
         timeout: 5000,
@@ -54,17 +64,18 @@ class UpdatePedidoBonificadoUseCase {
       printer.println(`Cliente: ${cliente.data.nome}`)
       printer.println(`Retirada de: ${quantidade} Bonificações`)
       printer.println(`Data: ${new Date().toLocaleDateString("pt-BR")}`)
+      printer.println(`Hora: ${new Date().toLocaleTimeString("pt-BR")}`)
       printer.newLine()
       printer.drawLine()
       printer.newLine()
       printer.newLine()
       printer.drawLine()
-      printer.println("Assinatura")
+      printer.println("Assinatura do Cliente")
       printer.cut()
 
       try {
         // console.log(printer.getText())
-        // await printer.execute();
+        await printer.execute()
         console.log("Print success!")
       } catch (error) {
         console.error("Print failed:", error)

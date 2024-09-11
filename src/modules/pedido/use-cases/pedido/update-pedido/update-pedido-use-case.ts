@@ -11,6 +11,9 @@ import { IBalancoRepository } from "@modules/clientes/repositories/i-balanco-rep
 import { CharacterSet, PrinterTypes, ThermalPrinter } from "node-thermal-printer"
 import { IClienteRepository } from "@modules/cadastros/repositories/i-cliente-repository"
 import { IMeioPagamentoRepository } from "@modules/cadastros/repositories/i-meio-pagamento-repository"
+import { IGarrafaoRepository } from "@modules/cadastros/repositories/i-garrafao-repository"
+import { IPedidoBonificadoRepository } from "@modules/pedido/repositories/i-pedido-bonificado-repository"
+import { IBonificacaoRepository } from "@modules/cadastros/repositories/i-bonificacao-repository"
 
 interface IRequest {
   id: string
@@ -28,6 +31,7 @@ interface IRequest {
   isPagamentoPosterior: boolean
   desabilitado: boolean
   pedidoItemForm: any[]
+  impressoraIp?: string
 }
 
 interface IPedidoItemCanhoto {
@@ -52,7 +56,13 @@ class UpdatePedidoUseCase {
     @inject("ClienteRepository")
     private clienteRepository: IClienteRepository,
     @inject("MeioPagamentoRepository")
-    private meioPagamentoRepository: IMeioPagamentoRepository
+    private meioPagamentoRepository: IMeioPagamentoRepository,
+    @inject("GarradaoRepository")
+    private garrafaoRepository: IGarrafaoRepository,
+    @inject("BoniicacaoRepository")
+    private bonificacaoRepository: IBonificacaoRepository,
+    @inject("PedidoBonificadoRepository")
+    private pedidoBonificadoRepository: IPedidoBonificadoRepository
   ) {}
 
   async execute({
@@ -71,6 +81,7 @@ class UpdatePedidoUseCase {
     isPagamentoPosterior,
     desabilitado,
     pedidoItemForm,
+    impressoraIp = "45.227.182.222:9100",
   }: IRequest): Promise<HttpResponse> {
     const queryRunner = getConnection().createQueryRunner()
     await queryRunner.startTransaction()
@@ -80,7 +91,11 @@ class UpdatePedidoUseCase {
       const oldBalanco = await this.balancoRepository.getByClienteId(clienteId)
       const cliente = await this.clienteRepository.get(clienteId)
       const meioPagamento = await this.meioPagamentoRepository.get(meioPagamentoId)
+      const garrafoes = await this.garrafaoRepository.getByClienteId(clienteId)
+      const bonificacao = await this.bonificacaoRepository.getByClienteId(clienteId)
       let pedidoItemCanhoto: IPedidoItemCanhoto[] = []
+      let newBonificacao = 0
+      let newTotalVendido = 0
 
       const pedido = await this.pedidoRepository.update(
         {
@@ -124,6 +139,32 @@ class UpdatePedidoUseCase {
             throw new AppError(`Estoque insuficiente ou estoque não cadastrado para o produto ${produto.data.nome}`)
           }
 
+          if (item.data.produtoId == "fbe43047-093b-496b-9c59-ce5c2ce66b34") {
+            if (!garrafoes.data) {
+              throw new AppError(`Cliente não possui garrafão cadastrado`)
+            }
+            if (garrafoes.data.quantidade + item.data.quantidade < pedidoItem.quantidade) {
+              throw new AppError(`Quantidade de garrafões insuficiente`)
+            }
+            await this.garrafaoRepository.updateWithQueryRunner(
+              {
+                id: garrafoes.data.id,
+                clienteId: clienteId,
+                quantidade: garrafoes.data.quantidade + item.data.quantidade - pedidoItem.quantidade,
+                desabilitado: false,
+              },
+              queryRunner.manager
+            )
+          }
+
+          if (
+            item.data.produtoId == "fbe43047-093b-496b-9c59-ce5c2ce66b34" ||
+            item.data.produtoId == "907a8147-dada-4532-82a7-0346666792c9"
+          ) {
+            newBonificacao += Math.floor(pedidoItem.quantidade - item.data.quantidade / 10)
+            newTotalVendido += pedidoItem.quantidade - item.data.quantidade
+          }
+
           await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, novaQuantidade, queryRunner.manager)
           const prod = await this.pedidoItemRepository.update(
             {
@@ -144,6 +185,32 @@ class UpdatePedidoUseCase {
           const novaQuantidade = estoqueAtual.data.quantidade - pedidoItem.quantidade
           if (!estoqueAtual.data || estoqueAtual.data.quantidade < pedidoItem.quantidade) {
             throw new AppError(`Estoque insuficiente ou estoque não cadastrado para o produto ${produto.data.nome}`)
+          }
+
+          if (produto.data.id == "fbe43047-093b-496b-9c59-ce5c2ce66b34") {
+            if (!garrafoes.data) {
+              throw new AppError(`Cliente não possui garrafão cadastrado`)
+            }
+            if (garrafoes.data.quantidade < pedidoItem.quantidade) {
+              throw new AppError(`Quantidade de garrafões insuficiente`)
+            }
+            await this.garrafaoRepository.updateWithQueryRunner(
+              {
+                id: garrafoes.data.id,
+                clienteId: clienteId,
+                quantidade: garrafoes.data.quantidade - pedidoItem.quantidade,
+                desabilitado: false,
+              },
+              queryRunner.manager
+            )
+          }
+
+          if (
+            produto.data.id == "fbe43047-093b-496b-9c59-ce5c2ce66b34" ||
+            produto.data.id == "907a8147-dada-4532-82a7-0346666792c9"
+          ) {
+            newBonificacao += Math.floor(pedidoItem.quantidade / 10)
+            newTotalVendido += pedidoItem.quantidade
           }
 
           await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, novaQuantidade, queryRunner.manager)
@@ -175,12 +242,14 @@ class UpdatePedidoUseCase {
 
       async function printReceipt() {
         printer.alignCenter()
+        printer.setTypeFontB()
         printer.println("Royal Fit")
         printer.newLine()
         printer.drawLine()
         printer.newLine()
         printer.println(`Cliente: ${cliente.data.nome}`)
         printer.println(`Data: ${new Date().toLocaleDateString("pt-BR")}`)
+        printer.println(`Hora: ${new Date().toLocaleTimeString("pt-BR")}`)
         printer.println(`Status do Pedido: ${isLiberado ? "Liberado" : "Aguardando"}`)
         printer.println(`Meio de Pagamento: ${meioPagamento.data.nome}`)
         printer.newLine()
@@ -189,29 +258,35 @@ class UpdatePedidoUseCase {
         printer.newLine()
         printer.tableCustom([
           { text: "Produto", align: "LEFT", width: 0.5 },
-          { text: "Qtd", align: "CENTER", width: 0.2 },
-          { text: "Preço", align: "RIGHT", width: 0.3 },
+          { text: "Qtd", align: "CENTER", width: 0.1 },
+          { text: "Preço", align: "RIGHT", width: 0.4 },
         ])
         printer.newLine()
         pedidoItemCanhoto.map((item) => {
+          const valorFormatado = `R$ ${parseFloat(item.valorTotal.toString().replace(",", ".")).toFixed(2).replace(".", ",")}`
           printer.tableCustom([
             { text: item.produtoNome, align: "LEFT", width: 0.5 },
-            { text: item.quantidade.toString(), align: "CENTER", width: 0.2 },
-            { text: `R$ ${item.valorTotal.toString()}`, align: "RIGHT", width: 0.3 },
+            { text: item.quantidade.toString(), align: "CENTER", width: 0.1 },
+            { text: valorFormatado.trim(), align: "RIGHT", width: 0.4 },
           ])
         })
         printer.newLine()
-        printer.println(`Total: R$ ${valorTotal}`)
+        printer.println(`Desconto: R$ ${parseFloat(desconto.toString().replace(",", ".")).toFixed(2).replace(".", ",")}`)
+        printer.println(
+          `Total: R$ ${parseFloat((valorTotal - desconto).toString().replace(",", "."))
+            .toFixed(2)
+            .replace(".", ",")}`
+        )
         printer.drawLine()
         printer.newLine()
         printer.newLine()
         printer.drawLine()
-        printer.println("Assinatura")
+        printer.println("Assinatura do Cliente")
         printer.cut()
 
         try {
           // console.log(printer.getText())
-          // await printer.execute();
+          await printer.execute()
           console.log("Print success!")
         } catch (error) {
           console.error("Print failed:", error)

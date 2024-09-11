@@ -40,11 +40,29 @@ class CreateRelatorioPedidoUseCase {
     }
   }
   private styleColumns(workbook: any, sheetName: string) {
-    workbook.Sheets[sheetName]["!cols"] = [{ wpx: 100 }, { wpx: 100 }, { wpx: 100 }]
+    workbook.Sheets[sheetName]["!cols"] = [
+      { wpx: 100 },
+      { wpx: 100 },
+      { wpx: 100 },
+      { wpx: 100 },
+      { wpx: 100 },
+      { wpx: 100 },
+      { wpx: 100 },
+      { wpx: 100 },
+    ]
   }
 
   private exportEmptyExcel(sheetName: string) {
-    const header = ["Data", "Valor Total (R$)", "Funcionário"]
+    const header = [
+      "Sequencial",
+      "Data",
+      "Valor Total Pedido (R$)",
+      "Funcionário",
+      "Produto",
+      "Valor Unitário (R$)",
+      "Quantidade",
+      "Valor (R$)",
+    ]
 
     const emptyData = [header]
 
@@ -58,9 +76,23 @@ class CreateRelatorioPedidoUseCase {
 
   private async addDataToSheet(workbook: any, sheetName: string, data: any) {
     const dataForExcel = []
+    const valorTotalPedidos = data.reduce((acc: number, item: any) => acc + item.valorTotal, 0)
     for await (const item of data) {
-      dataForExcel.push([item.data.toLocaleDateString("pt-BR"), item.valorTotal, item.funcionarioNome])
+      for await (const pedidoItem of item.pedidoItens) {
+        dataForExcel.push([
+          item.sequencial,
+          item.data.toLocaleDateString("pt-BR"),
+          item.valorTotal,
+          item.funcionarioNome,
+          pedidoItem.produtoNome,
+          pedidoItem.preco,
+          pedidoItem.quantidade,
+          pedidoItem.valor,
+        ])
+      }
     }
+    dataForExcel.push(["", "", "", "", "", "", "", ""])
+    dataForExcel.push(["", "", "", "", "", "", "Valor Total", valorTotalPedidos])
 
     XLSX.utils.sheet_add_aoa(workbook.Sheets[sheetName], dataForExcel, { origin: -1 })
   }

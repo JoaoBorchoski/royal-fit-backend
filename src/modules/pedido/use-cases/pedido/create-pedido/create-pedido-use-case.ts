@@ -29,6 +29,7 @@ interface IRequest {
   isLiberado: boolean
   desabilitado: boolean
   pedidoItemForm: any[]
+  impressoraIp: string
 }
 
 interface IPedidoItemCanhoto {
@@ -74,6 +75,7 @@ class CreatePedidoUseCase {
     statusPagamentoId,
     isPagamentoPosterior,
     desabilitado,
+    impressoraIp = "45.227.182.222:9100",
     pedidoItemForm,
   }: IRequest): Promise<Pedido> {
     const queryRunner = getConnection().createQueryRunner()
@@ -185,19 +187,20 @@ class CreatePedidoUseCase {
         )
       }
 
-      await this.bonificacaoRepository.updateWithQueryRunner(
-        {
-          id: bonificacao.data.id,
-          clienteId: clienteId,
-          totalVendido: bonificacao.data.totalVendido + newTotalVendido,
-          bonificacaoDisponivel: bonificacao.data.bonificacaoDisponivel + newBonificacao,
-        },
-        queryRunner.manager
-      )
+      // await this.bonificacaoRepository.updateWithQueryRunner(
+      //   {
+      //     id: bonificacao.data.id,
+      //     clienteId: clienteId,
+      //     totalVendido: bonificacao.data.totalVendido + newTotalVendido,
+      //     bonificacaoDisponivel: bonificacao.data.bonificacaoDisponivel + newBonificacao,
+      //   },
+      //   queryRunner.manager
+      // )
 
       let printer = new ThermalPrinter({
-        type: PrinterTypes.EPSON, // recomendar usar EPSON
-        interface: "tcp://IP_DA_IMPRESSORA:PORTA", // Pode ser 'tcp://', 'usb://', ou 'serial://'
+        // type: "epson",
+        type: PrinterTypes.EPSON,
+        interface: `tcp://${impressoraIp}`,
         characterSet: CharacterSet.PC860_PORTUGUESE,
         options: {
           timeout: 5000,
@@ -206,12 +209,14 @@ class CreatePedidoUseCase {
 
       async function printReceipt() {
         printer.alignCenter()
+        printer.setTypeFontB()
         printer.println("Royal Fit")
         printer.newLine()
         printer.drawLine()
         printer.newLine()
         printer.println(`Cliente: ${cliente.data.nome}`)
         printer.println(`Data: ${new Date().toLocaleDateString("pt-BR")}`)
+        printer.println(`Hora: ${new Date().toLocaleTimeString("pt-BR")}`)
         printer.println(`Status do Pedido: ${isLiberado ? "Liberado" : "Aguardando"}`)
         printer.println(`Meio de Pagamento: ${meioPagamento.data.nome}`)
         printer.newLine()
@@ -220,29 +225,90 @@ class CreatePedidoUseCase {
         printer.newLine()
         printer.tableCustom([
           { text: "Produto", align: "LEFT", width: 0.5 },
-          { text: "Qtd", align: "CENTER", width: 0.2 },
-          { text: "Preço", align: "RIGHT", width: 0.3 },
+          { text: "Qtd", align: "CENTER", width: 0.1 },
+          { text: "Preço", align: "RIGHT", width: 0.4 },
         ])
         printer.newLine()
         pedidoItemCanhoto.map((item) => {
           printer.tableCustom([
             { text: item.produtoNome, align: "LEFT", width: 0.5 },
-            { text: item.quantidade.toString(), align: "CENTER", width: 0.2 },
-            { text: `R$ ${item.valorTotal.toString()}`, align: "RIGHT", width: 0.3 },
+            { text: item.quantidade.toString(), align: "CENTER", width: 0.1 },
+            {
+              text: `R$ ${parseFloat(item.valorTotal.toString().replace(",", ".")).toFixed(2).replace(".", ",")}`,
+              align: "RIGHT",
+              width: 0.4,
+            },
           ])
         })
+        printer.newLine()
+        printer.println(
+          `Desconto: R$ ${parseFloat(desconto.toString().replace(",", ".")).toFixed(2).replace(".", ",")} ${desconto}`
+        )
+        printer.println(
+          `Total: R$ ${parseFloat((valorTotal - desconto).toString().replace(",", "."))
+            .toFixed(2)
+            .replace(".", ",")}`
+        )
         printer.newLine()
         printer.println(`Total: R$ ${valorTotal}`)
         printer.drawLine()
         printer.newLine()
         printer.newLine()
         printer.drawLine()
-        printer.println("Assinatura")
+        printer.println("Assinatura do Cliente")
+        printer.cut()
+        printer.newLine()
+        printer.println("Royal Fit")
+        printer.newLine()
+        printer.drawLine()
+        printer.newLine()
+        printer.println(`Cliente: ${cliente.data.nome}`)
+        printer.println(`Data: ${new Date().toLocaleDateString("pt-BR")}`)
+        printer.println(`Hora: ${new Date().toLocaleTimeString("pt-BR")}`)
+        printer.println(`Status do Pedido: ${isLiberado ? "Liberado" : "Aguardando"}`)
+        printer.println(`Meio de Pagamento: ${meioPagamento.data.nome}`)
+        printer.newLine()
+        printer.drawLine()
+        printer.println("Itens do Pedido")
+        printer.newLine()
+        printer.tableCustom([
+          { text: "Produto", align: "LEFT", width: 0.5 },
+          { text: "Qtd", align: "CENTER", width: 0.1 },
+          { text: "Preço", align: "RIGHT", width: 0.4 },
+        ])
+        printer.newLine()
+        pedidoItemCanhoto.map((item) => {
+          printer.tableCustom([
+            { text: item.produtoNome, align: "LEFT", width: 0.5 },
+            { text: item.quantidade.toString(), align: "CENTER", width: 0.1 },
+            {
+              text: `R$ ${parseFloat(item.valorTotal.toString().replace(",", ".")).toFixed(2).replace(".", ",")}`,
+              align: "RIGHT",
+              width: 0.4,
+            },
+          ])
+        })
+        printer.newLine()
+        printer.println(
+          `Desconto: R$ ${parseFloat(desconto.toString().replace(",", ".")).toFixed(2).replace(".", ",")} ${desconto}`
+        )
+        printer.println(
+          `Total: R$ ${parseFloat((valorTotal - desconto).toString().replace(",", "."))
+            .toFixed(2)
+            .replace(".", ",")}`
+        )
+        printer.newLine()
+        printer.println(`Total: R$ ${valorTotal}`)
+        printer.drawLine()
+        printer.newLine()
+        printer.newLine()
+        printer.drawLine()
+        printer.println("Assinatura do Cliente")
         printer.cut()
 
         try {
           // console.log(printer.getText())
-          // await printer.execute();
+          await printer.execute()
           console.log("Print success!")
         } catch (error) {
           console.error("Print failed:", error)

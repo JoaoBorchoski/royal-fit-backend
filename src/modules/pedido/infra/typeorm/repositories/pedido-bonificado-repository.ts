@@ -260,6 +260,26 @@ class PedidoBonificadoRepository implements IPedidoBonificadoRepository {
       return serverError(err)
     }
   }
+
+  async getBonificacoesUsadas(clienteId: string): Promise<HttpResponse> {
+    try {
+      const bonificacoesUsadas = await this.repository.query(
+        `
+        SELECT 
+          COALESCE(CAST(SUM(ped.quantidade) AS int),0) AS "quantidade"
+        FROM 
+          pedido_bonificado ped
+        WHERE 
+          ped.cliente_id = $1
+      `,
+        [clienteId]
+      )
+
+      return ok(bonificacoesUsadas[0])
+    } catch (err) {
+      return serverError(err)
+    }
+  }
 }
 
 export { PedidoBonificadoRepository }

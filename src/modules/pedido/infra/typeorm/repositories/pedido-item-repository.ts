@@ -4,6 +4,7 @@ import { IPedidoItemRepository } from "@modules/pedido/repositories/i-pedido-ite
 import { PedidoItem } from "@modules/pedido/infra/typeorm/entities/pedido-item"
 import { noContent, serverError, ok, notFound, HttpResponse } from "@shared/helpers"
 import { AppError } from "@shared/errors/app-error"
+import { PedidoBonificado } from "../entities/pedido-bonificado"
 
 class PedidoItemRepository implements IPedidoItemRepository {
   private repository: Repository<PedidoItem>
@@ -205,6 +206,20 @@ class PedidoItemRepository implements IPedidoItemRepository {
       }
 
       return ok(pedidoItem)
+    } catch (err) {
+      return serverError(err)
+    }
+  }
+
+  async getBonificacaoByClienteId(clienteId: string): Promise<HttpResponse> {
+    try {
+      const result = await getRepository(PedidoBonificado)
+        .createQueryBuilder("pedBon")
+        .select("COALESCE(CAST(SUM(pedBon.quantidade) AS int), 0)", "total")
+        .where("pedBon.clienteId = :clienteId", { clienteId })
+        .getRawOne()
+
+      return ok(result)
     } catch (err) {
       return serverError(err)
     }
