@@ -78,8 +78,8 @@ const sendMail = async (subject: string, html: string) => {
 
   const mailOptions = {
     from: `"Almoxarifado RoyalFit" <${process.env.APP_EMAIL}>`,
-    // to: ["elicristinarf@hotmail.com", "larissaroyalfit@gmail.com"],
-    to: "joaoborchoskidev@gmail.com",
+    to: ["elicristinarf@hotmail.com", "larissaroyalfit@gmail.com"],
+    // to: "joaoborchoskidev@gmail.com",
     subject: subject,
     html: html,
   }

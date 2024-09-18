@@ -4,6 +4,9 @@ import { PedidoBonificado } from "@modules/pedido/infra/typeorm/entities/pedido-
 import { ok, notFound, HttpResponse } from "@shared/helpers"
 
 class PedidoBonificadoRepositoryInMemory implements IPedidoBonificadoRepository {
+  getBonificacoesUsadas(clienteId: string): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
   pedidoBonificados: PedidoBonificado[] = []
 
   // create

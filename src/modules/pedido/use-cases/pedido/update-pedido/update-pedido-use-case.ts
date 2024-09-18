@@ -283,7 +283,7 @@ class UpdatePedidoUseCase {
 
         try {
           // console.log(printer.getText())
-          // await printer.execute()
+          await printer.execute()
           console.log("Print success!")
         } catch (error) {
           console.error("Print failed:", error)

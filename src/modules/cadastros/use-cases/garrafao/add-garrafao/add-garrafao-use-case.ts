@@ -41,14 +41,10 @@ class AddGarrafaoUseCase {
     await queryRunner.startTransaction()
 
     try {
-      console.log("aqui 1")
-
       const oldGarrafao = await this.garrafaoRepository.getByClienteId(clienteId)
       const cliente = await this.clienteRepository.get(clienteId)
       const estoque = await this.estoqueRepository.getByProdutoId("fbe43047-093b-496b-9c59-ce5c2ce66b34")
       const bonificacao = await this.bonificacaoRepository.getByClienteId(clienteId)
-
-      console.log("aqui 2")
 
       const garrafao = await this.garrafaoRepository.updateWithQueryRunner(
         {
@@ -59,11 +55,7 @@ class AddGarrafaoUseCase {
         queryRunner.manager
       )
 
-      console.log("aqui 3")
-
       await this.estoqueRepository.updateEstoqueQuantidade(estoque.data.id, estoque.data.quantidade + quantidade, queryRunner.manager)
-
-      console.log("aqui 4")
 
       await this.entradaGarrafaoRepository.createWithQueryRunner(
         {
@@ -73,8 +65,6 @@ class AddGarrafaoUseCase {
         },
         queryRunner.manager
       )
-
-      console.log("aqui 5")
 
       if (isRoyalfit) {
         const totalVendidoAtual = bonificacao.data.totalVendido + quantidade
@@ -92,8 +82,6 @@ class AddGarrafaoUseCase {
           queryRunner.manager
         )
       }
-
-      console.log("aqui 6")
 
       let printer = new ThermalPrinter({
         // type: "epson",
@@ -123,7 +111,7 @@ class AddGarrafaoUseCase {
 
         try {
           // console.log(printer.getText())
-          // await printer.execute()
+          await printer.execute()
           console.log("Print success!")
         } catch (error) {
           console.error("Print failed:", error)

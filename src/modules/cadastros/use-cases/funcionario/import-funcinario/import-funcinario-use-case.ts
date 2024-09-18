@@ -112,13 +112,13 @@ class ImportFuncionarioUseCase {
       }
 
       fs.unlinkSync(file.path)
-      if (errors.length > 0) {
-        await queryRunner.commitTransaction()
-        return ok({
-          warning: "Arquivo possui informações incorretas!\nConsultar aquivo para mais informações",
-          errors: errors,
-        })
-      }
+      // if (errors.length > 0) {
+      //   await queryRunner.commitTransaction()
+      //   return ok({
+      //     warning: "Arquivo possui informações incorretas!\nConsultar aquivo para mais informações",
+      //     errors: errors,
+      //   })
+      // }
       await queryRunner.commitTransaction()
       return noContent()
     } catch (error) {
