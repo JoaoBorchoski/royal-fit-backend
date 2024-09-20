@@ -5,7 +5,6 @@ import { HttpResponse } from "@shared/helpers"
 
 class CreateRelatorioDataAndFuncionarioController {
   async handle(request: Request, response: Response): Promise<Response> {
-    console.log("CreateRelatorioDataAndFuncionarioController")
     const id = request.params.id
     const { dataInicio, dataFim } = request.body
 

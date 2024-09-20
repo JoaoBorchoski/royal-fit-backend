@@ -5,7 +5,6 @@ import { HttpResponse } from "@shared/helpers"
 
 class CreateRelatorioPedidosTotaisController {
   async handle(request: Request, response: Response): Promise<Response> {
-    console.log("CreateRelatorioPedidosTotaisController -> handle -> request.body")
     const { dataInicio, dataFim } = request.body
 
     const createRelatorioPedidosTotaisUseCase = container.resolve(CreateRelatorioPedidosTotaisUseCase)

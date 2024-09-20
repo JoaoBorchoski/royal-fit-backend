@@ -57,10 +57,10 @@ class UpdatePedidoUseCase {
     private clienteRepository: IClienteRepository,
     @inject("MeioPagamentoRepository")
     private meioPagamentoRepository: IMeioPagamentoRepository,
-    @inject("GarradaoRepository")
-    private garrafaoRepository: IGarrafaoRepository,
-    @inject("BoniicacaoRepository")
+    @inject("BonificacaoRepository")
     private bonificacaoRepository: IBonificacaoRepository,
+    @inject("GarrafaoRepository")
+    private garrafaoRepository: IGarrafaoRepository,
     @inject("PedidoBonificadoRepository")
     private pedidoBonificadoRepository: IPedidoBonificadoRepository
   ) {}
@@ -229,8 +229,9 @@ class UpdatePedidoUseCase {
       }
 
       let printer = new ThermalPrinter({
-        type: PrinterTypes.EPSON, // recomendar usar EPSON
-        interface: "tcp://IP_DA_IMPRESSORA:PORTA", // Pode ser 'tcp://', 'usb://', ou 'serial://'
+        // type: "epson",
+        type: PrinterTypes.EPSON,
+        interface: `tcp://${impressoraIp}`,
         characterSet: CharacterSet.PC860_PORTUGUESE,
         options: {
           timeout: 5000,
@@ -238,6 +239,9 @@ class UpdatePedidoUseCase {
       })
 
       async function printReceipt() {
+        const dataAtual = new Date()
+        dataAtual.setHours(dataAtual.getHours() - 3)
+
         printer.alignCenter()
         printer.setTypeFontB()
         printer.println("Royal Fit")
@@ -246,7 +250,7 @@ class UpdatePedidoUseCase {
         printer.newLine()
         printer.println(`Cliente: ${cliente.data.nome}`)
         printer.println(`Data: ${new Date().toLocaleDateString("pt-BR")}`)
-        printer.println(`Hora: ${new Date().toLocaleTimeString("pt-BR")}`)
+        printer.println(`Hora: ${dataAtual.toLocaleTimeString("pt-BR")}`)
         printer.println(`Status do Pedido: ${isLiberado ? "Liberado" : "Aguardando"}`)
         printer.println(`Meio de Pagamento: ${meioPagamento.data.nome}`)
         printer.newLine()

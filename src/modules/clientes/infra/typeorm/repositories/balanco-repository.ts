@@ -84,7 +84,9 @@ class BalancoRepository implements IBalancoRepository {
           'a.id as "clienteId"',
           'a.nome as "clienteNome"',
           'bal.saldoDevedor as "saldoDevedor"',
-          'gar.quantidade as "bonificacaoDisponivel"',
+          'gar.quantidade as "garrafoesDisponivel"',
+          // 'bon.bonificacaoDisponivel as "bonificacaoDisponivel"',
+          'CASE WHEN a.isBonificado THEN bon.bonificacaoDisponivel ELSE 0 END as "bonificacaoDisponivel"',
         ])
         .leftJoin("bal.clienteId", "a")
         .leftJoin("bonificacoes", "bon", "bon.clienteId = a.id")
@@ -217,10 +219,7 @@ class BalancoRepository implements IBalancoRepository {
     }
   }
 
-  async getByClienteIdWithQueryRunner(
-    clienteId: string,
-    @TransactionManager() transactionManager: EntityManager
-  ): Promise<HttpResponse> {
+  async getByClienteIdWithQueryRunner(clienteId: string, @TransactionManager() transactionManager: EntityManager): Promise<HttpResponse> {
     try {
       const balanco = await transactionManager
         .createQueryBuilder(Balanco, "bal")

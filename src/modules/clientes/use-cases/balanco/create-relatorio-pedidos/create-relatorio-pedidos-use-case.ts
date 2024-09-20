@@ -29,8 +29,6 @@ class CreateRelatorioPedidoUseCase {
 
       const pedidos = await this.pedidoRepository.getPedidosByDataAndCliente(dataInicioFormatada, dataFimFormatada, clienteId)
 
-      console.log(pedidos.data)
-
       const sheetName = "Sheet1"
       const emptyWorkbook = this.exportEmptyExcel(sheetName)
       await this.addDataToSheet(emptyWorkbook, sheetName, pedidos.data)

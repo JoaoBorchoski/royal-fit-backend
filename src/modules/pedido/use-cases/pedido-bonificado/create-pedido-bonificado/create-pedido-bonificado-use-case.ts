@@ -68,6 +68,9 @@ class CreatePedidoBonificadoUseCase {
       })
 
       async function printReceipt() {
+        const dataAtual = new Date()
+        dataAtual.setHours(dataAtual.getHours() - 3)
+
         printer.alignCenter()
         printer.setTypeFontB()
         printer.println("Royal Fit")
@@ -77,7 +80,7 @@ class CreatePedidoBonificadoUseCase {
         printer.println(`Cliente: ${cliente.data.nome}`)
         printer.println(`Retirada de: ${quantidade} Bonificações`)
         printer.println(`Data: ${new Date().toLocaleDateString("pt-BR")}`)
-        printer.println(`Hora: ${new Date().toLocaleTimeString("pt-BR")}`)
+        printer.println(`Hora: ${dataAtual.toLocaleTimeString("pt-BR")}`)
         printer.newLine()
         printer.drawLine()
         printer.newLine()

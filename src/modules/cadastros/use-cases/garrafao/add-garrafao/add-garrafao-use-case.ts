@@ -94,6 +94,9 @@ class AddGarrafaoUseCase {
       })
 
       async function printReceipt() {
+        const dataAtual = new Date()
+        dataAtual.setHours(dataAtual.getHours() - 3)
+
         printer.alignCenter()
         printer.setTypeFontB()
         printer.println("Royal Fit")
@@ -101,7 +104,7 @@ class AddGarrafaoUseCase {
         printer.println(`Cliente: ${cliente.data.nome}`)
         printer.println(`Entrada de: ${quantidade} garrafões`)
         printer.println(`Data: ${new Date().toLocaleDateString("pt-BR")}`)
-        printer.println(`Hora: ${new Date().toLocaleTimeString("pt-BR")}`)
+        printer.println(`Hora: ${dataAtual.toLocaleTimeString("pt-BR")}`)
         printer.drawLine()
         printer.newLine()
         printer.newLine()
