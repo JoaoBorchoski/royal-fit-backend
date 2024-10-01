@@ -35,6 +35,7 @@ import { estoquesRoutes } from "./cadastros/estoques-routes"
 import { pedidoBonificadosRoutes } from "./pedido/pedido-bonificados-routes"
 import { almoxarifadoItensRoutes } from "./almoxarifado/almoxarifado-itens-routes"
 import { entradasGarrafaoRoutes } from "./cadastros/entradas-garrafao-routes"
+import { descontosRoutes } from "./clientes/descontos-routes"
 
 const router = Router()
 
@@ -74,5 +75,6 @@ router.use("/balancos", balancosRoutes)
 router.use("/pagamentos", pagamentosRoutes)
 router.use("/almoxarifado-itens", almoxarifadoItensRoutes)
 router.use("/entradas-garrafao", entradasGarrafaoRoutes)
+router.use("/descontos", descontosRoutes)
 
 export { router }

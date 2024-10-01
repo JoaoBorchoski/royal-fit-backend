@@ -14,12 +14,13 @@ class PedidoItemRepository implements IPedidoItemRepository {
   }
 
   // create
-  async create({ produtoId, pedidoId, quantidade, desabilitado }: IPedidoItemDTO): Promise<HttpResponse> {
+  async create({ produtoId, pedidoId, quantidade, desabilitado, valor }: IPedidoItemDTO): Promise<HttpResponse> {
     const pedidoItem = this.repository.create({
       produtoId,
       pedidoId,
       quantidade,
       desabilitado,
+      valor,
     })
 
     const result = await this.repository
@@ -35,7 +36,7 @@ class PedidoItemRepository implements IPedidoItemRepository {
   }
 
   async createWithQueryRunner(
-    { produtoId, pedidoId, quantidade, desabilitado }: IPedidoItemDTO,
+    { produtoId, pedidoId, quantidade, desabilitado, valor }: IPedidoItemDTO,
     @TransactionManager() transactionManager: EntityManager
   ): Promise<HttpResponse> {
     const pedidoItem = transactionManager.create(PedidoItem, {
@@ -43,6 +44,7 @@ class PedidoItemRepository implements IPedidoItemRepository {
       pedidoId,
       quantidade,
       desabilitado,
+      valor,
     })
 
     const result = await transactionManager
@@ -227,7 +229,7 @@ class PedidoItemRepository implements IPedidoItemRepository {
 
   // update
   async update(
-    { id, produtoId, pedidoId, quantidade, desabilitado }: IPedidoItemDTO,
+    { id, produtoId, pedidoId, quantidade, desabilitado, valor }: IPedidoItemDTO,
     @TransactionManager() transactionManager: EntityManager
   ): Promise<HttpResponse> {
     const pedidoItem = await transactionManager.findOne(PedidoItem, id)
@@ -242,6 +244,7 @@ class PedidoItemRepository implements IPedidoItemRepository {
       pedidoId,
       quantidade,
       desabilitado,
+      valor,
     })
 
     try {

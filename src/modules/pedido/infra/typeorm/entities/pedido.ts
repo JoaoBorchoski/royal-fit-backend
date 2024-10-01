@@ -51,6 +51,9 @@ class Pedido {
   @Column({ name: "is_liberado", nullable: true, default: false })
   isLiberado?: boolean
 
+  @Column({ name: "tipo_entrega", nullable: true })
+  tipoEntrega?: Number
+
   @Column({ name: "desabilitado", nullable: true, default: false })
   desabilitado?: boolean
 

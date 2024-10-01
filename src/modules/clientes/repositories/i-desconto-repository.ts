@@ -1,20 +1,15 @@
-import { IProdutoDTO } from "@modules/cadastros/dtos/i-produto-dto"
+import { IDescontoDTO } from "@modules/clientes/dtos/i-desconto-dto"
 import { HttpResponse } from "@shared/helpers"
-import { EntityManager } from "typeorm"
 
-interface IProdutoRepository {
+interface IDescontoRepository {
   // create
-  create(data: IProdutoDTO): Promise<HttpResponse>
-
-  createWithQueryRunner({ nome, preco, descricao, desabilitado }: IProdutoDTO, transactionManager: EntityManager): Promise<HttpResponse>
+  create(data: IDescontoDTO): Promise<HttpResponse>
 
   // list
   list(search: string, page: number, rowsPerPage: number, order: string, filter: string): Promise<HttpResponse>
 
   // select
   select(filter: string): Promise<HttpResponse>
-
-  selectWithOutDesabilitado(filter: string): Promise<HttpResponse>
 
   // id select
   idSelect(id: string): Promise<HttpResponse>
@@ -25,16 +20,16 @@ interface IProdutoRepository {
   // get
   get(id: string): Promise<HttpResponse>
 
-  getByname(nome: string): Promise<HttpResponse>
-
   // update
-  update(data: IProdutoDTO): Promise<HttpResponse>
+  update(data: IDescontoDTO): Promise<HttpResponse>
 
   // delete
   delete(id: string): Promise<HttpResponse>
 
   // multi delete
   multiDelete(ids: string[]): Promise<HttpResponse>
+
+  deleteByClienteId(clienteId: string): Promise<HttpResponse>
 }
 
-export { IProdutoRepository }
+export { IDescontoRepository }

@@ -41,11 +41,11 @@ class CreateRelatorioGarrafaoUseCase {
   }
 
   private styleColumns(workbook: any, sheetName: string) {
-    workbook.Sheets[sheetName]["!cols"] = [{ wpx: 100 }, { wpx: 100 }, { wpx: 100 }]
+    workbook.Sheets[sheetName]["!cols"] = [{ wpx: 100 }, { wpx: 100 }, { wpx: 100 }, { wpx: 100 }]
   }
 
   private exportEmptyExcel(sheetName: string) {
-    const header = ["Data", "Quantidade", "Garrafão Royalfit"]
+    const header = ["Data", "Quantidade", "Garrafão Royalfit", "Tipo Casco"]
 
     const emptyData = [header]
 
@@ -61,7 +61,7 @@ class CreateRelatorioGarrafaoUseCase {
     const dataForExcel = []
     for await (const item of data) {
       // dataForExcel.push([item.data.toLocaleDateString("pt-BR"), item.valorPago, item.meioPagamento, item.userName])
-      dataForExcel.push([item.data.toLocaleDateString("pt-BR"), item.quantidade, item.isRoyalfit ? "Sim" : "Não"])
+      dataForExcel.push([item.data.toLocaleDateString("pt-BR"), item.quantidade, item.isRoyalfit ? "Sim" : "Não", item.tamanhoCasco + "L"])
     }
 
     XLSX.utils.sheet_add_aoa(workbook.Sheets[sheetName], dataForExcel, { origin: -1 })

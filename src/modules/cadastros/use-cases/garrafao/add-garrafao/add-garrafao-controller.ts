@@ -4,7 +4,7 @@ import { AddGarrafaoUseCase } from "./add-garrafao-use-case"
 
 class AddGarrafaoController {
   async handle(request: Request, response: Response): Promise<Response> {
-    const { clienteId, quantidade, impressoraIp, isRoyalfit } = request.body
+    const { clienteId, quantidade, impressoraIp, isRoyalfit, tamanhoCasco } = request.body
 
     const { id } = request.params
 
@@ -17,6 +17,7 @@ class AddGarrafaoController {
         quantidade,
         impressoraIp,
         isRoyalfit,
+        tamanhoCasco,
       })
       .then((garrafaoResult) => {
         return garrafaoResult

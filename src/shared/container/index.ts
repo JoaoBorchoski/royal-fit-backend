@@ -70,6 +70,8 @@ import { AlmoxarifadoItemRepository } from "@modules/almoxarifado/infra/typeorm/
 import { IAlmoxarifadoItemRepository } from "@modules/almoxarifado/repositories/i-almoxarifado-item-repository"
 import { EntradaGarrafaoRepository } from "@modules/cadastros/infra/typeorm/repositories/entrada-garrafao-repository"
 import { IEntradaGarrafaoRepository } from "@modules/cadastros/repositories/i-entrada-garrafao-repository"
+import { DescontoRepository } from "@modules/clientes/infra/typeorm/repositories/desconto-repository"
+import { IDescontoRepository } from "@modules/clientes/repositories/i-desconto-repository"
 
 container.registerSingleton<IUserRepository>("UserRepository", UserRepository)
 container.registerSingleton<IUserSecurityRepository>("UserSecurityRepository", UserSecurityRepository)
@@ -105,3 +107,4 @@ container.registerSingleton<IPagamentoRepository>("PagamentoRepository", Pagamen
 container.registerSingleton<IEstoqueRepository>("EstoqueRepository", EstoqueRepository)
 container.registerSingleton<IAlmoxarifadoItemRepository>("AlmoxarifadoItemRepository", AlmoxarifadoItemRepository)
 container.registerSingleton<IEntradaGarrafaoRepository>("EntradaGarrafaoRepository", EntradaGarrafaoRepository)
+container.registerSingleton<IDescontoRepository>("DescontoRepository", DescontoRepository)

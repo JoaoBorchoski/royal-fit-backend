@@ -20,6 +20,7 @@ class UpdateClienteController {
       telefone,
       usuarioId,
       desabilitado,
+      descontos,
     } = request.body
 
     const { id } = request.params
@@ -44,6 +45,7 @@ class UpdateClienteController {
         telefone,
         usuarioId,
         desabilitado,
+        descontos,
       })
       .then((clienteResult) => {
         return clienteResult

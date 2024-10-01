@@ -6,6 +6,7 @@ import { IBonificacaoRepository } from "@modules/cadastros/repositories/i-bonifi
 import { IBalancoRepository } from "@modules/clientes/repositories/i-balanco-repository"
 import { IUserRepository } from "@modules/authentication/repositories/i-user-repository"
 import { IGarrafaoRepository } from "@modules/cadastros/repositories/i-garrafao-repository"
+import { IDescontoRepository } from "@modules/clientes/repositories/i-desconto-repository"
 
 interface IRequest {
   nome: string
@@ -23,6 +24,7 @@ interface IRequest {
   telefone: string
   usuarioId: string
   desabilitado: boolean
+  descontos: any
 }
 
 @injectable()
@@ -37,7 +39,9 @@ class CreateClienteUseCase {
     @inject("UserRepository")
     private UserRepository: IUserRepository,
     @inject("GarrafaoRepository")
-    private garrafaoRepository: IGarrafaoRepository
+    private garrafaoRepository: IGarrafaoRepository,
+    @inject("DescontoRepository")
+    private descontoRepository: IDescontoRepository
   ) {}
 
   async execute({
@@ -56,6 +60,7 @@ class CreateClienteUseCase {
     telefone,
     usuarioId,
     desabilitado,
+    descontos,
   }: IRequest): Promise<Cliente> {
     try {
       const findByEmail = await this.UserRepository.findByEmail(email)
@@ -89,6 +94,15 @@ class CreateClienteUseCase {
           return error
         })
 
+      for await (const desconto of descontos) {
+        await this.descontoRepository.create({
+          clienteId: result.data.id,
+          produtoId: desconto.produtoId,
+          desconto: desconto.desconto,
+          desabilitado: false,
+        })
+      }
+
       const bonificacaoAlreadyExists = await this.bonificacaoRepository.getByClienteId(result.data.id)
       const balancoAlreadyExists = await this.balancoRepository.getByClienteId(result.data.id)
       const garrafaAlreadyExists = await this.garrafaoRepository.getByClienteId(result.data.id)
@@ -118,6 +132,7 @@ class CreateClienteUseCase {
 
       return result
     } catch (error) {
+      console.log(error)
       return error
     }
   }

@@ -26,8 +26,8 @@ io.on("connection", (socket) => {
   })
 })
 
-server.listen(5500, () => {
-  console.log("Server is running on port 5500!")
+server.listen(3333, () => {
+  console.log("Server is running on port 3333!")
 })
 
 mqWorkerRun()

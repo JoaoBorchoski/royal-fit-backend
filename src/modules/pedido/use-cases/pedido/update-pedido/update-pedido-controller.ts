@@ -21,6 +21,7 @@ class UpdatePedidoController {
       desabilitado,
       pedidoItemForm,
       impressoraIp,
+      tipoEntrega,
     } = request.body
 
     const { id } = request.params
@@ -45,6 +46,7 @@ class UpdatePedidoController {
         desabilitado,
         pedidoItemForm,
         impressoraIp,
+        tipoEntrega,
       })
       .then((pedidoResult) => {
         return pedidoResult

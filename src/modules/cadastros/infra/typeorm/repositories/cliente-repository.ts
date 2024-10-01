@@ -4,6 +4,7 @@ import { IClienteRepository } from "@modules/cadastros/repositories/i-cliente-re
 import { Cliente } from "@modules/cadastros/infra/typeorm/entities/cliente"
 import { noContent, serverError, ok, notFound, HttpResponse } from "@shared/helpers"
 import { AppError } from "@shared/errors/app-error"
+import { Desconto } from "@modules/clientes/infra/typeorm/entities/desconto"
 
 class ClienteRepository implements IClienteRepository {
   private repository: Repository<Cliente>
@@ -248,6 +249,20 @@ class ClienteRepository implements IClienteRepository {
         .leftJoin("cli.cidadeId", "b")
         .where("cli.id = :id", { id })
         .getRawOne()
+
+      const descontos = await getRepository(Desconto)
+        .createQueryBuilder("des")
+        .select([
+          'des.id as "id"',
+          'des.clienteId as "clienteId"',
+          'des.produtoId as "produtoId"',
+          'des.desconto :: float as "desconto"',
+          'des.desabilitado as "desabilitado"',
+        ])
+        .where("des.clienteId = :clienteId", { clienteId: id })
+        .getRawMany()
+
+      cliente.descontos = descontos
 
       if (typeof cliente === "undefined") {
         return noContent()

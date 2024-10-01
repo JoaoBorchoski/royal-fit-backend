@@ -27,6 +27,7 @@ class PedidoRepository implements IPedidoRepository {
     statusPagamentoId,
     isPagamentoPosterior,
     desabilitado,
+    tipoEntrega,
   }: IPedidoDTO): Promise<HttpResponse> {
     const pedido = this.repository.create({
       sequencial,
@@ -40,6 +41,7 @@ class PedidoRepository implements IPedidoRepository {
       statusPagamentoId,
       isPagamentoPosterior,
       desabilitado,
+      tipoEntrega,
     })
 
     const result = await this.repository
@@ -69,6 +71,7 @@ class PedidoRepository implements IPedidoRepository {
       isPagamentoPosterior,
       isLiberado,
       desabilitado,
+      tipoEntrega,
     }: IPedidoDTO,
     @TransactionManager() transactionManager: EntityManager
   ): Promise<HttpResponse> {
@@ -86,6 +89,7 @@ class PedidoRepository implements IPedidoRepository {
       isPagamentoPosterior,
       isLiberado,
       desabilitado,
+      tipoEntrega,
     })
 
     const result = await transactionManager
@@ -263,6 +267,7 @@ class PedidoRepository implements IPedidoRepository {
           'ped.isLiberado as "isLiberado"',
           'ped.desabilitado as "desabilitado"',
           'ped.descricao as "descricao"',
+          'ped.tipoEntrega as "tipoEntrega"',
           // 'a.desconto :: float as "desconto"',
         ])
         .leftJoin("ped.clienteId", "a")
@@ -282,10 +287,9 @@ class PedidoRepository implements IPedidoRepository {
           'pedItem.id as "id"',
           'pedItem.produtoId as "produtoId"',
           'prod.nome as "produtoNome"',
-          'prod.preco :: float as "preco"',
+          'CAST(pedItem.valor / pedItem.quantidade AS float) "preco"',
           'pedItem.quantidade as "quantidade"',
-          // 'pedItem.valorTotal as "valor"',
-          'CAST(pedItem.quantidade * prod.preco AS float) as "valor"',
+          'pedItem.valor :: float as "valor"',
         ])
         .leftJoin("pedItem.pedidoId", "ped")
         .leftJoin("pedItem.produtoId", "prod")
@@ -298,6 +302,7 @@ class PedidoRepository implements IPedidoRepository {
 
       return ok(pedido)
     } catch (err) {
+      console.log(err)
       return serverError(err)
     }
   }
@@ -345,6 +350,7 @@ class PedidoRepository implements IPedidoRepository {
       statusPagamentoId,
       isPagamentoPosterior,
       desabilitado,
+      tipoEntrega,
     }: IPedidoDTO,
     @TransactionManager() transactionManager: EntityManager
   ): Promise<HttpResponse> {
@@ -369,6 +375,7 @@ class PedidoRepository implements IPedidoRepository {
       statusPagamentoId,
       isPagamentoPosterior,
       desabilitado,
+      tipoEntrega,
     })
 
     try {
@@ -434,6 +441,8 @@ class PedidoRepository implements IPedidoRepository {
           p.data BETWEEN $1 AND $2
         AND
           c.id = $3
+        ORDER BY
+          p.sequencial ASC
       `,
         [dataInicio, dataFim, clienteId]
       )

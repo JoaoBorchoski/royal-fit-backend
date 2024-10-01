@@ -17,6 +17,9 @@ class EntradaGarrafao {
   @Column({ name: "is_royalfit", nullable: true, default: false })
   isRoyalfit?: boolean
 
+  @Column({ name: "tamanho_casco", nullable: true })
+  tamanhoCasco?: Number
+
   @Column({ name: "desabilitado", nullable: true, default: false })
   desabilitado?: boolean
 

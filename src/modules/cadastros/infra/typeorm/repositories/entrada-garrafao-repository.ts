@@ -35,13 +35,14 @@ class EntradaGarrafaoRepository implements IEntradaGarrafaoRepository {
   }
 
   async createWithQueryRunner(
-    { clienteId, quantidade, isRoyalfit, desabilitado }: IEntradaGarrafaoDTO,
+    { clienteId, quantidade, isRoyalfit, tamanhoCasco, desabilitado }: IEntradaGarrafaoDTO,
     @TransactionManager() transactionManager: EntityManager
   ): Promise<HttpResponse> {
     const entradaGarrafao = transactionManager.create(EntradaGarrafao, {
       clienteId,
       quantidade,
       isRoyalfit,
+      tamanhoCasco,
       desabilitado,
     })
 
@@ -51,8 +52,11 @@ class EntradaGarrafaoRepository implements IEntradaGarrafaoRepository {
         return ok(entradaGarrafaoResult)
       })
       .catch((error) => {
+        console.log(error)
         return serverError(error)
       })
+
+    console.log(result)
 
     return result
   }
@@ -251,7 +255,8 @@ class EntradaGarrafaoRepository implements IEntradaGarrafaoRepository {
           ent.id as "id",
           ent.created_at as "data",
           ent.quantidade as "quantidade",
-          ent.is_royalfit as "isRoyalfit"
+          ent.is_royalfit as "isRoyalfit",
+          ent.tamanho_casco as "tamanhoCasco"
         FROM 
           entrada_garrafao ent
         LEFT JOIN
@@ -266,24 +271,9 @@ class EntradaGarrafaoRepository implements IEntradaGarrafaoRepository {
         [dataInicio, dataFim, clienteId]
       )
 
-      // const entradasGarrafao = await this.repository
-      //   .createQueryBuilder("ent")
-      //   .select([
-      //     'ent.id as "id"',
-      //     'ent.clienteId as "clienteId"',
-      //     'a.name as "clienteName"',
-      //     'ent.quantidade as "quantidade"',
-      //     'ent.isRoyalfit as "isRoyalfit"',
-      //     'ent.desabilitado as "desabilitado"',
-      //   ])
-      //   .leftJoin("ent.clienteId", "a")
-      //   .where("ent.clienteId = :clienteId", { clienteId })
-      //   .andWhere("ent.createdAt >= :dataInicio", { dataInicio })
-      //   .andWhere("ent.createdAt <= :dataFim", { dataFim })
-      //   .getRawMany()
-
       return ok(entradas)
     } catch (err) {
+      console.log(err)
       return serverError(err)
     }
   }

@@ -94,6 +94,7 @@ class ProdutoRepository implements IProdutoRepository {
             query.orWhere("CAST(pro.descricao AS VARCHAR) ilike :search", { search: `%${search}%` })
           })
         )
+        .andWhere("pro.desabilitado = false")
         .addOrderBy("pro.nome", columnOrder[0])
         .addOrderBy("pro.preco", columnOrder[1])
         .addOrderBy("pro.descricao", columnOrder[2])
@@ -115,6 +116,22 @@ class ProdutoRepository implements IProdutoRepository {
         .createQueryBuilder("pro")
         .select(['pro.id as "value"', 'pro.nome as "label"'])
         .where("pro.nome ilike :filter", { filter: `%${filter}%` })
+        .addOrderBy("pro.nome")
+        .getRawMany()
+
+      return ok(produtos)
+    } catch (err) {
+      return serverError(err)
+    }
+  }
+
+  async selectWithOutDesabilitado(filter: string): Promise<HttpResponse> {
+    try {
+      const produtos = await this.repository
+        .createQueryBuilder("pro")
+        .select(['pro.id as "value"', 'pro.nome as "label"'])
+        .where("pro.nome ilike :filter", { filter: `%${filter}%` })
+        .andWhere("pro.desabilitado = false")
         .addOrderBy("pro.nome")
         .getRawMany()
 

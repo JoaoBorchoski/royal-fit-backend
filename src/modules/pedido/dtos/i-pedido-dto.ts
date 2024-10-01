@@ -12,6 +12,7 @@ interface IPedidoDTO {
   statusPagamentoId?: string
   isPagamentoPosterior?: boolean
   isLiberado?: boolean
+  tipoEntrega?: number
   desabilitado?: boolean
   createdAt?: Date
   updatedAt?: Date

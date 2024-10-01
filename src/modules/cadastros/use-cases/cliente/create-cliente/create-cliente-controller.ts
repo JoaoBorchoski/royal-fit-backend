@@ -21,6 +21,7 @@ class CreateClienteController {
       telefone,
       usuarioId,
       desabilitado,
+      descontos,
     } = request.body
 
     const createClienteUseCase = container.resolve(CreateClienteUseCase)
@@ -42,6 +43,7 @@ class CreateClienteController {
         telefone,
         usuarioId,
         desabilitado,
+        descontos,
       })
       .then((clienteResult) => {
         return clienteResult

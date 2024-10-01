@@ -30,6 +30,7 @@ interface IRequest {
   desabilitado: boolean
   pedidoItemForm: any[]
   impressoraIp: string
+  tipoEntrega: number
 }
 
 interface IPedidoItemCanhoto {
@@ -77,6 +78,7 @@ class CreatePedidoUseCase {
     desabilitado,
     impressoraIp = "45.227.182.222:9100",
     pedidoItemForm,
+    tipoEntrega,
   }: IRequest): Promise<Pedido> {
     const queryRunner = getConnection().createQueryRunner()
     await queryRunner.startTransaction()
@@ -105,6 +107,7 @@ class CreatePedidoUseCase {
             isPagamentoPosterior,
             isLiberado,
             desabilitado,
+            tipoEntrega,
           },
           queryRunner.manager
         )
@@ -160,6 +163,7 @@ class CreatePedidoUseCase {
             pedidoId: result.data.id,
             produtoId: pedidoItem.produtoId,
             quantidade: pedidoItem.quantidade,
+            valor: pedidoItem.valor,
           },
           queryRunner.manager
         )

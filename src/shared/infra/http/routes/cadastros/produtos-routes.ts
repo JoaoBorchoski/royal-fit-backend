@@ -13,6 +13,7 @@ import { ImportProdutoController } from "@modules/cadastros/use-cases/produto/im
 import { ExportProdutoExcelController } from "@modules/cadastros/use-cases/produto/export-produto/export-produto-controller"
 import multer from "multer"
 import uploadConfig from "@config/upload"
+import { SelectProdutoWithoutDesabilitadoController } from "@modules/cadastros/use-cases/produto/select-produto-without-desabilitado/select-produto-without-desabilitado-controller"
 
 const uploadFiles = multer(uploadConfig)
 const produtosRoutes = Router()
@@ -28,6 +29,10 @@ const deleteProdutoController = new DeleteProdutoController()
 const multiDeleteProdutoController = new MultiDeleteProdutoController()
 const importProdutoController = new ImportProdutoController()
 const exportProdutoExcelController = new ExportProdutoExcelController()
+const selectProdutoWithoutDesabilitadoController = new SelectProdutoWithoutDesabilitadoController()
+
+produtosRoutes.get("/select-without-desabilitado", ensureAuthenticated, selectProdutoWithoutDesabilitadoController.handle)
+produtosRoutes.get("/select-without-desabilitado/:id", ensureAuthenticated, idSelectProdutoController.handle)
 
 produtosRoutes.post("/", ensureAuthenticated, createProdutoController.handle)
 produtosRoutes.post("/import-excel", ensureAuthenticated, uploadFiles.single("arquivos"), importProdutoController.handle)

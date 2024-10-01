@@ -22,6 +22,7 @@ class CreatePedidoController {
       desabilitado,
       impressoraIp,
       pedidoItemForm,
+      tipoEntrega,
     } = request.body
 
     const createPedidoUseCase = container.resolve(CreatePedidoUseCase)
@@ -43,6 +44,7 @@ class CreatePedidoController {
         desabilitado,
         impressoraIp,
         pedidoItemForm,
+        tipoEntrega,
       })
       .then((pedidoResult) => {
         return pedidoResult
