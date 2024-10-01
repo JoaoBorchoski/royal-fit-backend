@@ -40,6 +40,7 @@ class UpdateEstoqueUseCase {
       const quantidadeDiferenca = quantidade - oldEstoque.data.quantidade
       const estoqueId = produtoEstoqueMap[produtoId]
       const est = await this.estoqueRepository.get(estoqueId)
+
       const novaQuantidade = Math.max(est.data.quantidade - quantidadeDiferenca, 0)
       await this.estoqueRepository.update({
         id: est.data.id,
