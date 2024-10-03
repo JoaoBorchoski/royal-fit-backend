@@ -56,8 +56,6 @@ class EntradaGarrafaoRepository implements IEntradaGarrafaoRepository {
         return serverError(error)
       })
 
-    console.log(result)
-
     return result
   }
 

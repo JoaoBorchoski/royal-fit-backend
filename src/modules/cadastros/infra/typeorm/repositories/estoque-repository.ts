@@ -92,6 +92,7 @@ class EstoqueRepository implements IEstoqueRepository {
             query.andWhere("CAST(a.nome AS VARCHAR) ilike :search", { search: `%${search}%` })
           })
         )
+        .andWhere("est.desabilitado = false")
         .addOrderBy("a.nome", columnOrder[0])
         .addOrderBy("est.quantidade", columnOrder[1])
         .offset(offset)
