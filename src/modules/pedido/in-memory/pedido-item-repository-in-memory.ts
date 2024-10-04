@@ -5,6 +5,12 @@ import { ok, notFound, HttpResponse } from "@shared/helpers"
 import { EntityManager } from "typeorm"
 
 class PedidoItemRepositoryInMemory implements IPedidoItemRepository {
+  getByPedidoAndPedidoItemId(pedidoId: string, pedidoItemId: string): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
+  deleteByPedidoIdWithQueryRunner(pedidoId: string, transactionManager: EntityManager): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
   pedidoItens: PedidoItem[] = []
 
   // create
@@ -35,10 +41,7 @@ class PedidoItemRepositoryInMemory implements IPedidoItemRepository {
   }
 
   // update
-  update(
-    { id, produtoId, pedidoId, quantidade, desabilitado }: IPedidoItemDTO,
-    transactionManager: EntityManager
-  ): Promise<HttpResponse> {
+  update({ id, produtoId, pedidoId, quantidade, desabilitado }: IPedidoItemDTO, transactionManager: EntityManager): Promise<HttpResponse> {
     throw new Error("Method not implemented.")
   }
 

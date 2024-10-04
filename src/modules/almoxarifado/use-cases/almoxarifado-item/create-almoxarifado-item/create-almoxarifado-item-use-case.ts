@@ -4,7 +4,7 @@ import { IAlmoxarifadoItemRepository } from "@modules/almoxarifado/repositories/
 import { AppError } from "@shared/errors/app-error"
 import nodemailer from "nodemailer"
 import { sendMail } from "@shared/infra/http/app"
-import { io } from "@shared/infra/http/server"
+// import { io } from "@shared/infra/http/server"
 
 interface IRequest {
   item: string
@@ -36,7 +36,7 @@ class CreateAlmoxarifadoItemUseCase {
       })
 
     if (quantidade < quantidadeMin) {
-      io.emit("alertaAlmoxarifado", `Estoque de almoxarifado abaixo do mínimo para o item: ${item}`)
+      // io.emit("alertaAlmoxarifado", `Estoque de almoxarifado abaixo do mínimo para o item: ${item}`)
 
       sendMail(
         "Estoque de almoxarifado abaixo do mínimo",

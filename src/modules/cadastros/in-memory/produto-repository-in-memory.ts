@@ -5,6 +5,10 @@ import { ok, notFound, HttpResponse } from "@shared/helpers"
 import { EntityManager } from "typeorm"
 
 class ProdutoRepositoryInMemory implements IProdutoRepository {
+  selectWithOutDesabilitado(filter: string): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
+
   produtos: Produto[] = []
 
   // create
@@ -23,10 +27,7 @@ class ProdutoRepositoryInMemory implements IProdutoRepository {
     return ok(produto)
   }
 
-  createWithQueryRunner(
-    { nome, preco, descricao, desabilitado }: IProdutoDTO,
-    transactionManager: EntityManager
-  ): Promise<HttpResponse> {
+  createWithQueryRunner({ nome, preco, descricao, desabilitado }: IProdutoDTO, transactionManager: EntityManager): Promise<HttpResponse> {
     throw new Error("Method not implemented.")
   }
 

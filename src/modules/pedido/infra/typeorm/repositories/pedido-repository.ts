@@ -135,8 +135,10 @@ class PedidoRepository implements IPedidoRepository {
           'a.id as "clienteId"',
           'a.nome as "clienteNome"',
           'ped.data as "data"',
+          'ped.valorTotal :: float as "valorTotal"',
           // 'ped.valorTotal - ped.desconto :: float as "valorTotal"',
-          'ROUND(CAST((ped.valorTotal - COALESCE(ped.desconto, 0)) AS numeric), 2) as "valorTotal"',
+          // 'ROUND(CAST((ped.valorTotal - COALESCE(ped.desconto, 0)) AS numeric), 2) as "valorTotal"',
+          // 'ROUND(CAST(ped.valorTotal AS numeric), 2) as "valorTotal"',
           'ped.isLiberado as "isLiberado"',
         ])
         .leftJoin("ped.clienteId", "a")

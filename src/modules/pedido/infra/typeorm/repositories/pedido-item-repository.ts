@@ -213,6 +213,31 @@ class PedidoItemRepository implements IPedidoItemRepository {
     }
   }
 
+  async getByPedidoAndPedidoItemId(pedidoId: string, pedidoItemId: string): Promise<HttpResponse> {
+    try {
+      const pedidoItem = await this.repository
+        .createQueryBuilder("ped")
+        .select([
+          'ped.id as "id"',
+          'ped.produtoId as "produtoId"',
+          'ped.pedidoId as "pedidoId"',
+          'ped.quantidade as "quantidade"',
+          'ped.desabilitado as "desabilitado"',
+        ])
+        .where("ped.pedidoId = :pedidoId", { pedidoId })
+        .andWhere("ped.id = :pedidoItemId", { pedidoItemId })
+        .getRawOne()
+
+      if (typeof pedidoItem === "undefined") {
+        return noContent()
+      }
+
+      return ok(pedidoItem)
+    } catch (err) {
+      return serverError(err)
+    }
+  }
+
   async getBonificacaoByClienteId(clienteId: string): Promise<HttpResponse> {
     try {
       const result = await getRepository(PedidoBonificado)
@@ -274,6 +299,20 @@ class PedidoItemRepository implements IPedidoItemRepository {
   async deleteByPedidoId(pedidoId: string): Promise<HttpResponse> {
     try {
       await this.repository.delete({ pedidoId })
+
+      return noContent()
+    } catch (err) {
+      if (err.message.slice(0, 10) === "null value") {
+        throw new AppError("not null constraint", 404)
+      }
+
+      return serverError(err)
+    }
+  }
+
+  async deleteByPedidoIdWithQueryRunner(pedidoId: string, @TransactionManager() transactionManager: EntityManager): Promise<HttpResponse> {
+    try {
+      await transactionManager.delete(PedidoItem, { id: pedidoId })
 
       return noContent()
     } catch (err) {

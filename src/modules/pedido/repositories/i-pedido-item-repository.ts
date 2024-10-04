@@ -29,10 +29,7 @@ interface IPedidoItemRepository {
   getByPedidoIdAndProdutoId(pedidoId: string, produtoId: string): Promise<HttpResponse>
 
   // update
-  update(
-    { id, produtoId, pedidoId, quantidade, desabilitado }: IPedidoItemDTO,
-    transactionManager: EntityManager
-  ): Promise<HttpResponse>
+  update({ id, produtoId, pedidoId, quantidade, desabilitado }: IPedidoItemDTO, transactionManager: EntityManager): Promise<HttpResponse>
 
   // delete
   delete(id: string): Promise<HttpResponse>
@@ -41,6 +38,10 @@ interface IPedidoItemRepository {
 
   // multi delete
   multiDelete(ids: string[]): Promise<HttpResponse>
+
+  getByPedidoAndPedidoItemId(pedidoId: string, pedidoItemId: string): Promise<HttpResponse>
+
+  deleteByPedidoIdWithQueryRunner(pedidoId: string, transactionManager: EntityManager): Promise<HttpResponse>
 }
 
 export { IPedidoItemRepository }
