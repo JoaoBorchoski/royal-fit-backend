@@ -1,13 +1,13 @@
-import { compare } from 'bcrypt'
-import { sign } from 'jsonwebtoken'
-import { inject, injectable } from 'tsyringe'
-import { v4 as uuidV4 } from 'uuid'
-import { IUserRepository } from '@modules/authentication/repositories/i-user-repository'
-import { AppError } from '@shared/errors/app-error'
-import { IUserTokenRepository } from '@modules/authentication/repositories/i-user-token-repository'
-import auth from '@config/auth'
-import { IDateProvider } from '@shared/container/providers/date-provider/i-date-provider'
-import { IStorageProvider } from '@shared/container/providers/storage-provider/i-storage-provider'
+import { compare } from "bcrypt"
+import { sign } from "jsonwebtoken"
+import { inject, injectable } from "tsyringe"
+import { v4 as uuidV4 } from "uuid"
+import { IUserRepository } from "@modules/authentication/repositories/i-user-repository"
+import { AppError } from "@shared/errors/app-error"
+import { IUserTokenRepository } from "@modules/authentication/repositories/i-user-token-repository"
+import auth from "@config/auth"
+import { IDateProvider } from "@shared/container/providers/date-provider/i-date-provider"
+import { IStorageProvider } from "@shared/container/providers/storage-provider/i-storage-provider"
 
 interface IRequest {
   login: string
@@ -24,6 +24,7 @@ interface IResponse {
     tfa?: boolean
     isBlocked?: boolean
     blockReasonId?: string
+    isAdmin?: boolean
   }
   token: string
   refreshToken: string
@@ -31,34 +32,29 @@ interface IResponse {
 
 @injectable()
 class AuthenticateUserUseCase {
-  constructor(@inject('UserRepository')
+  constructor(
+    @inject("UserRepository")
     private userRepository: IUserRepository,
-    @inject('UserTokenRepository')
+    @inject("UserTokenRepository")
     private userTokenRepository: IUserTokenRepository,
-    @inject('DayjsDateProvider')
+    @inject("DayjsDateProvider")
     private dateProvider: IDateProvider,
-    @inject('StorageProvider')
+    @inject("StorageProvider")
     private storageProvider: IStorageProvider
   ) {}
 
   async execute({ login, password }: IRequest): Promise<IResponse> {
     const user = await this.userRepository.findByEmail(login)
-    const {
-      expires_in_token,
-      secret_refreshToken,
-      secret_token,
-      expires_in_refreshToken,
-      expires_refreshToken_days,
-    } = auth
+    const { expires_in_token, secret_refreshToken, secret_token, expires_in_refreshToken, expires_refreshToken_days } = auth
 
     if (!user) {
-      throw new AppError('Email or password incorrect!')
+      throw new AppError("Email or password incorrect!")
     }
 
     const passwordMatch = await compare(password, user.password)
 
     if (!passwordMatch) {
-      throw new AppError('Email or password incorrect!')
+      throw new AppError("Email or password incorrect!")
     }
 
     const token = sign({}, secret_token, {
@@ -102,9 +98,10 @@ class AuthenticateUserUseCase {
         avatar: user.avatar ? `${this.storageProvider.url}/avatar/${user.avatar}` : null,
         mustChangePassword,
         mustActiveTwoFactorAuthentication: user.mustActiveTwoFactorAuthentication,
-        tfa: user.tfa && user.tfa.secret !== '',
+        tfa: user.tfa && user.tfa.secret !== "",
         isBlocked: user.isBlocked || undefined,
-        blockReasonId: user.blockReasonId || undefined
+        blockReasonId: user.blockReasonId || undefined,
+        isAdmin: user.isAdmin,
       },
       refreshToken,
     }

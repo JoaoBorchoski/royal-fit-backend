@@ -289,7 +289,7 @@ class PedidoRepository implements IPedidoRepository {
           'pedItem.id as "id"',
           'pedItem.produtoId as "produtoId"',
           'prod.nome as "produtoNome"',
-          'CAST(pedItem.valor / pedItem.quantidade AS float) "preco"',
+          'pedItem.valor_produto as "preco"',
           'pedItem.quantidade as "quantidade"',
           'pedItem.valor :: float as "valor"',
         ])
@@ -426,7 +426,7 @@ class PedidoRepository implements IPedidoRepository {
         SELECT 
           p.id AS "id",
           p.data AS "data",
-          CAST(p.valor_total - p.desconto AS float) AS "valorTotal",
+          CAST(p.valor_total - p.desconto AS float) :: float AS "valorTotal",
           p.desconto :: float AS "desconto",
           a.id AS "funcionarioId",
           a.nome AS "funcionarioNome",
@@ -440,7 +440,7 @@ class PedidoRepository implements IPedidoRepository {
         LEFT JOIN
           Clientes c ON p.cliente_id = c.id
         WHERE 
-          p.data BETWEEN $1 AND $2
+          p.data >= $1 AND p.data <= $2
         AND
           c.id = $3
         ORDER BY
@@ -456,9 +456,9 @@ class PedidoRepository implements IPedidoRepository {
             'pedItem.id as "id"',
             'pedItem.produtoId as "produtoId"',
             'prod.nome as "produtoNome"',
-            'prod.preco :: float as "preco"',
+            'pedItem.valor_produto :: float as "preco"',
             'pedItem.quantidade as "quantidade"',
-            'CAST(pedItem.quantidade * prod.preco AS float) as "valor"',
+            'CAST(pedItem.quantidade * pedItem.valor_produto AS float) as "valor"',
           ])
           .leftJoin("pedItem.pedidoId", "ped")
           .leftJoin("pedItem.produtoId", "prod")

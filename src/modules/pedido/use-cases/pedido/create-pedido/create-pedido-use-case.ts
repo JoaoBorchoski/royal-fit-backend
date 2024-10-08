@@ -160,10 +160,12 @@ class CreatePedidoUseCase {
 
         const prod = await this.pedidoItemRepository.createWithQueryRunner(
           {
+            id: pedidoItem.id,
             pedidoId: result.data.id,
             produtoId: pedidoItem.produtoId,
             quantidade: pedidoItem.quantidade,
             valor: pedidoItem.valor,
+            valorProduto: produto.data.preco,
           },
           queryRunner.manager
         )

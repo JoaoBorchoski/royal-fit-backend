@@ -5,6 +5,9 @@ import { ok, notFound, HttpResponse } from "@shared/helpers"
 import { EntityManager } from "typeorm"
 
 class PedidoItemRepositoryInMemory implements IPedidoItemRepository {
+  getByPedidoId(pedidoId: string): Promise<HttpResponse> {
+    throw new Error("Method not implemented.")
+  }
   getByPedidoAndPedidoItemId(pedidoId: string, pedidoItemId: string): Promise<HttpResponse> {
     throw new Error("Method not implemented.")
   }

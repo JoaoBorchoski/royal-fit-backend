@@ -20,8 +20,10 @@ class CreateRelatorioPedidoUseCase {
 
   async execute({ clienteId, dataInicio, dataFim }: IRequest): Promise<HttpResponse> {
     try {
-      const dataInicioFormatada = new Date(new Date(dataInicio).setDate(new Date(dataInicio).getDate() - 1))
-      const dataFimFormatada = new Date(new Date(dataFim).setDate(new Date(dataFim).getDate() + 1))
+      // const dataInicioFormatada = new Date(new Date(dataInicio).setDate(new Date(dataInicio).getDate() - 1))
+      // const dataFimFormatada = new Date(new Date(dataFim).setDate(new Date(dataFim).getDate() + 1))
+      const dataFimFormatada = new Date(new Date(dataFim))
+      const dataInicioFormatada = new Date(new Date(dataInicio))
 
       if (dataInicioFormatada > dataFimFormatada) {
         throw new AppError("Data de início não pode ser maior que a data de fim")
@@ -44,6 +46,8 @@ class CreateRelatorioPedidoUseCase {
       { wpx: 100 },
       { wpx: 100 },
       { wpx: 150 },
+      { wpx: 150 },
+      { wpx: 150 },
       { wpx: 100 },
       { wpx: 100 },
       { wpx: 100 },
@@ -56,6 +60,8 @@ class CreateRelatorioPedidoUseCase {
     const header = [
       "Pedido",
       "Data",
+      "Subtotal (R$)",
+      "Desconto (R$)",
       "Valor Total Pedido (R$)",
       "Funcionário",
       "Produto",
@@ -83,6 +89,8 @@ class CreateRelatorioPedidoUseCase {
           item.sequencial,
           item.data.toLocaleDateString("pt-BR"),
           item.valorTotal,
+          item.desconto,
+          item.valorTotal - item.desconto,
           item.funcionarioNome,
           pedidoItem.produtoNome,
           pedidoItem.preco,
@@ -91,8 +99,8 @@ class CreateRelatorioPedidoUseCase {
         ])
       }
     }
-    dataForExcel.push(["", "", "", "", "", "", "", ""])
-    dataForExcel.push(["", "", "", "", "", "", "Valor Total do período", `R$ ${valorTotalPedidos}`])
+    dataForExcel.push(["", "", "", "", "", "", "", "", "", ""])
+    dataForExcel.push(["", "", "", "", "", "", "", "", "Valor Total do período", `R$ ${valorTotalPedidos.toFixed(2)}`])
 
     XLSX.utils.sheet_add_aoa(workbook.Sheets[sheetName], dataForExcel, { origin: -1 })
   }

@@ -38,7 +38,7 @@ class RetiradaBonificacaoUseCase {
     try {
       const garrafao = await this.garrafaoRepository.getByClienteId(clienteId)
       const oldBonificacao = await this.bonificacaoRepository.getByClienteId(clienteId)
-      const produto = await this.produtoRepository.getByname("20L - Envase")
+      const produto = await this.produtoRepository.get("fbe43047-093b-496b-9c59-ce5c2ce66b34")
       const oldEstoque = await this.estoqueRepository.getByProdutoId(produto.data.id)
       const cliente = await this.clienteRepository.get(clienteId)
 

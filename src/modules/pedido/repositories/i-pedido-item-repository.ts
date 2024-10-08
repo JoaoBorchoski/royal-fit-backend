@@ -28,6 +28,8 @@ interface IPedidoItemRepository {
 
   getByPedidoIdAndProdutoId(pedidoId: string, produtoId: string): Promise<HttpResponse>
 
+  getByPedidoId(pedidoId: string): Promise<HttpResponse>
+
   // update
   update({ id, produtoId, pedidoId, quantidade, desabilitado }: IPedidoItemDTO, transactionManager: EntityManager): Promise<HttpResponse>
 

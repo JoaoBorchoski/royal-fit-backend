@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import { container } from "tsyringe"
 import { UpdatePedidoUseCase } from "./update-pedido-use-case"
-// import { io } from "@shared/infra/http/server"
+import { io } from "@shared/infra/http/server"
 
 class UpdatePedidoController {
   async handle(request: Request, response: Response): Promise<Response> {
@@ -22,6 +22,7 @@ class UpdatePedidoController {
       pedidoItemForm,
       impressoraIp,
       tipoEntrega,
+      impressao,
     } = request.body
 
     const { id } = request.params
@@ -47,6 +48,7 @@ class UpdatePedidoController {
         pedidoItemForm,
         impressoraIp,
         tipoEntrega,
+        impressao,
       })
       .then((pedidoResult) => {
         return pedidoResult
@@ -55,9 +57,9 @@ class UpdatePedidoController {
         return error
       })
 
-    // if (result.statusCode === 200) {
-    //   io.emit("novoPedido", result)
-    // }
+    if (result.statusCode === 200) {
+      io.emit("novoPedido", result)
+    }
 
     return response.status(result.statusCode).json(result)
   }

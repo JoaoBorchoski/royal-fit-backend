@@ -23,6 +23,9 @@ class PedidoItem {
   @Column({ name: "valor", nullable: true })
   valor?: Number
 
+  @Column({ name: "valor_produto", nullable: true })
+  valorProduto?: Number
+
   @Column({ name: "desabilitado", nullable: true, default: false })
   desabilitado?: boolean
 

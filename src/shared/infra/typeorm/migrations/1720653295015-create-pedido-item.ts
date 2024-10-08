@@ -27,6 +27,16 @@ export class CreatePedidoItem1720653295015 implements MigrationInterface {
             isNullable: true,
           },
           {
+            name: "valor_produto",
+            type: "numeric",
+            isNullable: true,
+          },
+          {
+            name: "valor",
+            type: "numeric",
+            isNullable: true,
+          },
+          {
             name: "desabilitado",
             type: "boolean",
             default: false,

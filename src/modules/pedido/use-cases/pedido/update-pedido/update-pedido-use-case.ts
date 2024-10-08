@@ -29,6 +29,7 @@ interface IRequest {
   pedidoItemForm: any[]
   impressoraIp?: string
   tipoEntrega?: number
+  impressao?: boolean
 }
 
 interface IPedidoItemCanhoto {
@@ -76,18 +77,12 @@ class UpdatePedidoUseCase {
     pedidoItemForm,
     impressoraIp = "45.227.182.222:9100",
     tipoEntrega,
+    impressao,
   }: IRequest): Promise<HttpResponse> {
     const queryRunner = getConnection().createQueryRunner()
     await queryRunner.startTransaction()
 
     try {
-      const oldPedido = await this.pedidoRepository.get(id)
-      const oldBalanco = await this.balancoRepository.getByClienteId(clienteId)
-      const cliente = await this.clienteRepository.get(clienteId)
-      const meioPagamento = await this.meioPagamentoRepository.get(meioPagamentoId)
-      const garrafoes = await this.garrafaoRepository.getByClienteId(clienteId)
-      let pedidoItemCanhoto: IPedidoItemCanhoto[] = []
-
       const pedido = await this.pedidoRepository.update(
         {
           id,
@@ -108,81 +103,127 @@ class UpdatePedidoUseCase {
         },
         queryRunner.manager
       )
+      let pedidoItemCanhoto: IPedidoItemCanhoto[] = []
+      const cliente = await this.clienteRepository.get(clienteId)
+      const meioPagamento = await this.meioPagamentoRepository.get(meioPagamentoId)
 
-      if (meioPagamentoId == "9751732c-4ed8-465f-96f1-2d2580b33a5d") {
-        await this.balancoRepository.updateWithQueryRunner(
-          {
-            id: oldBalanco.data.id,
-            clienteId,
-            saldoDevedor: oldBalanco.data.saldoDevedor - oldPedido.data.valorTotal + valorTotal,
-          },
-          queryRunner.manager
-        )
-      }
+      if (!impressao) {
+        const oldPedido = await this.pedidoRepository.get(id)
+        const oldBalanco = await this.balancoRepository.getByClienteId(clienteId)
+        const garrafoes = await this.garrafaoRepository.getByClienteId(clienteId)
+        const items = await this.pedidoItemRepository.getByPedidoId(id)
 
-      const verificarEstoqueEGarrafao = async (produtoId, quantidade, item, garrafoes, clienteId, queryRunner) => {
-        if (produtoId === "fbe43047-093b-496b-9c59-ce5c2ce66b34") {
-          if (!garrafoes.data) {
-            throw new AppError(`Cliente não possui garrafão cadastrado`)
-          }
-          if (garrafoes.data.quantidade + item.data.quantidade < quantidade) {
-            throw new AppError(`Quantidade de garrafões insuficiente`)
-          }
-          await this.garrafaoRepository.updateWithQueryRunner(
+        if (meioPagamentoId == "9751732c-4ed8-465f-96f1-2d2580b33a5d") {
+          await this.balancoRepository.updateWithQueryRunner(
             {
-              id: garrafoes.data.id,
-              clienteId: clienteId,
-              quantidade: garrafoes.data.quantidade + item.data.quantidade - quantidade,
-              desabilitado: false,
+              id: oldBalanco.data.id,
+              clienteId,
+              saldoDevedor: oldBalanco.data.saldoDevedor - oldPedido.data.valorTotal + valorTotal,
             },
             queryRunner.manager
           )
         }
-      }
 
-      for await (const pedidoItem of pedidoItemForm) {
-        const estoqueAtual = await this.estoqueRepository.getByProdutoId(pedidoItem.produtoId)
-        const produto = await this.produtoRepository.get(pedidoItem.produtoId)
-        const item = await this.pedidoItemRepository.getByPedidoAndPedidoItemId(pedido.data.id, pedidoItem.id)
+        const verificarEstoqueEGarrafao = async (produtoId, quantidade, item, garrafoes, clienteId, queryRunner) => {
+          if (produtoId === "fbe43047-093b-496b-9c59-ce5c2ce66b34") {
+            if (!garrafoes.data) {
+              throw new AppError(`Cliente não possui garrafão cadastrado`)
+            }
+            if (garrafoes.data.quantidade + item.data.quantidade < quantidade) {
+              throw new AppError(`Quantidade de garrafões insuficiente`)
+            }
+            await this.garrafaoRepository.updateWithQueryRunner(
+              {
+                id: garrafoes.data.id,
+                clienteId: clienteId,
+                quantidade: garrafoes.data.quantidade + item.data.quantidade - quantidade,
+                desabilitado: false,
+              },
+              queryRunner.manager
+            )
+          }
+        }
 
-        if (item.data) {
-          if (!estoqueAtual.data || estoqueAtual.data.quantidade + item.data.quantidade < pedidoItem.quantidade) {
-            throw new AppError(`Estoque insuficiente ou estoque não cadastrado para o produto ${produto.data.nome}`)
+        for await (const pedidoItem of pedidoItemForm) {
+          const estoqueAtual = await this.estoqueRepository.getByProdutoId(pedidoItem.produtoId)
+          const produto = await this.produtoRepository.get(pedidoItem.produtoId)
+
+          const pedidoItemExistente = items.data.find((item) => item.produtoId === pedidoItem.produtoId)
+
+          const verificarQuantidadeEstoque = (quantidadeEstoque: number, quantidadePedido: number, quantidadeAdicional: number = 0) => {
+            return !quantidadeEstoque || quantidadeEstoque < quantidadePedido || quantidadeEstoque + quantidadeAdicional < quantidadePedido
           }
 
-          await verificarEstoqueEGarrafao(produto.data.id, pedidoItem.quantidade, item, garrafoes, clienteId, queryRunner)
+          if (verificarQuantidadeEstoque(estoqueAtual.data?.quantidade, pedidoItem.quantidade, pedidoItemExistente?.quantidade || 0)) {
+            throw new AppError(`Estoque insuficiente ou não cadastrado para o produto ${produto.data.nome}`)
+          }
+
+          const novaQuantidade = estoqueAtual.data.quantidade - pedidoItem.quantidade
+
+          const processarPedidoItem = async (
+            produtoId: string,
+            quantidade: number,
+            valor: number,
+            pedidoId: string,
+            pedidoItemId?: string
+          ) => {
+            await this.pedidoItemRepository.createWithQueryRunner(
+              {
+                id: pedidoItemId,
+                pedidoId,
+                produtoId,
+                quantidade,
+                valor,
+                valorProduto: produto.data.preco,
+              },
+              queryRunner.manager
+            )
+
+            pedidoItemCanhoto.push({
+              produtoNome: produto.data.nome,
+              quantidade,
+              valorTotal: quantidade * produto.data.preco,
+            })
+          }
+
+          if (pedidoItemExistente) {
+            await verificarEstoqueEGarrafao(
+              produto.data.id,
+              pedidoItem.quantidade,
+              { data: pedidoItemExistente },
+              garrafoes,
+              clienteId,
+              queryRunner
+            )
+
+            await this.pedidoItemRepository.deleteByPedidoIdWithQueryRunner(pedidoItemExistente.id, queryRunner.manager)
+            await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, novaQuantidade, queryRunner.manager)
+
+            await processarPedidoItem(pedidoItem.produtoId, pedidoItem.quantidade, pedidoItem.valor, pedido.data.id)
+          } else {
+            await verificarEstoqueEGarrafao(
+              produto.data.id,
+              pedidoItem.quantidade,
+              { data: { quantidade: 0 } },
+              garrafoes,
+              clienteId,
+              queryRunner
+            )
+
+            await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, novaQuantidade, queryRunner.manager)
+            await processarPedidoItem(pedidoItem.produtoId, pedidoItem.quantidade, pedidoItem.valor, pedido.data.id, pedidoItem.id)
+          }
         }
-
-        const novaQuantidade = estoqueAtual.data.quantidade - pedidoItem.quantidade
-        if (!estoqueAtual.data || estoqueAtual.data.quantidade < pedidoItem.quantidade) {
-          throw new AppError(`Estoque insuficiente ou estoque não cadastrado para o produto ${produto.data.nome}`)
+      }
+      if (impressao) {
+        for await (const pedidoItem of pedidoItemForm) {
+          const produto = await this.produtoRepository.get(pedidoItem.produtoId)
+          pedidoItemCanhoto.push({
+            produtoNome: produto.data.nome,
+            quantidade: +pedidoItem.quantidade,
+            valorTotal: +pedidoItem.quantidade * +produto.data.preco,
+          })
         }
-
-        await verificarEstoqueEGarrafao(
-          produto.data.id,
-          pedidoItem.quantidade,
-          { data: { quantidade: 0 } },
-          garrafoes,
-          clienteId,
-          queryRunner
-        )
-
-        await this.pedidoItemRepository.deleteByPedidoIdWithQueryRunner(pedidoItem.id, queryRunner.manager)
-        await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, novaQuantidade, queryRunner.manager)
-        await this.pedidoItemRepository.createWithQueryRunner(
-          {
-            pedidoId: pedido.data.id,
-            produtoId: pedidoItem.produtoId,
-            quantidade: pedidoItem.quantidade,
-            valor: pedidoItem.valor,
-          },
-          queryRunner.manager
-        )
-        pedidoItemCanhoto.push({
-          produtoNome: produto.data.nome,
-          quantidade: +pedidoItem.quantidade,
-          valorTotal: +pedidoItem.quantidade * +produto.data.preco,
-        })
       }
 
       let printer = new ThermalPrinter({
