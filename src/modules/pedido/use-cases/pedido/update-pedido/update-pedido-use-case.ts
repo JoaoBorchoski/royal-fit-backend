@@ -179,11 +179,43 @@ class UpdatePedidoUseCase {
               queryRunner.manager
             )
 
+            const produtoIdEspecial = "fbe43047-093b-496b-9c59-ce5c2ce66b34"
+            const isProdutoEspecial = produto.data.id === produtoIdEspecial
+            let precoCanhoto = produto.data.preco
+
+            const aplicarPreco = (faixas: { limite: number; preco: number }[]) => {
+              const faixa = faixas.find((f) => pedidoItem.quantidade <= f.limite) || faixas[faixas.length - 1]
+              precoCanhoto = faixa.preco
+            }
+
+            if (isProdutoEspecial) {
+              if (tipoEntrega === 1) {
+                aplicarPreco([
+                  { limite: 49, preco: 5.8 },
+                  { limite: 99, preco: 5.7 },
+                  { limite: Infinity, preco: 5.6 },
+                ])
+              } else if (tipoEntrega === 2) {
+                aplicarPreco([
+                  { limite: 19, preco: 6.9 },
+                  { limite: 29, preco: 6.8 },
+                  { limite: 49, preco: 6.5 },
+                  { limite: Infinity, preco: 6.4 },
+                ])
+              }
+            }
+
             pedidoItemCanhoto.push({
               produtoNome: produto.data.nome,
               quantidade,
-              valorTotal: quantidade * produto.data.preco,
+              valorTotal: quantidade * +precoCanhoto,
             })
+
+            // pedidoItemCanhoto.push({
+            //   produtoNome: produto.data.nome,
+            //   quantidade,
+            //   valorTotal: quantidade * produto.data.preco,
+            // })
           }
 
           if (pedidoItemExistente) {
@@ -218,11 +250,44 @@ class UpdatePedidoUseCase {
       if (impressao) {
         for await (const pedidoItem of pedidoItemForm) {
           const produto = await this.produtoRepository.get(pedidoItem.produtoId)
+
+          const produtoIdEspecial = "fbe43047-093b-496b-9c59-ce5c2ce66b34"
+          const isProdutoEspecial = produto.data.id === produtoIdEspecial
+          let precoCanhoto = produto.data.preco
+
+          const aplicarPreco = (faixas: { limite: number; preco: number }[]) => {
+            const faixa = faixas.find((f) => pedidoItem.quantidade <= f.limite) || faixas[faixas.length - 1]
+            precoCanhoto = faixa.preco
+          }
+
+          if (isProdutoEspecial) {
+            if (tipoEntrega === 1) {
+              aplicarPreco([
+                { limite: 49, preco: 5.8 },
+                { limite: 99, preco: 5.7 },
+                { limite: Infinity, preco: 5.6 },
+              ])
+            } else if (tipoEntrega === 2) {
+              aplicarPreco([
+                { limite: 19, preco: 6.9 },
+                { limite: 29, preco: 6.8 },
+                { limite: 49, preco: 6.5 },
+                { limite: Infinity, preco: 6.4 },
+              ])
+            }
+          }
+
           pedidoItemCanhoto.push({
             produtoNome: produto.data.nome,
-            quantidade: +pedidoItem.quantidade,
-            valorTotal: +pedidoItem.quantidade * +produto.data.preco,
+            quantidade: +produto.data.quantidade,
+            valorTotal: +produto.data.quantidade * +precoCanhoto,
           })
+
+          // pedidoItemCanhoto.push({
+          //   produtoNome: produto.data.nome,
+          //   quantidade: +pedidoItem.quantidade,
+          //   valorTotal: +pedidoItem.quantidade * +produto.data.preco,
+          // })
         }
       }
 
