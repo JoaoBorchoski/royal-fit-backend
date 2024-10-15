@@ -172,7 +172,7 @@ class CreatePedidoUseCase {
 
         const produtoIdEspecial = "fbe43047-093b-496b-9c59-ce5c2ce66b34"
         const isProdutoEspecial = produto.data.id === produtoIdEspecial
-        let precoCanhoto = produto.data.preco
+        let precoCanhoto = +pedidoItem.preco
 
         const aplicarPreco = (faixas: { limite: number; preco: number }[]) => {
           const faixa = faixas.find((f) => pedidoItem.quantidade <= f.limite) || faixas[faixas.length - 1]

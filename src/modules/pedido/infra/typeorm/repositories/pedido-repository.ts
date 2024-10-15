@@ -6,6 +6,7 @@ import { noContent, serverError, ok, notFound, HttpResponse } from "@shared/help
 import { AppError } from "@shared/errors/app-error"
 import { PedidoItem } from "../entities/pedido-item"
 import { destructor } from "@utils/destructor"
+import { Desconto } from "@modules/clientes/infra/typeorm/entities/desconto"
 
 class PedidoRepository implements IPedidoRepository {
   private repository: Repository<Pedido>
@@ -282,6 +283,20 @@ class PedidoRepository implements IPedidoRepository {
       if (typeof pedido === "undefined") {
         return noContent()
       }
+
+      const descontos = await getRepository(Desconto)
+        .createQueryBuilder("des")
+        .select([
+          'des.id as "id"',
+          'des.clienteId as "clienteId"',
+          'des.produtoId as "produtoId"',
+          'des.desconto :: float as "desconto"',
+          'des.desabilitado as "desabilitado"',
+        ])
+        .where("des.clienteId = :clienteId", { clienteId: pedido.clienteId })
+        .getRawMany()
+
+      pedido.descontos = descontos
 
       const pedidoItens = await getRepository(PedidoItem)
         .createQueryBuilder("pedItem")

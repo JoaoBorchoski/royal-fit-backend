@@ -107,7 +107,7 @@ class UpdatePedidoUseCase {
       const cliente = await this.clienteRepository.get(clienteId)
       const meioPagamento = await this.meioPagamentoRepository.get(meioPagamentoId)
 
-      if (!impressao) {
+      if (!impressao || impressao != true) {
         const oldPedido = await this.pedidoRepository.get(id)
         const oldBalanco = await this.balancoRepository.getByClienteId(clienteId)
         const garrafoes = await this.garrafaoRepository.getByClienteId(clienteId)
@@ -154,7 +154,7 @@ class UpdatePedidoUseCase {
             return !quantidadeEstoque || quantidadeEstoque < quantidadePedido || quantidadeEstoque + quantidadeAdicional < quantidadePedido
           }
 
-          if (verificarQuantidadeEstoque(estoqueAtual.data?.quantidade, pedidoItem.quantidade, pedidoItemExistente?.quantidade || 0)) {
+          if (verificarQuantidadeEstoque(estoqueAtual.data.quantidade, pedidoItem.quantidade, pedidoItemExistente?.quantidade || 0)) {
             throw new AppError(`Estoque insuficiente ou não cadastrado para o produto ${produto.data.nome}`)
           }
 
@@ -181,7 +181,7 @@ class UpdatePedidoUseCase {
 
             const produtoIdEspecial = "fbe43047-093b-496b-9c59-ce5c2ce66b34"
             const isProdutoEspecial = produto.data.id === produtoIdEspecial
-            let precoCanhoto = produto.data.preco
+            let precoCanhoto = +pedidoItem.preco
 
             const aplicarPreco = (faixas: { limite: number; preco: number }[]) => {
               const faixa = faixas.find((f) => pedidoItem.quantidade <= f.limite) || faixas[faixas.length - 1]
@@ -253,7 +253,7 @@ class UpdatePedidoUseCase {
 
           const produtoIdEspecial = "fbe43047-093b-496b-9c59-ce5c2ce66b34"
           const isProdutoEspecial = produto.data.id === produtoIdEspecial
-          let precoCanhoto = produto.data.preco
+          let precoCanhoto = +pedidoItem.preco
 
           const aplicarPreco = (faixas: { limite: number; preco: number }[]) => {
             const faixa = faixas.find((f) => pedidoItem.quantidade <= f.limite) || faixas[faixas.length - 1]
@@ -279,8 +279,8 @@ class UpdatePedidoUseCase {
 
           pedidoItemCanhoto.push({
             produtoNome: produto.data.nome,
-            quantidade: +produto.data.quantidade,
-            valorTotal: +produto.data.quantidade * +precoCanhoto,
+            quantidade: +pedidoItem.quantidade,
+            valorTotal: +pedidoItem.quantidade * +precoCanhoto,
           })
 
           // pedidoItemCanhoto.push({
