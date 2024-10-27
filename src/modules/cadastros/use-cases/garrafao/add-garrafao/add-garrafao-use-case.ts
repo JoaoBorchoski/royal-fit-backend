@@ -52,6 +52,7 @@ class AddGarrafaoUseCase {
       const oldGarrafao = await this.garrafaoRepository.getByClienteId(clienteId)
       const cliente = await this.clienteRepository.get(clienteId)
       const estoque = await this.estoqueRepository.getByProdutoId("fbe43047-093b-496b-9c59-ce5c2ce66b34")
+      const estoque10LRetornavel = await this.estoqueRepository.getByProdutoId("83ee8914-44d9-48be-9b9b-55057bb44787") // 28f4726e-db0f-4d48-88a0-64f0ec4d697b
       const bonificacao = await this.bonificacaoRepository.getByClienteId(clienteId)
 
       let result
@@ -64,6 +65,12 @@ class AddGarrafaoUseCase {
             isRoyalfit,
             tamanhoCasco,
           },
+          queryRunner.manager
+        )
+
+        await this.estoqueRepository.updateEstoqueQuantidade(
+          estoque10LRetornavel.data.id,
+          estoque10LRetornavel.data.quantidade + quantidade,
           queryRunner.manager
         )
 
@@ -93,20 +100,34 @@ class AddGarrafaoUseCase {
         )
 
         if (isRoyalfit) {
-          const totalVendidoAtual = bonificacao.data.totalVendido + quantidade
-          const totalBonificacoesPossiveis = Math.floor(totalVendidoAtual / 10)
-          const bonificacoesUsadas = await this.pedidoBonificadoRepository.getBonificacoesUsadas(clienteId)
-          const totalBonificacoesDisponiveis = totalBonificacoesPossiveis - bonificacoesUsadas.data.quantidade
-          const bonificacaoDup = cliente.data.bonificacaoDuplicada ? 2 : 1
+          const totalDisponivel = +bonificacao.data.bonificacaoDisponivel
+          const novaEntrada = quantidade / 10
+          const novoTotal = totalDisponivel + novaEntrada
+
           await this.bonificacaoRepository.updateWithQueryRunner(
             {
               id: bonificacao.data.id,
               clienteId: clienteId,
               totalVendido: bonificacao.data.totalVendido + quantidade,
-              bonificacaoDisponivel: totalBonificacoesDisponiveis < 0 ? 0 : totalBonificacoesDisponiveis * bonificacaoDup,
+              bonificacaoDisponivel: novoTotal,
             },
             queryRunner.manager
           )
+
+          // const totalVendidoAtual = bonificacao.data.totalVendido + quantidade
+          // const totalBonificacoesPossiveis = Math.floor(totalVendidoAtual / 10)
+          // const bonificacoesUsadas = await this.pedidoBonificadoRepository.getBonificacoesUsadas(clienteId)
+          // const totalBonificacoesDisponiveis = totalBonificacoesPossiveis - bonificacoesUsadas.data.quantidade
+          // const bonificacaoDup = cliente.data.bonificacaoDuplicada ? 2 : 1
+          // await this.bonificacaoRepository.updateWithQueryRunner(
+          //   {
+          //     id: bonificacao.data.id,
+          //     clienteId: clienteId,
+          //     totalVendido: bonificacao.data.totalVendido + quantidade,
+          //     bonificacaoDisponivel: totalBonificacoesDisponiveis < 0 ? 0 : totalBonificacoesDisponiveis * bonificacaoDup,
+          //   },
+          //   queryRunner.manager
+          // )
         }
       }
 
@@ -130,6 +151,8 @@ class AddGarrafaoUseCase {
         printer.drawLine()
         printer.println(`Cliente: ${cliente.data.nome}`)
         printer.println(`Entrada de: ${quantidade} garrafões`)
+        printer.println(`Tipo do Garrafão: ${tamanhoCasco}L`)
+        printer.println(`Tipo do Casco: ${isRoyalfit ? "Royalfit" : "Não Royalfit"}`)
         printer.println(`Data: ${new Date().toLocaleDateString("pt-BR")}`)
         printer.println(`Hora: ${dataAtual.toLocaleTimeString("pt-BR")}`)
         printer.drawLine()
@@ -145,6 +168,8 @@ class AddGarrafaoUseCase {
         printer.drawLine()
         printer.println(`Cliente: ${cliente.data.nome}`)
         printer.println(`Entrada de: ${quantidade} garrafões`)
+        printer.println(`Tipo do Garrafão: ${tamanhoCasco}L`)
+        printer.println(`Tipo do Casco: ${isRoyalfit ? "Royalfit" : "Não Royalfit"}`)
         printer.println(`Data: ${new Date().toLocaleDateString("pt-BR")}`)
         printer.println(`Hora: ${dataAtual.toLocaleTimeString("pt-BR")}`)
         printer.drawLine()

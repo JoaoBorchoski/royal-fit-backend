@@ -180,7 +180,7 @@ class BalancoRepository implements IBalancoRepository {
           'a.nome as "clienteNome"',
           'bal.saldoDevedor :: float as "saldoDevedor"',
           'bal.desabilitado as "desabilitado"',
-          "bon.bonificacaoDisponivel as bonificacaoDisponivel",
+          "FLOOR(bon.bonificacaoDisponivel) AS bonificacaoDisponivel",
           'gar.quantidade as "garrafoesDisponivel"',
           'a.isBonificado as "isBonificado"',
         ])

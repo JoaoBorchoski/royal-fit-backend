@@ -110,17 +110,26 @@ class EntradaGarrafaoRepository implements IEntradaGarrafaoRepository {
   }
 
   // select
-  async select(filter: string): Promise<HttpResponse> {
+  async select(filter: string, clienteId: string): Promise<HttpResponse> {
     try {
       const entradasGarrafao = await this.repository
         .createQueryBuilder("ent")
-        .select(['ent. as "value"', 'ent. as "label"'])
-        .where("ent. ilike :filter", { filter: `${filter}%` })
-        .addOrderBy("ent.")
+        .select([
+          'ent.id as "value"',
+          'ent.quantidade as "label"',
+          "TO_CHAR(ent.createdAt, 'DD/MM/YYYY') as \"date\"",
+          "CASE WHEN ent.isRoyalfit THEN 'Sim' ELSE 'Não' END as \"isRoyalfit\"",
+          "CONCAT(ent.tamanhoCasco, 'L') as \"tamanhoCasco\"",
+          'ent.clienteId as "clienteId"',
+        ])
+        .where("CAST(ent.quantidade as varchar) ilike :filter", { filter: `${filter}%` })
+        .andWhere("ent.clienteId = :clienteId", { clienteId })
+        .addOrderBy("ent.createdAt", "DESC")
         .getRawMany()
 
       return ok(entradasGarrafao)
     } catch (err) {
+      console.log(err)
       return serverError(err)
     }
   }
@@ -171,10 +180,12 @@ class EntradaGarrafaoRepository implements IEntradaGarrafaoRepository {
         .select([
           'ent.id as "id"',
           'ent.clienteId as "clienteId"',
-          'a.name as "clienteName"',
+          'a.nome as "clienteNome"',
           'ent.quantidade as "quantidade"',
           'ent.isRoyalfit as "isRoyalfit"',
+          'ent.tamanhoCasco as "tamanhoCasco"',
           'ent.desabilitado as "desabilitado"',
+          'ent.createdAt as "data"',
         ])
         .leftJoin("ent.clienteId", "a")
         .where("ent.id = :id", { id })
@@ -186,6 +197,7 @@ class EntradaGarrafaoRepository implements IEntradaGarrafaoRepository {
 
       return ok(entradaGarrafao)
     } catch (err) {
+      console.log(err)
       return serverError(err)
     }
   }

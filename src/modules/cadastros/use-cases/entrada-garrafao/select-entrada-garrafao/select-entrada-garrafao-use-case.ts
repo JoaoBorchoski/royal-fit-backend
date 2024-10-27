@@ -6,6 +6,7 @@ interface ResponseProps {
   hasNext?: boolean
   value?: string
   label?: string
+  clienteId?: string
 }
 
 @injectable()
@@ -15,8 +16,8 @@ class SelectEntradaGarrafaoUseCase {
     private entradaGarrafaoRepository: IEntradaGarrafaoRepository
   ) {}
 
-  async execute({ filter }): Promise<ResponseProps> {
-    const entradasGarrafao = await this.entradaGarrafaoRepository.select(filter)
+  async execute({ filter, clienteId }): Promise<ResponseProps> {
+    const entradasGarrafao = await this.entradaGarrafaoRepository.select(filter, clienteId)
 
     const newEntradasGarrafao = {
       items: entradasGarrafao.data,

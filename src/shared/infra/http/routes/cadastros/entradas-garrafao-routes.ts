@@ -10,6 +10,7 @@ import { UpdateEntradaGarrafaoController } from "@modules/cadastros/use-cases/en
 import { DeleteEntradaGarrafaoController } from "@modules/cadastros/use-cases/entrada-garrafao/delete-entrada-garrafao/delete-entrada-garrafao-controller"
 import { MultiDeleteEntradaGarrafaoController } from "@modules/cadastros/use-cases/entrada-garrafao/multi-delete-entrada-garrafao/multi-delete-entrada-garrafao-controller"
 import { CreateRelatorioGarrafaoController } from "@modules/cadastros/use-cases/entrada-garrafao/create-relatorios-garrafoes/create-relatorios-garrafoes-controller"
+import { ImprimirReciboEntradaGarrafaoController } from "@modules/cadastros/use-cases/entrada-garrafao/imprimir-recibo-entrada-garrafao/imprimir-recibo-entrada-garrafao-controller"
 
 const entradasGarrafaoRoutes = Router()
 
@@ -23,6 +24,7 @@ const updateEntradaGarrafaoController = new UpdateEntradaGarrafaoController()
 const deleteEntradaGarrafaoController = new DeleteEntradaGarrafaoController()
 const multiDeleteEntradaGarrafaoController = new MultiDeleteEntradaGarrafaoController()
 const createRelatorioGarrafoesController = new CreateRelatorioGarrafaoController()
+const imprimirReciboEntradaGarrafaoController = new ImprimirReciboEntradaGarrafaoController()
 
 entradasGarrafaoRoutes.post("/", ensureAuthenticated, createEntradaGarrafaoController.handle)
 entradasGarrafaoRoutes.post("/list", ensureAuthenticated, listEntradaGarrafaoController.handle)
@@ -30,6 +32,7 @@ entradasGarrafaoRoutes.post("/relatorio-cliente/:id", ensureAuthenticated, creat
 entradasGarrafaoRoutes.post("/count", ensureAuthenticated, countEntradaGarrafaoController.handle)
 entradasGarrafaoRoutes.get("/select/:id", ensureAuthenticated, idSelectEntradaGarrafaoController.handle)
 entradasGarrafaoRoutes.get("/select", ensureAuthenticated, selectEntradaGarrafaoController.handle)
+entradasGarrafaoRoutes.post("/imprimir-recibo", ensureAuthenticated, imprimirReciboEntradaGarrafaoController.handle)
 entradasGarrafaoRoutes.get("/:id", ensureAuthenticated, getEntradaGarrafaoController.handle)
 entradasGarrafaoRoutes.put("/:id", ensureAuthenticated, updateEntradaGarrafaoController.handle)
 entradasGarrafaoRoutes.delete("/:id", ensureAuthenticated, deleteEntradaGarrafaoController.handle)

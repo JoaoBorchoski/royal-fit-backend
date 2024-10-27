@@ -15,7 +15,7 @@ interface IEntradaGarrafaoRepository {
   list(search: string, page: number, rowsPerPage: number, order: string, filter: string): Promise<HttpResponse>
 
   // select
-  select(filter: string): Promise<HttpResponse>
+  select(filter: string, clienteId: string): Promise<HttpResponse>
 
   // id select
   idSelect(id: string): Promise<HttpResponse>
