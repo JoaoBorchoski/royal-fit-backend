@@ -230,7 +230,10 @@ class PedidoRepository implements IPedidoRepository {
     @TransactionManager() transactionManager: EntityManager
   ): Promise<HttpResponse> {
     try {
-      let query = transactionManager.createQueryBuilder(Pedido, "ped").select(['ped.id as "id"']).leftJoin("ped.clienteId", "a")
+      let query = transactionManager
+        .createQueryBuilder(Pedido, "ped")
+        .select(['ped.id as "id"'])
+        .leftJoin("ped.clienteId", "a")
 
       if (filter) {
         query = query.where(filter)
@@ -456,6 +459,8 @@ class PedidoRepository implements IPedidoRepository {
           Clientes c ON p.cliente_id = c.id
         WHERE 
           p.data >= $1 AND p.data <= $2
+        AND 
+          p.desabilitado = false
         AND
           c.id = $3
         ORDER BY
@@ -471,12 +476,15 @@ class PedidoRepository implements IPedidoRepository {
             'pedItem.id as "id"',
             'pedItem.produtoId as "produtoId"',
             'prod.nome as "produtoNome"',
-            'pedItem.valor_produto :: float as "preco"',
+            'ROUND((prod.preco * (1 - COALESCE(des.desconto, 0) / 100)), 2) :: float as "preco"',
             'pedItem.quantidade as "quantidade"',
-            'CAST(pedItem.quantidade * pedItem.valor_produto AS float) as "valor"',
+            'pedItem.valor :: float as "valor"',
           ])
           .leftJoin("pedItem.pedidoId", "ped")
           .leftJoin("pedItem.produtoId", "prod")
+          .leftJoin("descontos", "des", "des.produto_id = pedItem.produto_id AND des.cliente_id = :clienteId", {
+            clienteId,
+          })
           .where("pedItem.pedidoId = :id", { id: pedido.id })
           .getRawMany()
 

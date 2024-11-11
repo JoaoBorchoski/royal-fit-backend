@@ -1,7 +1,7 @@
 import { app } from "./app"
 import { mqWorkerRun } from "@shared/infra/mq/mq-worker-run"
 
-app.listen(3333, () => console.log("Server is running on port 3333!"))
+app.listen(5500, () => console.log("Server is running on port 5500!"))
 
 mqWorkerRun()
 

@@ -120,13 +120,15 @@ class CreatePedidoUseCase {
         })
 
       for await (const pedidoItem of pedidoItemForm) {
+        console.log("pedidoItem", pedidoItem)
+
         const estoqueAtual = await this.estoqueRepository.getByProdutoId(pedidoItem.produtoId)
         const produto = await this.produtoRepository.get(pedidoItem.produtoId)
         const garrafoes = await this.garrafaoRepository.getByClienteId(clienteId)
 
-        console.log("estoqueAtual", estoqueAtual)
-        console.log("estoqueAtual.data.quantidade", estoqueAtual.data.quantidade)
-        console.log("pedidoItem.quantidade", pedidoItem.quantidade)
+        // console.log("estoqueAtual", estoqueAtual)
+        // console.log("estoqueAtual.data.quantidade", estoqueAtual.data.quantidade)
+        // console.log("pedidoItem.quantidade", pedidoItem.quantidade)
 
         if (!estoqueAtual.data || estoqueAtual.data.quantidade < pedidoItem.quantidade) {
           throw new AppError(`Estoque insuficiente ou estoque não cadastrado para o produto ${produto.data.nome}`)
@@ -152,7 +154,10 @@ class CreatePedidoUseCase {
           )
         }
 
-        if (produto.data.id == "fbe43047-093b-496b-9c59-ce5c2ce66b34" || produto.data.id == "907a8147-dada-4532-82a7-0346666792c9") {
+        if (
+          produto.data.id == "fbe43047-093b-496b-9c59-ce5c2ce66b34" ||
+          produto.data.id == "907a8147-dada-4532-82a7-0346666792c9"
+        ) {
           newBonificacao += Math.floor(pedidoItem.quantidade / 10)
           newTotalVendido += pedidoItem.quantidade
         }
@@ -286,7 +291,9 @@ class CreatePedidoUseCase {
           ])
         })
         printer.newLine()
-        printer.println(`Desconto: R$ ${parseFloat(desconto.toString().replace(",", ".")).toFixed(2).replace(".", ",")} ${desconto}`)
+        printer.println(
+          `Desconto: R$ ${parseFloat(desconto.toString().replace(",", ".")).toFixed(2).replace(".", ",")} ${desconto}`
+        )
         printer.println(
           `Total: R$ ${parseFloat((valorTotal - desconto).toString().replace(",", "."))
             .toFixed(2)
@@ -334,7 +341,9 @@ class CreatePedidoUseCase {
           ])
         })
         printer.newLine()
-        printer.println(`Desconto: R$ ${parseFloat(desconto.toString().replace(",", ".")).toFixed(2).replace(".", ",")} ${desconto}`)
+        printer.println(
+          `Desconto: R$ ${parseFloat(desconto.toString().replace(",", ".")).toFixed(2).replace(".", ",")} ${desconto}`
+        )
         printer.println(
           `Total: R$ ${parseFloat((valorTotal - desconto).toString().replace(",", "."))
             .toFixed(2)

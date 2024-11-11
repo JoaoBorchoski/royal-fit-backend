@@ -35,12 +35,12 @@ class CreatePedidoBonificadoUseCase {
     desabilitado,
   }: IRequest): Promise<PedidoBonificado> {
     try {
-      const garrafao = await this.garrafaoRepository.getByClienteId(clienteId)
+      // const garrafao = await this.garrafaoRepository.getByClienteId(clienteId)
       const cliente = await this.clienteRepository.get(clienteId)
 
-      if (!garrafao.data || garrafao.data.quantidade < quantidade) {
-        throw new AppError("Quantidade de garrafões insuficiente")
-      }
+      // if (!garrafao.data || garrafao.data.quantidade < quantidade) {
+      //   throw new AppError("Quantidade de garrafões insuficiente")
+      // }
 
       const result = await this.pedidoBonificadoRepository
         .create({
