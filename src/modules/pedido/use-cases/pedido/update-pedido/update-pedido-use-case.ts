@@ -36,6 +36,7 @@ interface IPedidoItemCanhoto {
   produtoNome: string
   quantidade: number
   valorTotal: number
+  preco?: number
 }
 
 @injectable()
@@ -202,6 +203,10 @@ class UpdatePedidoUseCase {
                   { limite: 49, preco: 6.5 },
                   { limite: Infinity, preco: 6.4 },
                 ])
+              } else if (tipoEntrega === 3) {
+                aplicarPreco([{ limite: Infinity, preco: 7.95 }])
+              } else if (tipoEntrega === 4) {
+                aplicarPreco([{ limite: Infinity, preco: 6.7 }])
               }
             }
 
@@ -274,6 +279,10 @@ class UpdatePedidoUseCase {
                 { limite: 49, preco: 6.5 },
                 { limite: Infinity, preco: 6.4 },
               ])
+            } else if (tipoEntrega === 3) {
+              aplicarPreco([{ limite: Infinity, preco: 7.95 }])
+            } else if (tipoEntrega === 4) {
+              aplicarPreco([{ limite: Infinity, preco: 6.7 }])
             }
           }
 
@@ -281,6 +290,7 @@ class UpdatePedidoUseCase {
             produtoNome: produto.data.nome,
             quantidade: +pedidoItem.quantidade,
             valorTotal: +pedidoItem.quantidade * +precoCanhoto,
+            preco: +precoCanhoto,
           })
 
           // pedidoItemCanhoto.push({
@@ -323,15 +333,20 @@ class UpdatePedidoUseCase {
         printer.tableCustom([
           { text: "Produto", align: "LEFT", width: 0.5 },
           { text: "Qtd", align: "CENTER", width: 0.1 },
-          { text: "Preço", align: "RIGHT", width: 0.4 },
+          { text: "Uni", align: "CENTER", width: 0.1 },
+          { text: "Preço", align: "RIGHT", width: 0.3 },
         ])
         printer.newLine()
         pedidoItemCanhoto.map((item) => {
-          const valorFormatado = `R$ ${parseFloat(item.valorTotal.toString().replace(",", ".")).toFixed(2).replace(".", ",")}`
           printer.tableCustom([
             { text: item.produtoNome, align: "LEFT", width: 0.5 },
             { text: item.quantidade.toString(), align: "CENTER", width: 0.1 },
-            { text: valorFormatado.trim(), align: "RIGHT", width: 0.4 },
+            { text: item.preco.toString(), align: "CENTER", width: 0.1 },
+            {
+              text: `R$ ${parseFloat(item.valorTotal.toString().replace(",", ".")).toFixed(2).replace(".", ",")}`,
+              align: "RIGHT",
+              width: 0.3,
+            },
           ])
         })
         printer.newLine()

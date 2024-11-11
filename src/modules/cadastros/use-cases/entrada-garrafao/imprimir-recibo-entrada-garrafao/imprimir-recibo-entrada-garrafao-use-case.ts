@@ -15,7 +15,7 @@ class ImprimirReciboEntradaGarrafaoUseCase {
 
     let printer = new ThermalPrinter({
       type: PrinterTypes.EPSON,
-      // type: 'epson',
+      // type: "epson",
       interface: `tcp://${impressoraIp}`,
       characterSet: CharacterSet.PC860_PORTUGUESE,
       options: {

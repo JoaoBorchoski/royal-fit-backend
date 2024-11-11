@@ -37,6 +37,7 @@ interface IPedidoItemCanhoto {
   produtoNome: string
   quantidade: number
   valorTotal: number
+  preco: number
 }
 
 @injectable()
@@ -123,6 +124,10 @@ class CreatePedidoUseCase {
         const produto = await this.produtoRepository.get(pedidoItem.produtoId)
         const garrafoes = await this.garrafaoRepository.getByClienteId(clienteId)
 
+        console.log("estoqueAtual", estoqueAtual)
+        console.log("estoqueAtual.data.quantidade", estoqueAtual.data.quantidade)
+        console.log("pedidoItem.quantidade", pedidoItem.quantidade)
+
         if (!estoqueAtual.data || estoqueAtual.data.quantidade < pedidoItem.quantidade) {
           throw new AppError(`Estoque insuficiente ou estoque não cadastrado para o produto ${produto.data.nome}`)
         }
@@ -176,6 +181,7 @@ class CreatePedidoUseCase {
 
         const aplicarPreco = (faixas: { limite: number; preco: number }[]) => {
           const faixa = faixas.find((f) => pedidoItem.quantidade <= f.limite) || faixas[faixas.length - 1]
+
           precoCanhoto = faixa.preco
         }
 
@@ -193,13 +199,18 @@ class CreatePedidoUseCase {
               { limite: 49, preco: 6.5 },
               { limite: Infinity, preco: 6.4 },
             ])
+          } else if (tipoEntrega === 3) {
+            aplicarPreco([{ limite: Infinity, preco: 7.95 }])
+          } else if (tipoEntrega === 4) {
+            aplicarPreco([{ limite: Infinity, preco: 6.7 }])
           }
         }
 
         pedidoItemCanhoto.push({
           produtoNome: produto.data.nome,
           quantidade: +prod.data.quantidade,
-          valorTotal: +prod.data.quantidade * +precoCanhoto,
+          valorTotal: isProdutoEspecial ? +prod.data.quantidade * +precoCanhoto : pedidoItem.valor,
+          preco: +precoCanhoto,
         })
       }
 
@@ -258,17 +269,19 @@ class CreatePedidoUseCase {
         printer.tableCustom([
           { text: "Produto", align: "LEFT", width: 0.5 },
           { text: "Qtd", align: "CENTER", width: 0.1 },
-          { text: "Preço", align: "RIGHT", width: 0.4 },
+          { text: "Uni", align: "CENTER", width: 0.1 },
+          { text: "Preço", align: "RIGHT", width: 0.3 },
         ])
         printer.newLine()
         pedidoItemCanhoto.map((item) => {
           printer.tableCustom([
             { text: item.produtoNome, align: "LEFT", width: 0.5 },
             { text: item.quantidade.toString(), align: "CENTER", width: 0.1 },
+            { text: item.preco.toString(), align: "CENTER", width: 0.1 },
             {
               text: `R$ ${parseFloat(item.valorTotal.toString().replace(",", ".")).toFixed(2).replace(".", ",")}`,
               align: "RIGHT",
-              width: 0.4,
+              width: 0.3,
             },
           ])
         })
@@ -304,17 +317,19 @@ class CreatePedidoUseCase {
         printer.tableCustom([
           { text: "Produto", align: "LEFT", width: 0.5 },
           { text: "Qtd", align: "CENTER", width: 0.1 },
-          { text: "Preço", align: "RIGHT", width: 0.4 },
+          { text: "Uni", align: "CENTER", width: 0.1 },
+          { text: "Preço", align: "RIGHT", width: 0.3 },
         ])
         printer.newLine()
         pedidoItemCanhoto.map((item) => {
           printer.tableCustom([
             { text: item.produtoNome, align: "LEFT", width: 0.5 },
             { text: item.quantidade.toString(), align: "CENTER", width: 0.1 },
+            { text: item.preco.toString(), align: "CENTER", width: 0.1 },
             {
               text: `R$ ${parseFloat(item.valorTotal.toString().replace(",", ".")).toFixed(2).replace(".", ",")}`,
               align: "RIGHT",
-              width: 0.4,
+              width: 0.3,
             },
           ])
         })
