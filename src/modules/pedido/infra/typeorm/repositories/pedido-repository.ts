@@ -230,10 +230,7 @@ class PedidoRepository implements IPedidoRepository {
     @TransactionManager() transactionManager: EntityManager
   ): Promise<HttpResponse> {
     try {
-      let query = transactionManager
-        .createQueryBuilder(Pedido, "ped")
-        .select(['ped.id as "id"'])
-        .leftJoin("ped.clienteId", "a")
+      let query = transactionManager.createQueryBuilder(Pedido, "ped").select(['ped.id as "id"']).leftJoin("ped.clienteId", "a")
 
       if (filter) {
         query = query.where(filter)
@@ -439,35 +436,27 @@ class PedidoRepository implements IPedidoRepository {
 
   async getPedidosByDataAndCliente(dataInicio: Date, dataFim: Date, clienteId: string): Promise<HttpResponse> {
     try {
-      const pedidos = await this.repository.query(
-        `
-        SELECT 
-          p.id AS "id",
-          p.data AS "data",
-          CAST(p.valor_total - p.desconto AS float) :: float AS "valorTotal",
-          p.desconto :: float AS "desconto",
-          a.id AS "funcionarioId",
-          a.nome AS "funcionarioNome",
-          c.id AS "clienteId",
-          c.nome AS "clienteNome",
-          p.sequencial AS "sequencial"
-        FROM 
-          Pedidos p
-        LEFT JOIN 
-          Funcionarios a ON p.funcionario_id = a.id
-        LEFT JOIN
-          Clientes c ON p.cliente_id = c.id
-        WHERE 
-          p.data >= $1 AND p.data <= $2
-        AND 
-          p.desabilitado = false
-        AND
-          c.id = $3
-        ORDER BY
-          p.sequencial ASC
-      `,
-        [dataInicio, dataFim, clienteId]
-      )
+      const pedidos = await this.repository
+        .createQueryBuilder("ped")
+        .select([
+          'ped.id as "id"',
+          'ped.data as "data"',
+          'ped.valorTotal :: float as "valorTotal"',
+          'ped.desconto :: float as "desconto"',
+          'a.id as "funcionarioId"',
+          'a.nome as "funcionarioNome"',
+          'c.id as "clienteId"',
+          'c.nome as "clienteNome"',
+          'ped.sequencial as "sequencial"',
+        ])
+        .leftJoin("ped.funcionarioId", "a")
+        .leftJoin("ped.clienteId", "c")
+        .where("ped.data >= :dataInicio", { dataInicio })
+        .andWhere("ped.data <= :dataFim", { dataFim })
+        .andWhere("ped.desabilitado = false")
+        .andWhere("c.id = :clienteId", { clienteId })
+        .orderBy("ped.sequencial", "ASC")
+        .getRawMany()
 
       for await (const pedido of pedidos) {
         const pedidoItens = await getRepository(PedidoItem)
@@ -500,30 +489,24 @@ class PedidoRepository implements IPedidoRepository {
 
   async getAllPedidosByData(dataInicio: Date, dataFim: Date): Promise<HttpResponse> {
     try {
-      const pedidos = await this.repository.query(
-        `
-        SELECT 
-          p.id AS "id",
-          p.data AS "data",
-          p.valor_total :: float AS "valorTotal",
-          a.id AS "funcionarioId",
-          a.nome AS "funcionarioNome",
-          c.id AS "clienteId",
-          c.nome AS "clienteNome",
-          b.saldo_devedor :: float AS "saldoDevedor"
-        FROM 
-          Pedidos p
-        LEFT JOIN 
-          Funcionarios a ON p.funcionario_id = a.id
-        LEFT JOIN
-          Clientes c ON p.cliente_id = c.id
-        LEFT JOIN
-          Balancos b ON c.id = b.cliente_id
-        WHERE 
-          p.data BETWEEN $1 AND $2
-      `,
-        [dataInicio, dataFim]
-      )
+      const pedidos = await this.repository
+        .createQueryBuilder("ped")
+        .select([
+          'ped.id as "id"',
+          'ped.data as "data"',
+          'ped.valorTotal :: float as "valorTotal"',
+          'a.id as "funcionarioId"',
+          'a.nome as "funcionarioNome"',
+          'c.id as "clienteId"',
+          'c.nome as "clienteNome"',
+          'b.saldoDevedor :: float as "saldoDevedor"',
+        ])
+        .leftJoin("ped.funcionarioId", "a")
+        .leftJoin("ped.clienteId", "c")
+        .leftJoin("balancos", "b", "c.id = b.clienteId")
+        .where("ped.data >= :dataInicio", { dataInicio })
+        .andWhere("ped.data <= :dataFim", { dataFim })
+        .getRawMany()
 
       const newPedidos = destructor({
         data: pedidos,

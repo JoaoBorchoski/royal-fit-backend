@@ -22,14 +22,15 @@ class CreateRelatorioPedidosTotaisUseCase {
 
   async execute({ dataInicio, dataFim }: IRequest): Promise<HttpResponse> {
     try {
-      const dataInicioFormatada = new Date(dataInicio)
       const dataFimFormatada = new Date(dataFim)
+      const dataInicioFormatada = new Date(dataInicio)
+      // dataFimFormatada.setHours(23, 59, 59, 999)
 
       if (dataInicioFormatada > dataFimFormatada) {
         throw new AppError("Data de início não pode ser maior que a data de fim")
       }
 
-      const pedidos = await this.pedidoRepository.getAllPedidosByData(dataInicioFormatada, dataFimFormatada)
+      const pedidos = await this.pedidoRepository.getAllPedidosByData(dataInicio, dataFim)
 
       const sheetName = "Sheet1"
       const emptyWorkbook = this.exportEmptyExcel(sheetName)
@@ -70,23 +71,12 @@ class CreateRelatorioPedidosTotaisUseCase {
   private async addDataToSheet(workbook: any, sheetName: string, data: any, dataInicio: Date, dataFim: Date) {
     const dataForExcel = []
     for await (const item of data) {
-      const pedidosBonificados = await this.pedidoBonificadoRepository.getAllByClienteIdAndData(
-        item.clienteId,
-        dataInicio,
-        dataFim
-      )
+      const pedidosBonificados = await this.pedidoBonificadoRepository.getAllByClienteIdAndData(item.clienteId, dataInicio, dataFim)
 
       const total = await item.pedidos.reduce((acc: number, pedido: any) => acc + pedido.valorTotal, 0)
       const totalBonificado = await pedidosBonificados.data.reduce((acc: number, pedido: any) => acc + pedido.quantidade, 0)
 
-      dataForExcel.push([
-        item.clienteNome,
-        item.pedidos.length,
-        totalBonificado,
-        item.saldoDevedor,
-        total - item.saldoDevedor,
-        total,
-      ])
+      dataForExcel.push([item.clienteNome, item.pedidos.length, totalBonificado, item.saldoDevedor, total - item.saldoDevedor, total])
     }
 
     XLSX.utils.sheet_add_aoa(workbook.Sheets[sheetName], dataForExcel, { origin: -1 })

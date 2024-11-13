@@ -57,7 +57,7 @@ class UpdatePedidoBonificadoUseCase {
 
     async function printReceipt() {
       const dataAtual = new Date()
-      dataAtual.setHours(dataAtual.getHours() - 3)
+      // dataAtual.setHours(dataAtual.getHours() - 3)
 
       printer.alignCenter()
       printer.println("Royal Fit")

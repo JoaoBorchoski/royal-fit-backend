@@ -259,27 +259,21 @@ class EntradaGarrafaoRepository implements IEntradaGarrafaoRepository {
 
   async getEntradasByDataAndCliente(dataInicio: Date, dataFim: Date, clienteId: string): Promise<HttpResponse> {
     try {
-      const entradas = await this.repository.query(
-        `
-        SELECT 
-          ent.id as "id",
-          ent.created_at as "data",
-          ent.quantidade as "quantidade",
-          ent.is_royalfit as "isRoyalfit",
-          ent.tamanho_casco as "tamanhoCasco"
-        FROM 
-          entrada_garrafao ent
-        LEFT JOIN
-          Clientes c ON ent.cliente_id = c.id
-        WHERE 
-          ent.created_at BETWEEN $1 AND $2
-        AND
-          c.id = $3
-        ORDER BY
-          ent.created_at 
-      `,
-        [dataInicio, dataFim, clienteId]
-      )
+      const entradas = await this.repository
+        .createQueryBuilder("ent")
+        .select([
+          'ent.id as "id"',
+          'ent.createdAt as "data"',
+          'ent.quantidade as "quantidade"',
+          'ent.isRoyalfit as "isRoyalfit"',
+          'ent.tamanhoCasco as "tamanhoCasco"',
+        ])
+        .leftJoin("ent.clienteId", "a")
+        .where("ent.created_at >= :dataInicio", { dataInicio })
+        .andWhere("ent.created_at <= :dataFim", { dataFim })
+        .andWhere("a.id = :clienteId", { clienteId })
+        .orderBy("ent.createdAt")
+        .getRawMany()
 
       return ok(entradas)
     } catch (err) {

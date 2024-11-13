@@ -24,7 +24,7 @@ class ImprimirReciboEntradaGarrafaoUseCase {
     })
     async function printReceipt() {
       const dataAtual = new Date(entradaGarrafao.data.data)
-      dataAtual.setHours(dataAtual.getHours() - 3)
+      // dataAtual.setHours(dataAtual.getHours() - 3)
 
       printer.alignCenter()
       printer.setTypeFontB()

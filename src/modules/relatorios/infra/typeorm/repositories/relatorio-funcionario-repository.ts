@@ -177,14 +177,7 @@ class RelatorioFuncionarioRepository implements IRelatorioFuncionarioRepository 
   }
 
   // update
-  async update({
-    id,
-    funcionarioId,
-    dataInicio,
-    dataFim,
-    relatório,
-    desabilitado,
-  }: IRelatorioFuncionarioDTO): Promise<HttpResponse> {
+  async update({ id, funcionarioId, dataInicio, dataFim, relatório, desabilitado }: IRelatorioFuncionarioDTO): Promise<HttpResponse> {
     const relatorioFuncionario = await this.repository.findOne(id)
 
     if (!relatorioFuncionario) {
@@ -241,25 +234,21 @@ class RelatorioFuncionarioRepository implements IRelatorioFuncionarioRepository 
 
   async getPedidosByData(dataInicio: Date, dataFim: Date): Promise<HttpResponse> {
     try {
-      const pedidos = await this.repository.query(
-        `
-        SELECT 
-          p.id AS "id",
-          p.data AS "data",
-          p.valor_total :: float AS "valorTotal",
-          p.desconto AS "desconto",
-          p.desabilitado AS "desabilitado",
-          a.id AS "funcionarioId",
-          a.nome AS "funcionarioNome"
-        FROM 
-          Pedidos p
-        LEFT JOIN 
-          Funcionarios a ON p.funcionario_id = a.id
-        WHERE 
-          p.data BETWEEN $1 AND $2
-      `,
-        [dataInicio, dataFim]
-      )
+      const pedidos = await getRepository(Pedido)
+        .createQueryBuilder("ped")
+        .select([
+          'ped.id as "id"',
+          'ped.data as "data"',
+          'ped.valorTotal :: float as "valorTotal"',
+          'ped.desconto as "desconto"',
+          'ped.desabilitado as "desabilitado"',
+          'a.id as "funcionarioId"',
+          'a.nome as "funcionarioNome"',
+        ])
+        .leftJoin("ped.funcionarioId", "a")
+        .where("ped.data >= :dataInicio", { dataInicio })
+        .andWhere("ped.data <= :dataFim", { dataFim })
+        .getRawMany()
 
       const newPedidos = destructor({
         data: pedidos,
@@ -276,31 +265,25 @@ class RelatorioFuncionarioRepository implements IRelatorioFuncionarioRepository 
 
   async getPedidosByDataAndFuncionario(dataInicio: Date, dataFim: Date, funcionarioId: string): Promise<HttpResponse> {
     try {
-      const pedidos = await this.repository.query(
-        `
-        SELECT 
-          p.id AS "id",
-          p.data AS "data",
-          p.valor_total :: float AS "valorTotal",
-          p.desconto AS "desconto",
-          p.desabilitado AS "desabilitado",
-          a.id AS "funcionarioId",
-          a.nome AS "funcionarioNome",
-          c.id AS "clienteId",
-          c.nome AS "clienteNome"
-        FROM 
-          Pedidos p
-        LEFT JOIN 
-          Funcionarios a ON p.funcionario_id = a.id
-        LEFT JOIN
-          Clientes c ON p.cliente_id = c.id
-        WHERE 
-          p.data BETWEEN $1 AND $2
-        AND
-          a.id = $3
-      `,
-        [dataInicio, dataFim, funcionarioId]
-      )
+      const pedidos = await getRepository(Pedido)
+        .createQueryBuilder("ped")
+        .select([
+          'ped.id as "id"',
+          'ped.data as "data"',
+          'ped.valorTotal :: float as "valorTotal"',
+          'ped.desconto as "desconto"',
+          'ped.desabilitado as "desabilitado"',
+          'a.id as "funcionarioId"',
+          'a.nome as "funcionarioNome"',
+          'c.id as "clienteId"',
+          'c.nome as "clienteNome"',
+        ])
+        .leftJoin("ped.funcionarioId", "a")
+        .leftJoin("ped.clienteId", "c")
+        .where("ped.data >= :dataInicio", { dataInicio })
+        .andWhere("ped.data <= :dataFim", { dataFim })
+        .andWhere("a.id = :funcionarioId", { funcionarioId })
+        .getRawMany()
 
       return ok(pedidos)
     } catch (err) {

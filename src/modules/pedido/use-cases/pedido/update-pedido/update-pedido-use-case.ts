@@ -151,25 +151,11 @@ class UpdatePedidoUseCase {
 
           const pedidoItemExistente = items.data.find((item) => item.produtoId === pedidoItem.produtoId)
 
-          const verificarQuantidadeEstoque = (
-            quantidadeEstoque: number,
-            quantidadePedido: number,
-            quantidadeAdicional: number = 0
-          ) => {
-            return (
-              !quantidadeEstoque ||
-              quantidadeEstoque < quantidadePedido ||
-              quantidadeEstoque + quantidadeAdicional < quantidadePedido
-            )
+          const verificarQuantidadeEstoque = (quantidadeEstoque: number, quantidadePedido: number, quantidadeAdicional: number = 0) => {
+            return !quantidadeEstoque || quantidadeEstoque < quantidadePedido || quantidadeEstoque + quantidadeAdicional < quantidadePedido
           }
 
-          if (
-            verificarQuantidadeEstoque(
-              estoqueAtual.data.quantidade,
-              pedidoItem.quantidade,
-              pedidoItemExistente?.quantidade || 0
-            )
-          ) {
+          if (verificarQuantidadeEstoque(estoqueAtual.data.quantidade, pedidoItem.quantidade, pedidoItemExistente?.quantidade || 0)) {
             throw new AppError(`Estoque insuficiente ou não cadastrado para o produto ${produto.data.nome}`)
           }
 
@@ -248,11 +234,7 @@ class UpdatePedidoUseCase {
             )
 
             await this.pedidoItemRepository.deleteByPedidoIdWithQueryRunner(pedidoItemExistente.id, queryRunner.manager)
-            await this.estoqueRepository.updateEstoqueQuantidade(
-              estoqueAtual.data.id,
-              novaQuantidade,
-              queryRunner.manager
-            )
+            await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, novaQuantidade, queryRunner.manager)
 
             await processarPedidoItem(pedidoItem.produtoId, pedidoItem.quantidade, pedidoItem.valor, pedido.data.id)
           } else {
@@ -265,18 +247,8 @@ class UpdatePedidoUseCase {
               queryRunner
             )
 
-            await this.estoqueRepository.updateEstoqueQuantidade(
-              estoqueAtual.data.id,
-              novaQuantidade,
-              queryRunner.manager
-            )
-            await processarPedidoItem(
-              pedidoItem.produtoId,
-              pedidoItem.quantidade,
-              pedidoItem.valor,
-              pedido.data.id,
-              pedidoItem.id
-            )
+            await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, novaQuantidade, queryRunner.manager)
+            await processarPedidoItem(pedidoItem.produtoId, pedidoItem.quantidade, pedidoItem.valor, pedido.data.id, pedidoItem.id)
           }
         }
       }
@@ -341,7 +313,7 @@ class UpdatePedidoUseCase {
 
       async function printReceipt() {
         const dataAtual = new Date()
-        dataAtual.setHours(dataAtual.getHours() - 3)
+        // dataAtual.setHours(dataAtual.getHours() - 3)
 
         printer.alignCenter()
         printer.setTypeFontB()
@@ -378,9 +350,7 @@ class UpdatePedidoUseCase {
           ])
         })
         printer.newLine()
-        printer.println(
-          `Desconto: R$ ${parseFloat(desconto.toString().replace(",", ".")).toFixed(2).replace(".", ",")}`
-        )
+        printer.println(`Desconto: R$ ${parseFloat(desconto.toString().replace(",", ".")).toFixed(2).replace(".", ",")}`)
         printer.println(
           `Total: R$ ${parseFloat((valorTotal - desconto).toString().replace(",", "."))
             .toFixed(2)

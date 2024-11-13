@@ -18,14 +18,14 @@ class CreateRelatorioFuncionarioUseCase {
 
   async execute({ dataInicio, dataFim }: IRequest): Promise<HttpResponse> {
     try {
-      const dataInicioFormatada = new Date(new Date(dataInicio).setDate(new Date(dataInicio).getDate() - 1))
-      const dataFimFormatada = new Date(new Date(dataFim).setDate(new Date(dataFim).getDate() + 1))
+      const dataFimFormatada = new Date(dataFim)
+      const dataInicioFormatada = new Date(dataInicio)
+      // dataFimFormatada.setHours(23, 59, 59, 999)
 
       if (dataInicioFormatada > dataFimFormatada) {
         throw new AppError("Data de início não pode ser maior que a data de fim")
       }
-
-      const pedidos = await this.relatorioFuncionarioRepository.getPedidosByData(dataInicioFormatada, dataFimFormatada)
+      const pedidos = await this.relatorioFuncionarioRepository.getPedidosByData(dataInicio, dataFim)
 
       const sheetName = "Sheet1"
       const emptyWorkbook = this.exportEmptyExcel(sheetName)

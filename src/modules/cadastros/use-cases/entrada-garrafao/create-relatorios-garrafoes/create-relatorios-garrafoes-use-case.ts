@@ -21,13 +21,15 @@ class CreateRelatorioGarrafaoUseCase {
 
   async execute({ clienteId, dataInicio, dataFim }): Promise<HttpResponse> {
     try {
-      const dataInicioFormatada = new Date(new Date(dataInicio).setDate(new Date(dataInicio).getDate() - 1))
-      const dataFimFormatada = new Date(new Date(dataFim).setDate(new Date(dataFim).getDate() + 1))
+      const dataFimFormatada = new Date(dataFim)
+      const dataInicioFormatada = new Date(dataInicio)
+      // dataFimFormatada.setHours(23, 59, 59, 999)
+
       if (dataInicioFormatada > dataFimFormatada) {
         throw new AppError("Data de início não pode ser maior que a data de fim")
       }
 
-      const entradas = await this.entradaGarrafaoRepository.getEntradasByDataAndCliente(dataInicioFormatada, dataFimFormatada, clienteId)
+      const entradas = await this.entradaGarrafaoRepository.getEntradasByDataAndCliente(dataInicio, dataFim, clienteId)
 
       const sheetName = "Sheet1"
       const emptyWorkbook = this.exportEmptyExcel(sheetName)

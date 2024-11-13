@@ -254,33 +254,27 @@ class PagamentoRepository implements IPagamentoRepository {
 
   async getPagamentosByDataAndCliente(dataInicio: Date, dataFim: Date, clienteId: string): Promise<HttpResponse> {
     try {
-      const pedidos = await this.repository.query(
-        `
-        SELECT 
-          p.id AS "id",
-          p.data AS "data",
-          p.valor_pago :: float AS "valorPago",
-          p.user_id AS "userId",
-          u.name AS "userName",
-          mp.nome AS "meioPagamento"
-        FROM 
-          Pagamentos p
-        LEFT JOIN
-          Clientes c ON p.cliente_id = c.id
-        LEFT JOIN
-          meios_pagamento mp ON p.meio_pagamento_id = mp.id
-        LEFT JOIN
-          users u ON p.user_id = u.id
-        WHERE 
-          p.data BETWEEN $1 AND $2
-        AND
-          c.id = $3
-      `,
-        [dataInicio, dataFim, clienteId]
-      )
+      const pagamentos = await this.repository
+        .createQueryBuilder("pag")
+        .select([
+          'pag.id as "id"',
+          'pag.data as "data"',
+          'pag.valorPago as "valorPago"',
+          'pag.userId as "userId"',
+          'u.nome as "userName"',
+          'mp.nome as "meioPagamento"',
+        ])
+        .leftJoin("pag.clienteId", "c")
+        .leftJoin("pag.meioPagamentoId", "mp")
+        .leftJoin("pag.userId", "u")
+        .where("pag.data >= :dataInicio", { dataInicio })
+        .andWhere("pag.data <= :dataFim", { dataFim })
+        .andWhere("c.id = :clienteId", { clienteId })
+        .getRawMany()
 
-      return ok(pedidos)
+      return ok(pagamentos)
     } catch (err) {
+      console.log(err)
       return serverError(err)
     }
   }
