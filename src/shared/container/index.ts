@@ -72,6 +72,12 @@ import { EntradaGarrafaoRepository } from "@modules/cadastros/infra/typeorm/repo
 import { IEntradaGarrafaoRepository } from "@modules/cadastros/repositories/i-entrada-garrafao-repository"
 import { DescontoRepository } from "@modules/clientes/infra/typeorm/repositories/desconto-repository"
 import { IDescontoRepository } from "@modules/clientes/repositories/i-desconto-repository"
+import { CaixaRepository } from "@modules/financeiro/infra/typeorm/repositories/caixa-repository"
+import { ControleDespesaRepository } from "@modules/financeiro/infra/typeorm/repositories/controle-despesa-repository"
+import { FechamentoRepository } from "@modules/financeiro/infra/typeorm/repositories/fechamento-repository"
+import { ICaixaRepository } from "@modules/financeiro/repositories/i-caixa-repository"
+import { IControleDespesaRepository } from "@modules/financeiro/repositories/i-controle-despesa-repository"
+import { IFechamentoRepository } from "@modules/financeiro/repositories/i-fechamento-repository"
 
 container.registerSingleton<IUserRepository>("UserRepository", UserRepository)
 container.registerSingleton<IUserSecurityRepository>("UserSecurityRepository", UserSecurityRepository)
@@ -108,3 +114,6 @@ container.registerSingleton<IEstoqueRepository>("EstoqueRepository", EstoqueRepo
 container.registerSingleton<IAlmoxarifadoItemRepository>("AlmoxarifadoItemRepository", AlmoxarifadoItemRepository)
 container.registerSingleton<IEntradaGarrafaoRepository>("EntradaGarrafaoRepository", EntradaGarrafaoRepository)
 container.registerSingleton<IDescontoRepository>("DescontoRepository", DescontoRepository)
+container.registerSingleton<ICaixaRepository>("CaixaRepository", CaixaRepository)
+container.registerSingleton<IControleDespesaRepository>("ControleDespesaRepository", ControleDespesaRepository)
+container.registerSingleton<IFechamentoRepository>("FechamentoRepository", FechamentoRepository)

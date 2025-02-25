@@ -36,6 +36,9 @@ import { pedidoBonificadosRoutes } from "./pedido/pedido-bonificados-routes"
 import { almoxarifadoItensRoutes } from "./almoxarifado/almoxarifado-itens-routes"
 import { entradasGarrafaoRoutes } from "./cadastros/entradas-garrafao-routes"
 import { descontosRoutes } from "./clientes/descontos-routes"
+import { caixasRoutes } from "./financeiro/caixas-routes"
+import { controleDespesasRoutes } from "./financeiro/controle-despesas-routes"
+import { fechamentosRoutes } from "./financeiro/fechamentos-routes"
 
 const router = Router()
 
@@ -76,5 +79,8 @@ router.use("/pagamentos", pagamentosRoutes)
 router.use("/almoxarifado-itens", almoxarifadoItensRoutes)
 router.use("/entradas-garrafao", entradasGarrafaoRoutes)
 router.use("/descontos", descontosRoutes)
+router.use("/caixas", caixasRoutes)
+router.use("/controle-despesas", controleDespesasRoutes)
+router.use("/fechamentos", fechamentosRoutes)
 
 export { router }

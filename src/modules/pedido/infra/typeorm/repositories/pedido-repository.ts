@@ -175,9 +175,13 @@ class PedidoRepository implements IPedidoRepository {
     try {
       const pedidos = await this.repository
         .createQueryBuilder("ped")
-        .select(['ped.id as "value"', 'ped.nome as "label"'])
-        .where("ped.nome ilike :filter", { filter: `${filter}%` })
-        .addOrderBy("ped.nome")
+        .select(['ped.id as "value"', "CONCAT(ped.sequencial, ' - ', a.nome, ' - ', TO_CHAR(ped.data, 'DD/MM/YYYY')) as \"label\""])
+        .leftJoin("ped.clienteId", "a")
+        .where("ped.sequencial :: varchar ilike :filter", { filter: `${filter}%` })
+        .orWhere("a.nome ilike :filter", { filter: `%${filter}%` })
+        .orWhere("TO_CHAR(ped.data, 'YYYY-MM-DD HH24:MI:SS') ILIKE :filter", { filter: `%${filter}%` })
+        .addOrderBy("ped.sequencial")
+        .limit(100)
         .getRawMany()
 
       return ok(pedidos)
@@ -224,11 +228,7 @@ class PedidoRepository implements IPedidoRepository {
     }
   }
 
-  async countWithQueryRunner(
-    search: string,
-    filter: string,
-    @TransactionManager() transactionManager: EntityManager
-  ): Promise<HttpResponse> {
+  async countWithQueryRunner(search: string, filter: string, @TransactionManager() transactionManager: EntityManager): Promise<HttpResponse> {
     try {
       let query = transactionManager.createQueryBuilder(Pedido, "ped").select(['ped.id as "id"']).leftJoin("ped.clienteId", "a")
 
