@@ -362,7 +362,7 @@ class FechamentoRepository implements IFechamentoRepository {
         meios_pagamento as a ON cd.forma_pagamento_id = a.id::varchar
       WHERE 
         cd.data_emissao >= NOW() - INTERVAL '12 months'
-  `)
+    `)
 
       const entradas = await this.repository.query(`
       SELECT 
@@ -376,7 +376,7 @@ class FechamentoRepository implements IFechamentoRepository {
         meios_pagamento as a ON c.forma_pagamento_id = a.id::varchar
       WHERE
         c.data >= NOW() - INTERVAL '12 months'
-  `)
+    `)
 
       function somarValores(dados) {
         return dados.reduce((total, item) => total + item.valor, 0)
@@ -455,6 +455,225 @@ class FechamentoRepository implements IFechamentoRepository {
     } catch (err) {
       console.log("err", err)
       return serverError(err)
+    }
+  }
+
+  async getFechamentoRelatorio(type: string) {
+    try {
+      const despesas = await this.repository.query(`
+        SELECT 
+          cd.id as "id", 
+          cd.data_emissao as "data",
+          cd.valor :: float as "valor",
+          cd.descricao as "descricao",
+          a.nome as "meio_pagamento"
+        FROM 
+          controle_despesas as cd
+        LEFT JOIN 
+          meios_pagamento as a ON cd.forma_pagamento_id = a.id::varchar
+        WHERE 
+          cd.data_emissao >= NOW() - INTERVAL '12 months'
+    `)
+
+      const entradas = await this.repository.query(`
+        SELECT 
+          c.id as "id", 
+          c.data as "data",
+          c.valor :: float as "valor",
+          c.descricao as "descricao",
+          a.nome as "meio_pagamento"
+        FROM 
+          caixa as c
+        LEFT JOIN 
+          meios_pagamento as a ON c.forma_pagamento_id = a.id::varchar
+        WHERE
+          c.data >= NOW() - INTERVAL '12 months'
+    `)
+
+      function somarValores(dados) {
+        return dados.reduce((total, item) => total + item.valor, 0)
+      }
+
+      function filtrarDadosPorPeriodo(dados, dias) {
+        const dataLimite = new Date()
+        dataLimite.setHours(0, 0, 0, 0)
+
+        if (dias === 0) {
+          return dados.filter((d) => {
+            const dataRegistro = new Date(d.data)
+            dataRegistro.setHours(0, 0, 0, 0)
+            return dataRegistro.getTime() === dataLimite.getTime()
+          })
+        }
+
+        dataLimite.setDate(dataLimite.getDate() - dias)
+        return dados.filter((d) => new Date(d.data) >= dataLimite)
+      }
+
+      const fechamento = {
+        ultimos_12_meses: {
+          caixa: Number(somarValores(entradas).toFixed(2)),
+          controle_despesas: Number(somarValores(despesas).toFixed(2)),
+          fechamento: Number((somarValores(entradas) - somarValores(despesas)).toFixed(2)),
+          detalhes: {
+            entradas: entradas,
+            despesas: despesas,
+          },
+        },
+        ultimas_4_semanas: {
+          caixa: Number(somarValores(filtrarDadosPorPeriodo(entradas, 28)).toFixed(2)),
+          controle_despesas: Number(somarValores(filtrarDadosPorPeriodo(despesas, 28)).toFixed(2)),
+          fechamento: Number((somarValores(filtrarDadosPorPeriodo(entradas, 28)) - somarValores(filtrarDadosPorPeriodo(despesas, 28))).toFixed(2)),
+          detalhes: {
+            entradas: filtrarDadosPorPeriodo(entradas, 28),
+            despesas: filtrarDadosPorPeriodo(despesas, 28),
+          },
+        },
+        ultimos_7_dias: {
+          caixa: Number(somarValores(filtrarDadosPorPeriodo(entradas, 7)).toFixed(2)),
+          controle_despesas: Number(somarValores(filtrarDadosPorPeriodo(despesas, 7)).toFixed(2)),
+          fechamento: Number((somarValores(filtrarDadosPorPeriodo(entradas, 7)) - somarValores(filtrarDadosPorPeriodo(despesas, 7))).toFixed(2)),
+          detalhes: {
+            entradas: filtrarDadosPorPeriodo(entradas, 7),
+            despesas: filtrarDadosPorPeriodo(despesas, 7),
+          },
+        },
+        hoje: {
+          caixa: Number(somarValores(filtrarDadosPorPeriodo(entradas, 0)).toFixed(2)),
+          controle_despesas: Number(somarValores(filtrarDadosPorPeriodo(despesas, 0)).toFixed(2)),
+          fechamento: Number((somarValores(filtrarDadosPorPeriodo(entradas, 0)) - somarValores(filtrarDadosPorPeriodo(despesas, 0))).toFixed(2)),
+          detalhes: {
+            entradas: filtrarDadosPorPeriodo(entradas, 0),
+            despesas: filtrarDadosPorPeriodo(despesas, 0),
+          },
+        },
+      }
+
+      return fechamento[type]
+    } catch (error) {
+      console.log("error", error)
+      return serverError(error)
+    }
+  }
+
+  async getFechamentoRelatorioDetalhado(type: string, payload: any) {
+    try {
+      let result
+
+      if (type == "periodo") {
+        const despesas = await this.repository.query(
+          `
+          SELECT
+            cd.id as "id",
+            cd.data_emissao as "data",
+            cd.valor :: float as "valor",
+            cd.descricao as "descricao",
+            a.nome as "meio_pagamento"
+          FROM
+            controle_despesas as cd
+          LEFT JOIN
+            meios_pagamento as a ON cd.forma_pagamento_id = a.id::varchar
+          WHERE
+            cd.data_emissao >= $1 AND cd.data_emissao <= $2
+        `,
+          [payload.dataInicio, payload.dataFim]
+        )
+
+        const entradas = await this.repository.query(
+          `
+          SELECT
+            c.id as "id",
+            c.data as "data",
+            c.descricao as "descricao",
+            c.valor :: float as "valor",
+            a.nome as "meio_pagamento"
+          FROM
+            caixa as c
+          LEFT JOIN
+            meios_pagamento as a ON c.forma_pagamento_id = a.id::varchar
+          WHERE
+            c.data >= $1 AND c.data <= $2
+        `,
+          [payload.dataInicio, payload.dataFim]
+        )
+
+        function somarValores(dados) {
+          return dados.reduce((total, item) => total + item.valor, 0)
+        }
+
+        const totalDespesas = Number(somarValores(despesas).toFixed(2))
+        const totalEntradas = Number(somarValores(entradas).toFixed(2))
+
+        result = {
+          caixa: totalEntradas,
+          controle_despesas: totalDespesas,
+          fechamento: Number((totalEntradas - totalDespesas).toFixed(2)),
+          detalhes: {
+            entradas: entradas,
+            despesas: despesas,
+          },
+        }
+      }
+
+      if (type == "produto") {
+        const fechamentoProd = await this.repository.query(
+          `
+            SELECT 
+                pi.id AS "item_id",
+                pedido.sequencial AS "sequencial",
+                pi.quantidade AS "quantidade",
+                pi.valor :: float AS "valor",
+                pedido.created_at AS "data_pedido",
+                p.nome AS "produto"
+            FROM pedido_itens pi
+            LEFT JOIN pedidos pedido 
+                ON pi.pedido_id = pedido.id
+            LEFT JOIN produtos p
+                ON pi.produto_id = p.id
+            WHERE 
+                pi.produto_id = $1
+                AND pedido.created_at >= DATE_TRUNC('month', NOW()) 
+            ORDER BY 
+                pedido.created_at ASC
+            `,
+          [payload.produtoId]
+        )
+
+        result = fechamentoProd
+      }
+
+      if (type == "cliente") {
+        const fechamentoCliente = await this.repository.query(
+          `
+          SELECT 
+              cx.id AS "id",
+              cx.descricao AS "descricao",
+              cx.valor::float AS "valor",
+              mp.nome AS "meio_pagamento",
+              c.nome AS "cliente",
+              cx.data AS "data"
+          FROM
+              caixa AS cx
+          LEFT JOIN 
+              clientes AS c ON c.id::varchar = cx.cliente_id 
+          LEFT JOIN
+              meios_pagamento AS mp ON cx.forma_pagamento_id = mp.id::varchar
+          WHERE
+              cx.cliente_id = $1::varchar  
+              AND cx.created_at >= DATE_TRUNC('month', NOW())
+          ORDER BY
+              cx.created_at ASC
+          `,
+          [String(payload.clienteId)]
+        )
+
+        result = fechamentoCliente
+      }
+
+      return result
+    } catch (error) {
+      console.log("error", error)
+      return serverError(error)
     }
   }
 }

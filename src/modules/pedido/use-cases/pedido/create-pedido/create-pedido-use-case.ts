@@ -13,6 +13,7 @@ import { noContent } from "@shared/helpers"
 import { IClienteRepository } from "@modules/cadastros/repositories/i-cliente-repository"
 import { CharacterSet, PrinterTypes, ThermalPrinter } from "node-thermal-printer"
 import { IMeioPagamentoRepository } from "@modules/cadastros/repositories/i-meio-pagamento-repository"
+import { ICaixaRepository } from "@modules/financeiro/repositories/i-caixa-repository"
 
 interface IRequest {
   sequencial: number
@@ -60,7 +61,9 @@ class CreatePedidoUseCase {
     @inject("ClienteRepository")
     private clienteRepository: IClienteRepository,
     @inject("MeioPagamentoRepository")
-    private meioPagamentoRepository: IMeioPagamentoRepository
+    private meioPagamentoRepository: IMeioPagamentoRepository,
+    @inject("CaixaRepository")
+    private caixaRepository: ICaixaRepository
   ) {}
 
   async execute({
@@ -120,7 +123,7 @@ class CreatePedidoUseCase {
         })
 
       for await (const pedidoItem of pedidoItemForm) {
-        console.log("pedidoItem", pedidoItem)
+        // console.log("pedidoItem", pedidoItem)
 
         const estoqueAtual = await this.estoqueRepository.getByProdutoId(pedidoItem.produtoId)
         const produto = await this.produtoRepository.get(pedidoItem.produtoId)
@@ -159,11 +162,7 @@ class CreatePedidoUseCase {
           newTotalVendido += pedidoItem.quantidade
         }
 
-        await this.estoqueRepository.updateEstoqueQuantidade(
-          estoqueAtual.data.id,
-          estoqueAtual.data.quantidade - pedidoItem.quantidade,
-          queryRunner.manager
-        )
+        await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, estoqueAtual.data.quantidade - pedidoItem.quantidade, queryRunner.manager)
 
         const prod = await this.pedidoItemRepository.createWithQueryRunner(
           {
@@ -215,6 +214,18 @@ class CreatePedidoUseCase {
           preco: +precoCanhoto,
         })
       }
+
+      const caixa = await this.caixaRepository.createWithQueryRunner(
+        {
+          descricao: "Pedido " + result.data.sequencial + " - " + cliente.data.nome,
+          valor: valorTotal,
+          data: new Date(),
+          pedidoId: result.data.id,
+          clienteId: clienteId,
+          formaPagamentoId: meioPagamentoId,
+        },
+        queryRunner.manager
+      )
 
       // if (statusPagamentoId == "58922f62-67e4-4f50-8e0d-2bcb89f95f9a") {
       if (meioPagamentoId == "9751732c-4ed8-465f-96f1-2d2580b33a5d") {

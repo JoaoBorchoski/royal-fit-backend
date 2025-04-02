@@ -1,4 +1,4 @@
-import { Brackets, getRepository, Repository } from "typeorm"
+import { Brackets, EntityManager, getRepository, Repository, TransactionManager } from "typeorm"
 import { ICaixaDTO } from "@modules/financeiro/dtos/i-caixa-dto"
 import { ICaixaRepository } from "@modules/financeiro/repositories/i-caixa-repository"
 import { Caixa } from "@modules/financeiro/infra/typeorm/entities/caixa"
@@ -35,6 +35,31 @@ class CaixaRepository implements ICaixaRepository {
     return result
   }
 
+  async createWithQueryRunner(
+    { descricao, valor, data, pedidoId, clienteId, formaPagamentoId }: ICaixaDTO,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    const caixa = transactionManager.create(Caixa, {
+      descricao,
+      valor,
+      data,
+      pedidoId,
+      clienteId,
+      formaPagamentoId,
+    })
+
+    const result = await transactionManager
+      .save(caixa)
+      .then((caixaResult) => {
+        return ok(caixaResult)
+      })
+      .catch((error) => {
+        return serverError(error)
+      })
+
+    return result
+  }
+
   // list
   async list(search: string, page: number, rowsPerPage: number, order: string, filter: string): Promise<HttpResponse> {
     let columnName: string
@@ -58,9 +83,12 @@ class CaixaRepository implements ICaixaRepository {
     const offset = rowsPerPage * page
 
     try {
-      let query = this.repository
-        .createQueryBuilder("cai")
-        .select(['cai.id as "id"', 'cai.valor as "valor"', 'cai.data as "data"', 'cai.descricao as "descricao"'])
+      let query = this.repository.createQueryBuilder("cai").select([
+        'cai.id as "id"',
+        "CONCAT('R$ ', TO_CHAR(cai.valor, 'FM999G999G990D00')) as \"valor\"", // Força 2 casas decimais
+        'cai.data as "data"',
+        'cai.descricao as "descricao"',
+      ])
 
       if (filter) {
         query = query.where(filter)
@@ -72,8 +100,9 @@ class CaixaRepository implements ICaixaRepository {
             query.andWhere("CAST(cai.valor AS VARCHAR) ilike :search", { search: `%${search}%` })
           })
         )
-        .addOrderBy("cai.valor", columnOrder[0])
-        .addOrderBy("cai.data", columnOrder[1])
+        .orderBy("cai.data", "DESC")
+        // .addOrderBy("cai.valor", columnOrder[0])
+        // .addOrderBy("cai.data", columnOrder[1])
         .offset(offset)
         .limit(rowsPerPage)
         .take(rowsPerPage)
@@ -166,6 +195,34 @@ class CaixaRepository implements ICaixaRepository {
     }
   }
 
+  async getByPedidoId(pedidoId: string): Promise<HttpResponse> {
+    try {
+      const caixa = await this.repository
+        .createQueryBuilder("cai")
+        .select([
+          'cai.id as "id"',
+          'cai.descricao as "descricao"',
+          'cai.valor as "valor"',
+          'cai.data as "data"',
+          'cai.pedidoId as "pedidoId"',
+          'cai.clienteId as "clienteId"',
+          'cai.formaPagamentoId as "formaPagamentoId"',
+        ])
+        .where("cai.pedidoId = :pedidoId", { pedidoId })
+        .getRawOne()
+
+      if (typeof caixa === "undefined") {
+        return noContent()
+      }
+
+      return ok(caixa)
+    } catch (error) {
+      console.log(error)
+
+      return serverError(error)
+    }
+  }
+
   // update
   async update({ id, descricao, valor, data, pedidoId, clienteId, formaPagamentoId }: ICaixaDTO): Promise<HttpResponse> {
     const caixa = await this.repository.findOne(id)
@@ -186,6 +243,35 @@ class CaixaRepository implements ICaixaRepository {
 
     try {
       await this.repository.save(newcaixa)
+
+      return ok(newcaixa)
+    } catch (err) {
+      return serverError(err)
+    }
+  }
+
+  async updateWithQueryRunner(
+    { id, descricao, valor, data, pedidoId, clienteId, formaPagamentoId }: ICaixaDTO,
+    @TransactionManager() transactionManager: EntityManager
+  ): Promise<HttpResponse> {
+    const caixa = await transactionManager.findOne(Caixa, id)
+
+    if (!caixa) {
+      return notFound()
+    }
+
+    const newcaixa = transactionManager.create(Caixa, {
+      id,
+      descricao,
+      valor,
+      data,
+      pedidoId,
+      clienteId,
+      formaPagamentoId,
+    })
+
+    try {
+      await transactionManager.save(newcaixa)
 
       return ok(newcaixa)
     } catch (err) {

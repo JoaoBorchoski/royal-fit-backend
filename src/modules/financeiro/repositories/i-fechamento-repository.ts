@@ -30,6 +30,10 @@ interface IFechamentoRepository {
   multiDelete(ids: string[]): Promise<HttpResponse>
 
   getData(): Promise<HttpResponse>
+
+  getFechamentoRelatorio(type: string)
+
+  getFechamentoRelatorioDetalhado(type: string, payload: any)
 }
 
 export { IFechamentoRepository }

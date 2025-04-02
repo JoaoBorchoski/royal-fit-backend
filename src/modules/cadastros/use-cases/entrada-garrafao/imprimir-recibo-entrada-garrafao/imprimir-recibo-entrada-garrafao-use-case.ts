@@ -14,8 +14,8 @@ class ImprimirReciboEntradaGarrafaoUseCase {
     const entradaGarrafao = await this.entradaGarrafaoRepository.get(entradaId)
 
     let printer = new ThermalPrinter({
-      type: PrinterTypes.EPSON,
       // type: "epson",
+      type: PrinterTypes.EPSON,
       interface: `tcp://${impressoraIp}`,
       characterSet: CharacterSet.PC860_PORTUGUESE,
       options: {

@@ -10,6 +10,7 @@ import { DeleteFechamentoController } from "@modules/financeiro/use-cases/fecham
 import { MultiDeleteFechamentoController } from "@modules/financeiro/use-cases/fechamento/multi-delete-fechamento/multi-delete-fechamento-controller"
 import { ensureAuthenticated } from "@shared/infra/http/middlewares/ensure-authenticated"
 import { GetFechamentoDataController } from "@modules/financeiro/use-cases/fechamento/get-fechamento-data/get-fechamento-data-controller"
+import { GetFechamentoRelatorioController } from "@modules/financeiro/use-cases/fechamento/get-fechamento-relatorio/get-fechamento-relatorio-controller"
 
 const fechamentosRoutes = Router()
 
@@ -23,10 +24,12 @@ const updateFechamentoController = new UpdateFechamentoController()
 const deleteFechamentoController = new DeleteFechamentoController()
 const multiDeleteFechamentoController = new MultiDeleteFechamentoController()
 const getFechamentoDataController = new GetFechamentoDataController()
+const getFechamentoRelatorioController = new GetFechamentoRelatorioController()
 
 fechamentosRoutes.post("/", ensureAuthenticated, createFechamentoController.handle)
 fechamentosRoutes.post("/list", ensureAuthenticated, listFechamentoController.handle)
 fechamentosRoutes.post("/count", ensureAuthenticated, countFechamentoController.handle)
+fechamentosRoutes.post("/relatorio", ensureAuthenticated, getFechamentoRelatorioController.handle)
 fechamentosRoutes.get("/select/:id", ensureAuthenticated, idSelectFechamentoController.handle)
 fechamentosRoutes.get("/select", ensureAuthenticated, selectFechamentoController.handle)
 fechamentosRoutes.get("/:id", ensureAuthenticated, getFechamentoController.handle)

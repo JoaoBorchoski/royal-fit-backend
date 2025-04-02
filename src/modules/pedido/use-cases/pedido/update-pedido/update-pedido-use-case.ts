@@ -11,6 +11,7 @@ import { CharacterSet, PrinterTypes, ThermalPrinter } from "node-thermal-printer
 import { IClienteRepository } from "@modules/cadastros/repositories/i-cliente-repository"
 import { IMeioPagamentoRepository } from "@modules/cadastros/repositories/i-meio-pagamento-repository"
 import { IGarrafaoRepository } from "@modules/cadastros/repositories/i-garrafao-repository"
+import { ICaixaRepository } from "@modules/financeiro/repositories/i-caixa-repository"
 interface IRequest {
   id: string
   sequencial: number
@@ -57,7 +58,10 @@ class UpdatePedidoUseCase {
     @inject("MeioPagamentoRepository")
     private meioPagamentoRepository: IMeioPagamentoRepository,
     @inject("GarrafaoRepository")
-    private garrafaoRepository: IGarrafaoRepository
+    private garrafaoRepository: IGarrafaoRepository,
+
+    @inject("CaixaRepository")
+    private caixaRepository: ICaixaRepository
   ) {}
 
   async execute({
@@ -104,9 +108,19 @@ class UpdatePedidoUseCase {
         },
         queryRunner.manager
       )
+
       let pedidoItemCanhoto: IPedidoItemCanhoto[] = []
       const cliente = await this.clienteRepository.get(clienteId)
       const meioPagamento = await this.meioPagamentoRepository.get(meioPagamentoId)
+      const caixa = await this.caixaRepository.getByPedidoId(id)
+
+      const caixaUpdate = await this.caixaRepository.updateWithQueryRunner(
+        {
+          id: caixa.data.id,
+          valor: valorTotal,
+        },
+        queryRunner.manager
+      )
 
       if (!impressao || impressao != true) {
         const oldPedido = await this.pedidoRepository.get(id)
@@ -161,13 +175,7 @@ class UpdatePedidoUseCase {
 
           const novaQuantidade = estoqueAtual.data.quantidade - pedidoItem.quantidade
 
-          const processarPedidoItem = async (
-            produtoId: string,
-            quantidade: number,
-            valor: number,
-            pedidoId: string,
-            pedidoItemId?: string
-          ) => {
+          const processarPedidoItem = async (produtoId: string, quantidade: number, valor: number, pedidoId: string, pedidoItemId?: string) => {
             await this.pedidoItemRepository.createWithQueryRunner(
               {
                 id: pedidoItemId,
@@ -224,28 +232,14 @@ class UpdatePedidoUseCase {
           }
 
           if (pedidoItemExistente) {
-            await verificarEstoqueEGarrafao(
-              produto.data.id,
-              pedidoItem.quantidade,
-              { data: pedidoItemExistente },
-              garrafoes,
-              clienteId,
-              queryRunner
-            )
+            await verificarEstoqueEGarrafao(produto.data.id, pedidoItem.quantidade, { data: pedidoItemExistente }, garrafoes, clienteId, queryRunner)
 
             await this.pedidoItemRepository.deleteByPedidoIdWithQueryRunner(pedidoItemExistente.id, queryRunner.manager)
             await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, novaQuantidade, queryRunner.manager)
 
             await processarPedidoItem(pedidoItem.produtoId, pedidoItem.quantidade, pedidoItem.valor, pedido.data.id)
           } else {
-            await verificarEstoqueEGarrafao(
-              produto.data.id,
-              pedidoItem.quantidade,
-              { data: { quantidade: 0 } },
-              garrafoes,
-              clienteId,
-              queryRunner
-            )
+            await verificarEstoqueEGarrafao(produto.data.id, pedidoItem.quantidade, { data: { quantidade: 0 } }, garrafoes, clienteId, queryRunner)
 
             await this.estoqueRepository.updateEstoqueQuantidade(estoqueAtual.data.id, novaQuantidade, queryRunner.manager)
             await processarPedidoItem(pedidoItem.produtoId, pedidoItem.quantidade, pedidoItem.valor, pedido.data.id, pedidoItem.id)
@@ -341,7 +335,7 @@ class UpdatePedidoUseCase {
           printer.tableCustom([
             { text: item.produtoNome, align: "LEFT", width: 0.5 },
             { text: item.quantidade.toString(), align: "CENTER", width: 0.1 },
-            { text: item.preco.toString(), align: "CENTER", width: 0.1 },
+            { text: item.valorTotal.toString(), align: "CENTER", width: 0.1 },
             {
               text: `R$ ${parseFloat(item.valorTotal.toString().replace(",", ".")).toFixed(2).replace(".", ",")}`,
               align: "RIGHT",
